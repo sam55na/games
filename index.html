@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>BOOMB | مدفع المربعات</title>
+    <title>BOOMB | لعبة مدفع المربعات</title>
     <style>
         * {
             margin: 0;
@@ -174,7 +174,6 @@
             font-size: 1.2rem;
         }
 
-        /* الشبكة 10x10 */
         .grid-area {
             display: flex;
             justify-content: center;
@@ -216,14 +215,12 @@
             filter: brightness(1.3);
         }
 
-        /* المدافع - تصميم جديد وجميل */
         .cannons-area {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             gap: 30px;
             margin-top: 10px;
-            position: relative;
         }
 
         .cannon-wrapper {
@@ -231,7 +228,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
         }
 
         .cannon {
@@ -242,7 +238,7 @@
             position: relative;
             cursor: pointer;
             transition: all 0.05s linear;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
             border: 2px solid #ffd700;
         }
 
@@ -268,7 +264,7 @@
         }
 
         .cannon.active {
-            box-shadow: 0 0 20px #ffd700, inset 0 1px 0 rgba(255,255,255,0.2);
+            box-shadow: 0 0 20px #ffd700;
             border-color: #ffaa33;
         }
 
@@ -276,15 +272,12 @@
             color: #888;
             font-size: 0.8rem;
             margin-top: 10px;
-            font-weight: bold;
         }
 
         .cannon.active .cannon-label {
             color: #ffd700;
-            text-shadow: 0 0 5px #ffd700;
         }
 
-        /* شريط القوة العمودي */
         .power-side {
             width: 50px;
             background: rgba(0,0,0,0.7);
@@ -313,10 +306,8 @@
             color: #ffd700;
             font-size: 0.7rem;
             white-space: nowrap;
-            font-weight: bold;
         }
 
-        /* مؤشر الاتجاه */
         .direction-arrow {
             position: fixed;
             width: 0;
@@ -335,7 +326,6 @@
             display: block;
         }
 
-        /* كرة الرمي */
         .ball-canvas {
             position: fixed;
             top: 0;
@@ -358,11 +348,6 @@
             font-size: 0.7rem;
             cursor: pointer;
             z-index: 100;
-            transition: all 0.2s;
-        }
-
-        .exit-btn:hover {
-            background: rgba(0,0,0,0.8);
         }
 
         .result-modal {
@@ -410,7 +395,6 @@
             .cannon { width: 60px; height: 60px; }
             .cannon::before { width: 30px; height: 15px; top: 28px; }
             .power-side { height: 100px; width: 40px; margin: 0 10px; }
-            .game-grid { width: min(60vh, 85vw); height: min(60vh, 85vw); }
         }
     </style>
 </head>
@@ -421,7 +405,7 @@
             <div class="waiting-card">
                 <div class="waiting-title">🎮 غرف اللعب</div>
                 <div class="rooms-list" id="roomsList"></div>
-                <button class="create-btn" id="createBtn">➕ إنشاء غرفة ($10)</button>
+                <button class="create-btn" id="createBtn">➕ إنشاء غرفة جديدة ($10)</button>
                 <div class="waiting-text" id="waitingText">
                     ⏳ انتظار لاعب آخر...<br>
                     <span id="roomIdDisplay"></span>
@@ -462,14 +446,14 @@
 
 <canvas class="ball-canvas" id="ballCanvas"></canvas>
 <div class="direction-arrow" id="directionArrow"></div>
-<button class="exit-btn" id="exitBtn" onclick="window.exitGame()">🚪 خروج</button>
+<button class="exit-btn" id="exitBtn" onclick="closeGame()">🚪 خروج</button>
 
 <div class="result-modal" id="resultModal">
     <div class="result-card">
         <h2 id="resultTitle"></h2>
         <p id="resultMsg"></p>
         <div id="resultStats" style="margin: 15px 0;"></div>
-        <button onclick="window.closeResult()">العودة للغرف</button>
+        <button onclick="closeResult()">العودة للغرف</button>
     </div>
 </div>
 
@@ -477,6 +461,26 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
+    // ==================== GET USER DATA FROM URL ====================
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentUser = {
+        id: urlParams.get('user_id'),
+        name: urlParams.get('user_name'),
+        balance: parseFloat(urlParams.get('balance')),
+        isAdmin: urlParams.get('is_admin') === 'true'
+    };
+
+    // تحديث الرصيد في الواجهة
+    document.getElementById('balance').textContent = currentUser.balance;
+
+    // دالة إرسال تحديث الرصيد للموقع الرئيسي
+    function updateParentBalance(newBalance) {
+        window.parent.postMessage({
+            type: 'UPDATE_BALANCE',
+            balance: newBalance
+        }, '*');
+    }
+
     // ==================== SOUND SYSTEM ====================
     let audioCtx = null;
     
@@ -544,14 +548,6 @@
         BASE_SPEED: 4.5
     };
     
-    // ==================== USER ====================
-    let currentUser = {
-        id: localStorage.getItem('uid') || 'u_' + Math.random().toString(36).substr(2, 8),
-        name: 'لاعب_' + Math.floor(Math.random() * 1000),
-        balance: 100
-    };
-    localStorage.setItem('uid', currentUser.id);
-    
     // ==================== GAME STATE ====================
     let gameState = {
         active: false,
@@ -604,7 +600,7 @@
         updateGrid();
     }
     
-    // ==================== BALL PHYSICS - حرية كاملة ====================
+    // ==================== BALL PHYSICS ====================
     class Ball {
         constructor(x, y, vx, vy, player) {
             this.x = x;
@@ -624,11 +620,9 @@
             this.x += this.vx;
             this.y += this.vy;
             
-            // حفظ المسار
             this.trail.push({ x: this.x, y: this.y });
             if (this.trail.length > 10) this.trail.shift();
             
-            // تنتهي الرمية عندما تخرج الكرة بعيداً جداً
             if (Math.abs(this.x) > 3000 || Math.abs(this.y) > 3000) {
                 this.active = false;
             }
@@ -637,7 +631,6 @@
         draw() {
             if (!ctx) return;
             
-            // رسم المسار
             for (let i = 0; i < this.trail.length; i++) {
                 const t = this.trail[i];
                 const alpha = (i / this.trail.length) * 0.4;
@@ -647,7 +640,6 @@
                 ctx.fill();
             }
             
-            // رسم الكرة مع توهج
             ctx.shadowBlur = 20;
             ctx.shadowColor = this.player === 1 ? '#ff4444' : '#4444ff';
             ctx.beginPath();
@@ -656,7 +648,6 @@
             ctx.fill();
             ctx.shadowBlur = 0;
             
-            // الإضاءة الداخلية
             ctx.beginPath();
             ctx.arc(this.x - 3, this.y - 3, 5, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(255,255,220,0.9)';
@@ -679,14 +670,12 @@
         const gridRect = gridElement.getBoundingClientRect();
         const canvasRect = canvas.getBoundingClientRect();
         
-        // نقطة انطلاق الكرة من المدفع
         const cannonX = isLeft ? gridRect.left + 15 : gridRect.right - 15;
         const cannonY = gridRect.bottom - 10;
         
         const startX = cannonX - canvasRect.left;
         const startY = cannonY - canvasRect.top;
         
-        // سرعة الكرة - بطيئة للرؤية الواضحة
         const speed = CONFIG.BASE_SPEED + (power / 100) * 6;
         const vx = Math.cos(angleRad) * speed * (isLeft ? 1 : -1);
         const vy = Math.sin(angleRad) * speed * -1;
@@ -711,7 +700,6 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ball.draw();
             
-            // تحديث حدود الشبكة
             const newGridRect = document.querySelector('.game-grid').getBoundingClientRect();
             const newCanvasRect = canvas.getBoundingClientRect();
             
@@ -722,7 +710,6 @@
                 bottom: newGridRect.bottom - newCanvasRect.top
             };
             
-            // التحقق من الاصطدام بالشبكة - فقط عندما تكون الكرة داخل حدود الشبكة
             if (ball.x >= gridBounds.left && ball.x <= gridBounds.right &&
                 ball.y >= gridBounds.top && ball.y <= gridBounds.bottom) {
                 
@@ -734,12 +721,10 @@
                 if (row >= 0 && row < CONFIG.GRID && col >= 0 && col < CONFIG.GRID) {
                     const cellKey = `${row}-${col}`;
                     if (lastHit !== cellKey && gameState.grid[row][col] === 0) {
-                        // تلوين المربع
                         gameState.grid[row][col] = gameState.currentPlayer;
                         updateGrid();
                         playHit();
                         
-                        // تأثير بصري
                         const cellDiv = document.querySelector(`.cell[data-index="${row * CONFIG.GRID + col}"]`);
                         if (cellDiv) {
                             cellDiv.classList.add('hit');
@@ -747,7 +732,6 @@
                         }
                         lastHit = cellKey;
                         
-                        // ارتداد طفيف عند الاصطدام
                         ball.vx *= 0.96;
                         ball.vy *= -0.25;
                     }
@@ -857,8 +841,10 @@
         }
         
         if (winnings > 0) {
-            currentUser.balance += winnings;
-            await saveUser();
+            const newBalance = currentUser.balance + winnings;
+            currentUser.balance = newBalance;
+            updateParentBalance(newBalance);
+            document.getElementById('balance').textContent = newBalance;
         }
         
         playGameOver();
@@ -886,8 +872,12 @@
         
         try {
             const roomId = 'r_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-            currentUser.balance -= CONFIG.BET;
-            await saveUser();
+            
+            // خصم الرهان
+            const newBalance = currentUser.balance - CONFIG.BET;
+            currentUser.balance = newBalance;
+            updateParentBalance(newBalance);
+            document.getElementById('balance').textContent = newBalance;
             
             const roomData = {
                 id: roomId,
@@ -918,8 +908,10 @@
             
         } catch(e) {
             showMsg('❌ فشل الإنشاء');
-            currentUser.balance += CONFIG.BET;
-            await saveUser();
+            const refundBalance = currentUser.balance + CONFIG.BET;
+            currentUser.balance = refundBalance;
+            updateParentBalance(refundBalance);
+            document.getElementById('balance').textContent = refundBalance;
         } finally {
             btn.disabled = false;
         }
@@ -939,8 +931,11 @@
             return;
         }
         
-        currentUser.balance -= CONFIG.BET;
-        await saveUser();
+        // خصم الرهان
+        const newBalance = currentUser.balance - CONFIG.BET;
+        currentUser.balance = newBalance;
+        updateParentBalance(newBalance);
+        document.getElementById('balance').textContent = newBalance;
         
         await db.ref(`rooms/${roomId}`).update({
             player2: currentUser.id,
@@ -1008,7 +1003,7 @@
         setupDrag();
     }
     
-    // ==================== DRAG SYSTEM with Direction Arrow ====================
+    // ==================== DRAG SYSTEM ====================
     function setupDrag() {
         const leftCannon = document.getElementById('cannonLeft');
         const rightCannon = document.getElementById('cannonRight');
@@ -1052,11 +1047,9 @@
             gameState.power = Math.min(100, distance / 1.5);
             powerFill.style.height = gameState.power + '%';
             
-            // حساب زاوية الاتجاه
             const angle = Math.atan2(dy, dx);
             const angleDeg = angle * 180 / Math.PI;
             
-            // تحديث مؤشر الاتجاه
             const cannonRect = (currentIsLeft ? leftCannon : rightCannon).getBoundingClientRect();
             const arrowX = cannonRect.left + cannonRect.width / 2;
             const arrowY = cannonRect.top + cannonRect.height / 2;
@@ -1066,7 +1059,6 @@
             directionArrow.style.transform = `rotate(${angleDeg + 90}deg)`;
             directionArrow.classList.add('active');
             
-            // تدوير المدفع
             const rotate = Math.min(40, Math.max(-40, angleDeg * 0.6));
             const cannon = currentIsLeft ? leftCannon : rightCannon;
             if (currentIsLeft) {
@@ -1121,22 +1113,6 @@
         setTimeout(() => div.remove(), 2000);
     }
     
-    async function saveUser() {
-        await db.ref(`users/${currentUser.id}`).set({
-            id: currentUser.id,
-            name: currentUser.name,
-            balance: currentUser.balance
-        });
-        document.getElementById('balance').textContent = currentUser.balance;
-    }
-    
-    async function loadUser() {
-        const snap = await db.ref(`users/${currentUser.id}`).once('value');
-        if (snap.exists()) currentUser.balance = snap.val().balance;
-        else await saveUser();
-        document.getElementById('balance').textContent = currentUser.balance;
-    }
-    
     async function loadRooms() {
         const snap = await db.ref('rooms').orderByChild('createdAt').limitToLast(20).once('value');
         const rooms = snap.val() || {};
@@ -1162,37 +1138,22 @@
         });
     }
     
-    window.exitGame = async function() {
-        if (gameState.timerInterval) clearInterval(gameState.timerInterval);
-        if (gameState.gameListener && gameState.roomId) {
-            db.ref(`rooms/${gameState.roomId}`).off();
-            if (gameState.myRole === 1 && !gameState.roomData?.player2) {
-                await db.ref(`rooms/${gameState.roomId}`).remove();
-                currentUser.balance += CONFIG.BET;
-                await saveUser();
-            }
-        }
-        
-        gameState.active = false;
-        document.getElementById('gameBoard').classList.remove('active');
+    function closeGame() {
+        window.parent.postMessage({ type: 'CLOSE_GAME' }, '*');
+    }
+    
+    function closeResult() {
+        document.getElementById('resultModal').classList.remove('active');
         document.getElementById('waitingRoom').style.display = 'flex';
+        document.getElementById('gameBoard').classList.remove('active');
         document.getElementById('waitingText').style.display = 'none';
         document.getElementById('roomsList').style.display = 'block';
         document.getElementById('createBtn').style.display = 'block';
-        
-        if (animationId) cancelAnimationFrame(animationId);
-        if (ctx) ctx.clearRect(0, 0, canvas?.width || 0, canvas?.height || 0);
-        
         loadRooms();
-    };
+    }
     
-    window.closeResult = function() {
-        document.getElementById('resultModal').classList.remove('active');
-        window.exitGame();
-    };
-    
+    // ==================== INIT ====================
     async function init() {
-        await loadUser();
         createGrid();
         loadRooms();
         setInterval(loadRooms, 5000);
@@ -1200,6 +1161,9 @@
         
         document.body.addEventListener('click', () => initAudio(), { once: true });
     }
+    
+    window.closeGame = closeGame;
+    window.closeResult = closeResult;
     
     init();
 </script>
