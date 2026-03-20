@@ -18,7 +18,7 @@
             background: #050510;
         }
 
-        /* UI Overlay */
+        /* UI */
         .ui-overlay {
             position: fixed;
             top: 0;
@@ -200,11 +200,6 @@
             cursor: not-allowed;
         }
 
-        .create-room-btn:hover:not(:disabled) {
-            transform: scale(1.02);
-            background: #ffaa33;
-        }
-
         .waiting-message {
             font-size: 1.3rem;
             color: #ffd700;
@@ -345,7 +340,6 @@
     <div class="active-game-badge" id="activeGameBadge">🎮 في لعبة</div>
     <button class="back-btn" id="backBtn" onclick="window.exitGame()">🏠 خروج</button>
 
-    <!-- Waiting Room -->
     <div class="waiting-room" id="waitingRoom">
         <div class="waiting-content">
             <div class="waiting-title">🎮 غرف اللعب</div>
@@ -360,7 +354,6 @@
         </div>
     </div>
 
-    <!-- Result Modal -->
     <div class="result-modal" id="resultModal">
         <div class="result-content">
             <div class="result-title" id="resultTitle"></div>
@@ -383,7 +376,7 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // ==================== Firebase Config ====================
+        // ==================== FIREBASE ====================
         const firebaseConfig = {
             apiKey: "AIzaSyCvPo4HlsNhyf1WBmTzIr6CdR1c2lQ5sHU",
             authDomain: "boomb-fa3e7.firebaseapp.com",
@@ -397,7 +390,7 @@
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.database(app);
 
-        // ==================== Game Config ====================
+        // ==================== CONFIG ====================
         const CONFIG = {
             BET: 10,
             GRID_SIZE: 10,
@@ -406,7 +399,7 @@
             WIN_MULT: 1.8
         };
 
-        // ==================== User Data ====================
+        // ==================== USER ====================
         let currentUser = {
             id: 'user_' + Math.random().toString(36).substr(2, 8),
             name: 'زائر_' + Math.floor(Math.random() * 1000),
@@ -415,10 +408,11 @@
             roomId: null
         };
 
-        // ==================== Game State ====================
+        // ==================== GAME STATE ====================
         let gameState = {
             active: false,
             roomId: null,
+            roomData: null,
             grid: [],
             currentPlayer: 1,
             p1Throws: CONFIG.THROWS,
@@ -429,15 +423,17 @@
             cameraShake: 0
         };
 
-        // ==================== Three.js ====================
+        // ==================== THREE.JS ====================
         let scene, camera, renderer;
         let cells = [];
         let leftBarrel, rightBarrel;
         let bombMesh = null;
         let bombPhysics = null;
         let timerInterval = null;
+        let roomListener = null;
+        let gameListener = null;
 
-        // ==================== Helper Functions ====================
+        // ==================== HELPERS ====================
         function showToast(msg, isError = false) {
             const div = document.createElement('div');
             div.textContent = msg;
@@ -445,7 +441,7 @@
                 position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
                 background: ${isError ? '#e74c3c' : '#2c3e50'}; color: white;
                 padding: 8px 20px; border-radius: 40px; z-index: 1000;
-                font-weight: bold; white-space: nowrap;
+                font-weight: bold; white-space: nowrap; font-size: 0.9rem;
             `;
             document.body.appendChild(div);
             setTimeout(() => div.remove(), 2500);
@@ -474,7 +470,7 @@
             document.getElementById('mainBalance').textContent = currentUser.balance;
         }
 
-        // ==================== 3D Setup ====================
+        // ==================== 3D SETUP ====================
         function init3D() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x050514);
@@ -497,7 +493,11 @@
             mainLight.castShadow = true;
             scene.add(mainLight);
             
-            // Grid ground
+            const fillLight = new THREE.PointLight(0x4466aa, 0.5);
+            fillLight.position.set(-3, 4, 4);
+            scene.add(fillLight);
+
+            // Ground grid
             const gridHelper = new THREE.GridHelper(18, 20, 0xffaa55, 0x3399ff);
             gridHelper.position.y = -1.4;
             gridHelper.material.transparent = true;
@@ -508,28 +508,30 @@
             createCannons();
 
             // Particles
-            const particles = new THREE.BufferGeometry();
-            const pos = [];
-            for (let i = 0; i < 600; i++) {
-                pos.push((Math.random() - 0.5) * 35);
-                pos.push(Math.random() * 7);
-                pos.push((Math.random() - 0.5) * 18);
+            const particleCount = 600;
+            const particlesGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            for (let i = 0; i < particleCount; i++) {
+                positions[i*3] = (Math.random() - 0.5) * 35;
+                positions[i*3+1] = Math.random() * 7;
+                positions[i*3+2] = (Math.random() - 0.5) * 18;
             }
-            particles.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-            const particleMat = new THREE.PointsMaterial({ color: 0xffaa77, size: 0.045, transparent: true, opacity: 0.4 });
-            scene.add(new THREE.Points(particles, particleMat));
+            particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particlesMat = new THREE.PointsMaterial({ color: 0xffaa77, size: 0.045, transparent: true, opacity: 0.4 });
+            scene.add(new THREE.Points(particlesGeo, particlesMat));
         }
 
         function createGrid() {
             const size = 0.78;
+            const spacing = 0.03;
             const startX = -4.4;
             const startZ = -4.4;
             
             for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
                 cells[row] = [];
                 for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
-                    const x = startX + col * (size + 0.03);
-                    const z = startZ + row * (size + 0.03);
+                    const x = startX + col * (size + spacing);
+                    const z = startZ + row * (size + spacing);
                     const box = new THREE.Mesh(
                         new THREE.BoxGeometry(size, 0.12, size),
                         new THREE.MeshStandardMaterial({ color: 0x3a3a55, metalness: 0.25, roughness: 0.5 })
@@ -557,7 +559,7 @@
             }
         }
 
-        function resetGrid() {
+        function resetGridVisual() {
             for (let i = 0; i < CONFIG.GRID_SIZE; i++) {
                 for (let j = 0; j < CONFIG.GRID_SIZE; j++) {
                     updateCell(i, j, 0);
@@ -566,6 +568,7 @@
         }
 
         function createCannons() {
+            // Left cannon
             const leftGroup = new THREE.Group();
             const leftBase = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 0.5, 24), 
                 new THREE.MeshStandardMaterial({ color: 0xcc5533, metalness: 0.7 }));
@@ -578,6 +581,7 @@
             leftGroup.position.set(-5.3, -0.7, 0.2);
             scene.add(leftGroup);
             
+            // Right cannon
             const rightGroup = new THREE.Group();
             const rightBase = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 0.5, 24), 
                 new THREE.MeshStandardMaterial({ color: 0x3355cc, metalness: 0.7 }));
@@ -594,16 +598,16 @@
             window.rightBarrel = rightBarrel;
         }
 
-        function addImpact(pos) {
+        function addImpactEffect(pos) {
             const ring = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), 
-                new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422 }));
+                new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422, emissiveIntensity: 0.7 }));
             ring.position.copy(pos);
             scene.add(ring);
             setTimeout(() => scene.remove(ring), 180);
         }
 
-        // ==================== Bomb Physics ====================
-        class BombPhys {
+        // ==================== BOMB PHYSICS ====================
+        class BombPhysics {
             constructor(pos, dir, power, player) {
                 this.pos = pos.clone();
                 const force = 5.5 + power / 18;
@@ -628,7 +632,7 @@
                     this.vel.x *= 0.98;
                     this.vel.z *= 0.98;
                     gameState.cameraShake = 0.18;
-                    addImpact(this.pos);
+                    addImpactEffect(this.pos);
                     if (Math.abs(this.vel.y) < 0.25) {
                         this.active = false;
                         return false;
@@ -650,7 +654,7 @@
                             if (gameState.grid[r] && gameState.grid[r][c] === 0) {
                                 gameState.grid[r][c] = this.player;
                                 updateCell(r, c, this.player);
-                                addImpact(new THREE.Vector3(cx, 0.1, cz));
+                                addImpactEffect(new THREE.Vector3(cx, 0.1, cz));
                             }
                         }
                     }
@@ -662,26 +666,26 @@
             if (gameState.bombActive || !gameState.active) return;
             
             const isLeft = gameState.currentPlayer === 1;
-            const start = isLeft ? new THREE.Vector3(-5.1, 0.25, 0.3) : new THREE.Vector3(5.1, 0.25, 0.3);
-            const dir = isLeft ? new THREE.Vector3(0.95, 0.35, 0) : new THREE.Vector3(-0.95, 0.35, 0);
+            const startPos = isLeft ? new THREE.Vector3(-5.1, 0.25, 0.3) : new THREE.Vector3(5.1, 0.25, 0.3);
+            const direction = isLeft ? new THREE.Vector3(0.95, 0.35, 0) : new THREE.Vector3(-0.95, 0.35, 0);
             
-            // Flash
+            // Flash effect
             const flash = new THREE.PointLight(isLeft ? 0xff6644 : 0x4488ff, 1.2, 6);
-            flash.position.copy(start);
+            flash.position.copy(startPos);
             scene.add(flash);
             setTimeout(() => scene.remove(flash), 100);
             
-            // Bomb
+            // Create bomb
             bombMesh = new THREE.Mesh(
                 new THREE.SphereGeometry(0.22, 24, 24),
-                new THREE.MeshStandardMaterial({ color: isLeft ? 0xff8866 : 0x6688ff, emissive: isLeft ? 0x552222 : 0x222255 })
+                new THREE.MeshStandardMaterial({ color: isLeft ? 0xff8866 : 0x6688ff, emissive: isLeft ? 0x552222 : 0x222255, emissiveIntensity: 0.6 })
             );
             bombMesh.castShadow = true;
-            bombMesh.position.copy(start);
+            bombMesh.position.copy(startPos);
             scene.add(bombMesh);
             
             gameState.bombActive = true;
-            bombPhysics = new BombPhys(start, dir, power, gameState.currentPlayer);
+            bombPhysics = new BombPhysics(startPos, direction, power, gameState.currentPlayer);
             
             function animateBomb() {
                 if (!bombPhysics || !bombPhysics.active) {
@@ -703,8 +707,11 @@
             if (gameState.currentPlayer === 1) gameState.p1Throws--;
             else gameState.p2Throws--;
             
-            if (gameState.p1Throws === 0 && gameState.p2Throws === 0) endGame();
-            else switchTurn();
+            if (gameState.p1Throws === 0 && gameState.p2Throws === 0) {
+                endGame();
+            } else {
+                switchTurn();
+            }
             saveGameState();
         }
 
@@ -747,33 +754,34 @@
         async function endGame() {
             gameState.active = false;
             if (timerInterval) clearInterval(timerInterval);
+            if (gameListener) gameListener();
             
-            let p1 = 0, p2 = 0;
+            let p1Score = 0, p2Score = 0;
             for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
                 for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
-                    if (gameState.grid[r]?.[c] === 1) p1++;
-                    if (gameState.grid[r]?.[c] === 2) p2++;
+                    if (gameState.grid[r]?.[c] === 1) p1Score++;
+                    if (gameState.grid[r]?.[c] === 2) p2Score++;
                 }
             }
             
             const isPlayer1 = gameState.roomData?.player1?.id === currentUser.id;
             let msg = '';
             
-            if (p1 > p2) {
+            if (p1Score > p2Score) {
                 if (isPlayer1) {
                     currentUser.balance += CONFIG.BET * CONFIG.WIN_MULT;
                     await saveUser();
-                    msg = `🎉 فزت! +$${(CONFIG.BET * CONFIG.WIN_MULT).toFixed(2)} (${p1}-${p2})`;
+                    msg = `🎉 فزت! +$${(CONFIG.BET * CONFIG.WIN_MULT).toFixed(2)} (${p1Score}-${p2Score})`;
                 } else {
-                    msg = `🔴 فاز اللاعب الأول (${p1} - ${p2})`;
+                    msg = `🔴 فاز اللاعب الأول (${p1Score} - ${p2Score})`;
                 }
-            } else if (p2 > p1) {
+            } else if (p2Score > p1Score) {
                 if (!isPlayer1) {
                     currentUser.balance += CONFIG.BET * CONFIG.WIN_MULT;
                     await saveUser();
-                    msg = `🎉 فزت! +$${(CONFIG.BET * CONFIG.WIN_MULT).toFixed(2)} (${p1}-${p2})`;
+                    msg = `🎉 فزت! +$${(CONFIG.BET * CONFIG.WIN_MULT).toFixed(2)} (${p1Score}-${p2Score})`;
                 } else {
-                    msg = `🔵 فاز اللاعب الثاني (${p1} - ${p2})`;
+                    msg = `🔵 فاز اللاعب الثاني (${p1Score} - ${p2Score})`;
                 }
             } else {
                 currentUser.balance += CONFIG.BET;
@@ -785,7 +793,9 @@
             document.getElementById('resultMessage').innerHTML = msg;
             document.getElementById('resultModal').classList.add('active');
             
-            await db.ref(`rooms/${gameState.roomId}`).remove();
+            if (gameState.roomId) {
+                await db.ref(`rooms/${gameState.roomId}`).remove();
+            }
             
             currentUser.inGame = false;
             currentUser.roomId = null;
@@ -794,8 +804,10 @@
             showLobby();
         }
 
-        // ==================== Room Functions ====================
+        // ==================== ROOM FUNCTIONS ====================
         async function createRoom() {
+            console.log('createRoom called');
+            
             if (currentUser.inGame) {
                 showToast('⚠️ أنت بالفعل في لعبة!', true);
                 return;
@@ -811,6 +823,8 @@
             
             try {
                 const roomId = Date.now().toString();
+                console.log('Creating room with ID:', roomId);
+                
                 const roomData = {
                     id: roomId,
                     player1: { id: currentUser.id, name: currentUser.name },
@@ -821,7 +835,7 @@
                 };
                 
                 await db.ref(`rooms/${roomId}`).set(roomData);
-                console.log('Room created:', roomId);
+                console.log('Room created successfully');
                 
                 currentUser.inGame = true;
                 currentUser.roomId = roomId;
@@ -831,8 +845,8 @@
                 enterWaitingRoom(roomId);
                 
             } catch (error) {
-                console.error('Create error:', error);
-                showToast('❌ فشل إنشاء الغرفة', true);
+                console.error('Create room error:', error);
+                showToast('❌ فشل إنشاء الغرفة: ' + error.message, true);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '➕ إنشاء غرفة جديدة';
@@ -840,6 +854,8 @@
         }
 
         async function joinRoom(roomId) {
+            console.log('joinRoom called:', roomId);
+            
             if (currentUser.inGame && currentUser.roomId !== roomId) {
                 showToast('⚠️ أنت بالفعل في لعبة!', true);
                 return;
@@ -860,8 +876,9 @@
                 return;
             }
             
-            // If creator
+            // If user is the creator
             if (room.player1?.id === currentUser.id) {
+                console.log('User is creator, entering waiting room');
                 currentUser.inGame = true;
                 currentUser.roomId = roomId;
                 await saveUser();
@@ -869,16 +886,18 @@
                 return;
             }
             
-            // If available
+            // If room is available
             if (!room.player2 && room.status === 'waiting') {
                 if (currentUser.balance < CONFIG.BET) {
                     showToast(`⚠️ رصيد غير كافي!`, true);
                     return;
                 }
                 
+                // Deduct bet
                 currentUser.balance -= CONFIG.BET;
                 await saveUser();
                 
+                // Update room
                 await db.ref(`rooms/${roomId}`).update({
                     player2: { id: currentUser.id, name: currentUser.name },
                     status: 'full'
@@ -896,6 +915,8 @@
         }
 
         function enterWaitingRoom(roomId) {
+            console.log('Entering waiting room for:', roomId);
+            
             document.getElementById('roomsGrid').style.display = 'none';
             document.getElementById('createRoomBtn').style.display = 'none';
             const waitingMsg = document.getElementById('waitingMessage');
@@ -904,9 +925,12 @@
             document.getElementById('activeGameBadge').classList.add('visible');
             document.getElementById('activeGameBadge').innerHTML = `🎮 غرفة: ${roomId.slice(-4)}`;
             
+            if (roomListener) roomListener();
+            
             const roomRef = db.ref(`rooms/${roomId}`);
-            roomRef.on('value', async (snap) => {
+            roomListener = roomRef.on('value', async (snap) => {
                 const room = snap.val();
+                console.log('Room update:', room?.status);
                 if (room && room.status === 'full') {
                     roomRef.off();
                     startGame(roomId, room);
@@ -919,12 +943,14 @@
         }
 
         async function startGame(roomId, room) {
+            console.log('Starting game for room:', roomId);
+            
             document.getElementById('waitingRoom').classList.add('hidden');
             document.getElementById('waitingMessage').classList.remove('active');
             document.getElementById('roomsGrid').style.display = 'grid';
             document.getElementById('createRoomBtn').style.display = 'block';
             
-            // Initialize game
+            // Initialize game state
             gameState = {
                 active: true,
                 roomId: roomId,
@@ -939,7 +965,7 @@
                 cameraShake: 0
             };
             
-            resetGrid();
+            resetGridVisual();
             document.getElementById('currentTurn').textContent = '🔴 دور اللاعب الأول';
             startTimer();
             document.getElementById('activeGameBadge').classList.add('visible');
@@ -961,8 +987,9 @@
                 document.getElementById('currentTurn').textContent = gameState.currentPlayer === 1 ? '🔴 دور اللاعب الأول' : '🔵 دور اللاعب الثاني';
             }
             
-            // Listen for updates
-            db.ref(`rooms/${roomId}/game`).on('value', (snap) => {
+            // Listen for game updates
+            if (gameListener) gameListener();
+            gameListener = db.ref(`rooms/${roomId}/game`).on('value', (snap) => {
                 const data = snap.val();
                 if (data && gameState.active && !gameState.bombActive) {
                     if (data.grid) {
@@ -984,6 +1011,8 @@
         }
 
         function showLobby() {
+            console.log('Showing lobby');
+            
             document.getElementById('waitingRoom').classList.remove('hidden');
             document.getElementById('roomsGrid').style.display = 'grid';
             document.getElementById('createRoomBtn').style.display = 'block';
@@ -997,6 +1026,11 @@
             gameState.active = false;
             if (timerInterval) clearInterval(timerInterval);
             
+            if (roomListener) roomListener();
+            if (gameListener) gameListener();
+            roomListener = null;
+            gameListener = null;
+            
             camera.position.set(7, 5.5, 11);
             camera.lookAt(0, 0, 0);
             
@@ -1004,12 +1038,19 @@
         }
 
         async function exitGame() {
+            console.log('Exiting game');
+            
             if (timerInterval) clearInterval(timerInterval);
             gameState.active = false;
             
             if (gameState.roomId) {
                 await db.ref(`rooms/${gameState.roomId}`).remove();
             }
+            
+            if (roomListener) roomListener();
+            if (gameListener) gameListener();
+            roomListener = null;
+            gameListener = null;
             
             currentUser.inGame = false;
             currentUser.roomId = null;
@@ -1024,6 +1065,8 @@
         }
 
         function loadRooms() {
+            console.log('Loading rooms');
+            
             const roomsRef = db.ref('rooms');
             roomsRef.off('value');
             
@@ -1036,6 +1079,8 @@
                     r.status === 'waiting' && 
                     r.player1?.id !== currentUser.id
                 ).slice(0, 12);
+                
+                console.log('Rooms found:', list.length);
                 
                 if (list.length === 0) {
                     grid.innerHTML = '<div style="grid-column:1/-1;color:#888;text-align:center;padding:30px;">✨ لا توجد غرف متاحة<br>أنشئ غرفة جديدة</div>';
@@ -1056,11 +1101,11 @@
             });
         }
 
-        // ==================== Drag Events ====================
-        function setupDrag() {
+        // ==================== DRAG EVENTS ====================
+        function setupDragEvents() {
             const canvas = renderer.domElement;
             canvas.style.cursor = 'grab';
-            let drag = false;
+            let dragging = false;
             let startX = 0, startY = 0;
             
             canvas.addEventListener('mousedown', (e) => {
@@ -1068,10 +1113,10 @@
                 const isPlayer1 = gameState.roomData?.player1?.id === currentUser.id;
                 const localPlayer = isPlayer1 ? 1 : 2;
                 if (gameState.currentPlayer !== localPlayer) {
-                    showToast('⏳ ليس دورك!', true);
+                    showToast('⏳ ليس دورك الآن!', true);
                     return;
                 }
-                drag = true;
+                dragging = true;
                 startX = e.clientX;
                 startY = e.clientY;
                 gameState.power = 0;
@@ -1080,7 +1125,7 @@
             });
             
             canvas.addEventListener('mousemove', (e) => {
-                if (!drag || !gameState.active) return;
+                if (!dragging || !gameState.active) return;
                 const dx = startX - e.clientX;
                 const dy = startY - e.clientY;
                 const dist = Math.min(100, Math.sqrt(dx*dx + dy*dy) / 1.8);
@@ -1092,8 +1137,8 @@
             });
             
             canvas.addEventListener('mouseup', () => {
-                if (!drag) { canvas.style.cursor = 'grab'; return; }
-                drag = false;
+                if (!dragging) { canvas.style.cursor = 'grab'; return; }
+                dragging = false;
                 canvas.style.cursor = 'grab';
                 if (gameState.power > 8) shoot(gameState.power);
                 if (window.leftBarrel) window.leftBarrel.rotation.z = 0;
@@ -1118,7 +1163,7 @@
             });
         }
 
-        // ==================== Animation ====================
+        // ==================== ANIMATION ====================
         function animate() {
             requestAnimationFrame(animate);
             if (gameState.cameraShake > 0 && !gameState.bombActive) {
@@ -1129,17 +1174,21 @@
             renderer.render(scene, camera);
         }
 
-        // ==================== Init ====================
+        // ==================== INIT ====================
         async function init() {
+            console.log('Initializing game...');
+            
             init3D();
-            setupDrag();
+            setupDragEvents();
             animate();
             
             await loadUser();
+            console.log('User loaded:', currentUser);
             
             if (currentUser.inGame && currentUser.roomId) {
                 const roomSnap = await db.ref(`rooms/${currentUser.roomId}`).once('value');
                 if (roomSnap.exists()) {
+                    console.log('Resuming game in room:', currentUser.roomId);
                     joinRoom(currentUser.roomId);
                 } else {
                     currentUser.inGame = false;
