@@ -39,7 +39,6 @@
             border: 1px solid rgba(255,215,0,0.2);
         }
 
-        /* ========== غرفة الانتظار ========== */
         .waiting-room {
             position: fixed;
             top: 0;
@@ -124,7 +123,6 @@
             50% { opacity: 0.6; }
         }
 
-        /* ========== لوحة اللعبة ========== */
         .game-board {
             display: none;
         }
@@ -405,7 +403,7 @@
             <div class="waiting-card">
                 <div class="waiting-title">🎮 غرف اللعب</div>
                 <div class="rooms-list" id="roomsList"></div>
-                <button class="create-btn" id="createBtn">➕ إنشاء غرفة جديدة ($10)</button>
+                <button class="create-btn" id="createBtn">➕ إنشاء غرفة جديدة</button>
                 <div class="waiting-text" id="waitingText">
                     ⏳ انتظار لاعب آخر...<br>
                     <span id="roomIdDisplay"></span>
@@ -461,24 +459,27 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-    // ==================== GET USER DATA FROM URL ====================
+    // ==================== GET USER DATA ====================
     const urlParams = new URLSearchParams(window.location.search);
     const currentUser = {
         id: urlParams.get('user_id'),
+        email: urlParams.get('user_email'),
         name: urlParams.get('user_name'),
         balance: parseFloat(urlParams.get('balance')),
-        isAdmin: urlParams.get('is_admin') === 'true'
+        isAdmin: urlParams.get('is_admin') === 'true',
+        gameBet: parseFloat(urlParams.get('game_bet')) || 10
     };
 
-    // تحديث الرصيد في الواجهة
+    const WIN_AMOUNT = currentUser.gameBet * 1.8;
+
     document.getElementById('balance').textContent = currentUser.balance;
 
-    // دالة إرسال تحديث الرصيد للموقع الرئيسي
     function updateParentBalance(newBalance) {
         window.parent.postMessage({
             type: 'UPDATE_BALANCE',
             balance: newBalance
         }, '*');
+        document.getElementById('balance').textContent = newBalance;
     }
 
     // ==================== SOUND SYSTEM ====================
@@ -537,8 +538,8 @@
     
     // ==================== CONFIG ====================
     const CONFIG = {
-        BET: 10,
-        WIN: 18,
+        BET: currentUser.gameBet,
+        WIN: WIN_AMOUNT,
         GRID: 10,
         THROW_TIME: 15,
         THROWS: 3,
@@ -567,7 +568,6 @@
         dragStart: { x: 0, y: 0 }
     };
     
-    // ==================== DOM ELEMENTS ====================
     let canvas, ctx;
     let animationId = null;
     
@@ -844,7 +844,6 @@
             const newBalance = currentUser.balance + winnings;
             currentUser.balance = newBalance;
             updateParentBalance(newBalance);
-            document.getElementById('balance').textContent = newBalance;
         }
         
         playGameOver();
@@ -873,11 +872,9 @@
         try {
             const roomId = 'r_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
             
-            // خصم الرهان
             const newBalance = currentUser.balance - CONFIG.BET;
             currentUser.balance = newBalance;
             updateParentBalance(newBalance);
-            document.getElementById('balance').textContent = newBalance;
             
             const roomData = {
                 id: roomId,
@@ -889,7 +886,9 @@
                 currentPlayer: 1,
                 p1Throws: CONFIG.THROWS,
                 p2Throws: CONFIG.THROWS,
-                status: 'waiting'
+                status: 'waiting',
+                bet: CONFIG.BET,
+                createdAt: Date.now()
             };
             
             await db.ref(`rooms/${roomId}`).set(roomData);
@@ -911,7 +910,6 @@
             const refundBalance = currentUser.balance + CONFIG.BET;
             currentUser.balance = refundBalance;
             updateParentBalance(refundBalance);
-            document.getElementById('balance').textContent = refundBalance;
         } finally {
             btn.disabled = false;
         }
@@ -931,11 +929,9 @@
             return;
         }
         
-        // خصم الرهان
         const newBalance = currentUser.balance - CONFIG.BET;
         currentUser.balance = newBalance;
         updateParentBalance(newBalance);
-        document.getElementById('balance').textContent = newBalance;
         
         await db.ref(`rooms/${roomId}`).update({
             player2: currentUser.id,
@@ -1131,7 +1127,7 @@
             btn.innerHTML = `
                 <span>🏠 غرفة ${room.id.slice(-6)}</span>
                 <span>👤 ${room.creatorName}</span>
-                <span>💰 $${CONFIG.BET}</span>
+                <span>💰 $${room.bet || CONFIG.BET}</span>
             `;
             btn.onclick = () => joinRoom(room.id);
             listDiv.appendChild(btn);
@@ -1152,7 +1148,6 @@
         loadRooms();
     }
     
-    // ==================== INIT ====================
     async function init() {
         createGrid();
         loadRooms();
