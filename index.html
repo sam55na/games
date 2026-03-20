@@ -15,6 +15,7 @@
         body {
             overflow: hidden;
             font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
+            background: #050510;
         }
 
         /* واجهة المستخدم */
@@ -28,7 +29,7 @@
         }
 
         .game-header {
-            background: linear-gradient(135deg, rgba(0,0,0,0.85), rgba(0,0,0,0.7));
+            background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(0,0,0,0.7));
             backdrop-filter: blur(12px);
             padding: 12px 20px;
             display: flex;
@@ -76,7 +77,6 @@
             z-index: 100;
             pointer-events: none;
             white-space: nowrap;
-            font-family: monospace;
         }
 
         .throw-timer {
@@ -154,7 +154,7 @@
             padding: 35px;
             text-align: center;
             border: 2px solid #ffd700;
-            max-width: 700px;
+            max-width: 750px;
             width: 90%;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
@@ -171,12 +171,13 @@
 
         .rooms-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 12px;
             margin-bottom: 25px;
             max-height: 380px;
             overflow-y: auto;
             padding: 5px;
+            min-height: 200px;
         }
 
         .room-card {
@@ -206,7 +207,6 @@
         }
 
         .room-status.available { color: #2ecc71; }
-        .room-status.waiting { color: #f39c12; }
 
         .room-creator {
             font-size: 0.65rem;
@@ -256,17 +256,17 @@
             display: block;
         }
 
-        .countdown-display {
-            font-size: 2.5rem;
+        .waiting-message {
+            font-size: 1.5rem;
             color: #ffd700;
-            margin: 15px 0;
+            margin: 20px 0;
             display: none;
             font-weight: bold;
         }
 
-        .countdown-display.active {
+        .waiting-message.active {
             display: block;
-            animation: pulse 0.6s infinite;
+            animation: pulse 0.8s infinite;
         }
 
         @keyframes pulse {
@@ -371,7 +371,7 @@
             .throw-timer { font-size: 1rem; top: 65px; padding: 5px 12px; }
             .power-bar-container { width: 220px; bottom: 15px; }
             .waiting-title { font-size: 1.4rem; }
-            .rooms-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .rooms-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
         }
     </style>
 </head>
@@ -390,17 +390,20 @@
         <div class="power-bar" id="powerBar"></div>
     </div>
     <div class="active-game-badge" id="activeGameBadge">🎮 في لعبة نشطة</div>
-    <button class="back-btn" id="backBtn" onclick="window.backToRooms?.()">🏠 الخروج للغرف</button>
+    <button class="back-btn" id="backBtn" onclick="window.exitToLobby?.()">🏠 الخروج للغرف</button>
 
     <!-- غرفة الانتظار -->
     <div class="waiting-room" id="waitingRoom">
         <div class="waiting-content">
             <div class="waiting-title">🎮 غرف اللعب</div>
             <div class="rooms-grid" id="roomsGrid">
-                <div style="grid-column:1/-1;text-align:center;color:#888;padding:20px;">جاري تحميل الغرف...</div>
+                <div style="grid-column:1/-1;text-align:center;color:#888;padding:30px;">🔄 جاري تحميل الغرف...</div>
             </div>
-            <button class="create-room-btn" id="createRoomBtn" onclick="window.createRoom?.()">➕ إنشاء غرفة جديدة</button>
-            <div class="countdown-display" id="countdownDisplay"></div>
+            <button class="create-room-btn" id="createRoomBtn">➕ إنشاء غرفة جديدة</button>
+            <div class="waiting-message" id="waitingMessage">
+                ⏳ انتظار لاعب آخر...<br>
+                <span style="font-size:0.9rem; color:#aaa;" id="waitingRoomId"></span>
+            </div>
         </div>
     </div>
 
@@ -409,24 +412,25 @@
         <div class="result-content">
             <div class="result-title" id="resultTitle"></div>
             <div class="result-message" id="resultMessage"></div>
-            <button class="result-btn" onclick="window.closeResult?.()">موافق</button>
+            <button class="result-btn" onclick="window.closeResultModal?.()">موافق</button>
         </div>
     </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script type="importmap">
         {
             "imports": {
-                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
             }
         }
     </script>
 
     <script type="module">
         import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        // ==================== Firebase ====================
+        // ==================== Firebase Configuration ====================
         const firebaseConfig = {
             apiKey: "AIzaSyCvPo4HlsNhyf1WBmTzIr6CdR1c2lQ5sHU",
             authDomain: "boomb-fa3e7.firebaseapp.com",
@@ -437,10 +441,11 @@
             appId: "1:499624996530:web:235f71e450845c748523ab"
         };
 
+        // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database(app);
 
-        // ==================== إعدادات اللعبة ====================
+        // ==================== Game Configuration ====================
         const CONFIG = {
             BET_AMOUNT: 10,
             GRID_SIZE: 10,
@@ -450,18 +455,19 @@
             ROOM_EXPIRE_TIME: 120000
         };
 
-        // ==================== بيانات المستخدم ====================
+        // ==================== User Data ====================
         let currentUser = {
             id: 'user_' + Math.random().toString(36).substr(2, 8),
             name: 'زائر_' + Math.floor(Math.random() * 1000),
             balance: 100,
-            activeRoomId: null
+            activeRoomId: null,
+            inGame: false
         };
 
-        // ==================== حالة اللعبة ====================
+        // ==================== Game State ====================
         let gameState = {
             currentRoom: null,
-            gridColors: Array(CONFIG.GRID_SIZE).fill().map(() => Array(CONFIG.GRID_SIZE).fill(0)),
+            gridColors: [],
             currentPlayer: 1,
             player1Throws: CONFIG.THROWS_PER_PLAYER,
             player2Throws: CONFIG.THROWS_PER_PLAYER,
@@ -472,18 +478,20 @@
             bombActive: false,
             cameraShake: 0,
             followCamera: false,
-            roomListeners: []
+            roomRef: null,
+            gameRef: null
         };
 
-        // ==================== متغيرات Three.js ====================
+        // ==================== Three.js Variables ====================
         let scene, camera, renderer;
         let cells = [];
         let leftCannon, rightCannon, leftBarrel, rightBarrel;
         let bombMesh = null;
+        let currentPhysics = null;
         let timerInterval = null;
-        let roomsListener = null;
+        let animationId = null;
 
-        // ==================== دوال مساعدة ====================
+        // ==================== Helper Functions ====================
         function showMessage(msg, isError = false) {
             const div = document.createElement('div');
             div.style.cssText = `
@@ -510,11 +518,23 @@
             document.getElementById('mainBalance').textContent = currentUser.balance;
         }
 
-        // ==================== Three.js تهيئة المشهد ====================
+        async function loadUserFromDB() {
+            const snap = await database.ref(`users/${currentUser.id}`).once('value');
+            if (snap.exists()) {
+                const data = snap.val();
+                currentUser.balance = data.balance;
+                currentUser.name = data.name;
+                currentUser.activeRoomId = data.activeRoomId;
+            }
+            document.getElementById('mainBalance').textContent = currentUser.balance;
+            return currentUser.activeRoomId;
+        }
+
+        // ==================== Three.js 3D Setup ====================
         function init3D() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x050514);
-            scene.fog = new THREE.FogExp2(0x050514, 0.01);
+            scene.fog = new THREE.FogExp2(0x050514, 0.008);
 
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(7, 5.5, 11);
@@ -525,7 +545,7 @@
             renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            // إضاءة
+            // Lighting
             const ambient = new THREE.AmbientLight(0x404060);
             scene.add(ambient);
             const mainLight = new THREE.DirectionalLight(0xfff5e0, 1);
@@ -539,20 +559,22 @@
             const backLight = new THREE.PointLight(0xffaa66, 0.4);
             backLight.position.set(0, 3, -5);
             scene.add(backLight);
+            const rimLight = new THREE.PointLight(0xffaa88, 0.5);
+            rimLight.position.set(2, 3, -4);
+            scene.add(rimLight);
 
-            // أرضية شبكية
+            // Grid ground
             const gridHelper = new THREE.GridHelper(18, 20, 0xffaa55, 0x3399ff);
             gridHelper.position.y = -1.4;
             gridHelper.material.transparent = true;
             gridHelper.material.opacity = 0.3;
             scene.add(gridHelper);
 
-            // إنشاء الشبكة
             create3DGrid();
             createCannons();
 
-            // جزيئات
-            const particleCount = 600;
+            // Particles
+            const particleCount = 800;
             const particlesGeo = new THREE.BufferGeometry();
             const positions = new Float32Array(particleCount * 3);
             for (let i = 0; i < particleCount; i++) {
@@ -592,7 +614,6 @@
                     scene.add(cube);
                     cells[row][col] = cube;
                     
-                    // حواف ذهبية
                     const edges = new THREE.EdgesGeometry(geometry);
                     const wire = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffcc66 }));
                     cube.add(wire);
@@ -624,27 +645,39 @@
             }
         }
 
+        function resetAllCells() {
+            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                    updateCellColor(row, col, 0);
+                }
+            }
+        }
+
         function createCannons() {
-            // المدفع الأيسر
+            // Left Cannon (Red)
             leftCannon = new THREE.Group();
-            const leftBase = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 0.5, 24), new THREE.MeshStandardMaterial({ color: 0xcc5533, metalness: 0.7, roughness: 0.3 }));
+            const leftBase = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 0.5, 24), 
+                new THREE.MeshStandardMaterial({ color: 0xcc5533, metalness: 0.7, roughness: 0.3 }));
             leftBase.castShadow = true;
             leftBase.position.y = 0.2;
             leftCannon.add(leftBase);
-            leftBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 1.1, 16), new THREE.MeshStandardMaterial({ color: 0xff6644, metalness: 0.8 }));
+            leftBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 1.1, 16), 
+                new THREE.MeshStandardMaterial({ color: 0xff6644, metalness: 0.8 }));
             leftBarrel.castShadow = true;
             leftBarrel.position.set(0.6, 0.3, 0);
             leftCannon.add(leftBarrel);
             leftCannon.position.set(-5.3, -0.7, 0.2);
             scene.add(leftCannon);
             
-            // المدفع الأيمن
+            // Right Cannon (Blue)
             rightCannon = new THREE.Group();
-            const rightBase = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 0.5, 24), new THREE.MeshStandardMaterial({ color: 0x3355cc, metalness: 0.7, roughness: 0.3 }));
+            const rightBase = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 0.5, 24), 
+                new THREE.MeshStandardMaterial({ color: 0x3355cc, metalness: 0.7, roughness: 0.3 }));
             rightBase.castShadow = true;
             rightBase.position.y = 0.2;
             rightCannon.add(rightBase);
-            rightBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 1.1, 16), new THREE.MeshStandardMaterial({ color: 0x4488ff, metalness: 0.8 }));
+            rightBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 1.1, 16), 
+                new THREE.MeshStandardMaterial({ color: 0x4488ff, metalness: 0.8 }));
             rightBarrel.castShadow = true;
             rightBarrel.position.set(-0.6, 0.3, 0);
             rightCannon.add(rightBarrel);
@@ -653,13 +686,14 @@
         }
 
         function addImpactEffect(pos) {
-            const ring = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422, emissiveIntensity: 0.7 }));
+            const ring = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), 
+                new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4422, emissiveIntensity: 0.7 }));
             ring.position.copy(pos);
             scene.add(ring);
             setTimeout(() => scene.remove(ring), 180);
         }
 
-        // ==================== فيزياء القنبلة ====================
+        // ==================== Bomb Physics ====================
         class BombPhysics {
             constructor(startPos, direction, power, player) {
                 this.pos = startPos.clone();
@@ -705,7 +739,7 @@
                         const cx = startX + col * cellSize;
                         const cz = startZ + row * cellSize;
                         if (Math.abs(this.pos.x - cx) < 0.45 && Math.abs(this.pos.z - cz) < 0.45 && this.pos.y < 0.4) {
-                            if (gameState.gridColors[row][col] === 0) {
+                            if (gameState.gridColors[row] && gameState.gridColors[row][col] === 0) {
                                 gameState.gridColors[row][col] = this.player;
                                 updateCellColor(row, col, this.player);
                                 addImpactEffect(new THREE.Vector3(cx, 0.1, cz));
@@ -715,9 +749,7 @@
                 }
             }
         }
-        
-        let currentPhysics = null;
-        
+
         function shootBomb(power) {
             if (gameState.bombActive || !gameState.gameActive) return;
             
@@ -725,15 +757,19 @@
             const startPos = isLeft ? new THREE.Vector3(-5.1, 0.25, 0.3) : new THREE.Vector3(5.1, 0.25, 0.3);
             const direction = isLeft ? new THREE.Vector3(0.95, 0.35, 0) : new THREE.Vector3(-0.95, 0.35, 0);
             
-            // وميض المدفع
+            // Muzzle flash
             const flash = new THREE.PointLight(isLeft ? 0xff6644 : 0x4488ff, 1.2, 6);
             flash.position.copy(startPos);
             scene.add(flash);
             setTimeout(() => scene.remove(flash), 100);
             
-            // القنبلة
+            // Create bomb
             const bombGeo = new THREE.SphereGeometry(0.22, 24, 24);
-            const bombMat = new THREE.MeshStandardMaterial({ color: isLeft ? 0xff8866 : 0x6688ff, emissive: isLeft ? 0x552222 : 0x222255, emissiveIntensity: 0.6 });
+            const bombMat = new THREE.MeshStandardMaterial({ 
+                color: isLeft ? 0xff8866 : 0x6688ff, 
+                emissive: isLeft ? 0x552222 : 0x222255, 
+                emissiveIntensity: 0.6 
+            });
             bombMesh = new THREE.Mesh(bombGeo, bombMat);
             bombMesh.castShadow = true;
             bombMesh.position.copy(startPos);
@@ -765,22 +801,25 @@
             }
             requestAnimationFrame(animateBomb);
         }
-        
+
         function afterShoot() {
             if (gameState.currentPlayer === 1) gameState.player1Throws--;
             else gameState.player2Throws--;
             
-            if (gameState.player1Throws === 0 && gameState.player2Throws === 0) endGame();
-            else switchPlayer();
+            if (gameState.player1Throws === 0 && gameState.player2Throws === 0) {
+                endGame();
+            } else {
+                switchPlayer();
+            }
             syncGameToFirebase();
         }
-        
+
         function switchPlayer() {
             gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
             document.getElementById('currentTurn').textContent = gameState.currentPlayer === 1 ? '🔴 دور اللاعب الأول' : '🔵 دور اللاعب الثاني';
             startThrowTimer();
         }
-        
+
         function startThrowTimer() {
             if (timerInterval) clearInterval(timerInterval);
             let timeLeft = CONFIG.THROW_TIME;
@@ -799,10 +838,10 @@
                 }
             }, 1000);
         }
-        
+
         function syncGameToFirebase() {
-            if (!gameState.currentRoom) return;
-            database.ref(`rooms/${gameState.currentRoom.id}/game`).set({
+            if (!gameState.currentRoom || !gameState.gameRef) return;
+            gameState.gameRef.set({
                 gridColors: gameState.gridColors,
                 currentPlayer: gameState.currentPlayer,
                 player1Throws: gameState.player1Throws,
@@ -810,25 +849,39 @@
                 timestamp: Date.now()
             });
         }
-        
+
         async function endGame() {
             gameState.gameActive = false;
             if (timerInterval) clearInterval(timerInterval);
             
             let p1Score = 0, p2Score = 0;
-            for (let r = 0; r < CONFIG.GRID_SIZE; r++)
-                for (let c = 0; c < CONFIG.GRID_SIZE; c++)
-                    if (gameState.gridColors[r][c] === 1) p1Score++;
-                    else if (gameState.gridColors[r][c] === 2) p2Score++;
+            for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                    if (gameState.gridColors[r]?.[c] === 1) p1Score++;
+                    else if (gameState.gridColors[r]?.[c] === 2) p2Score++;
+                }
+            }
             
-            const localPlayer = (gameState.currentRoom?.player1?.id === currentUser.id) ? 1 : (gameState.currentRoom?.player2?.id === currentUser.id) ? 2 : 0;
+            const localPlayer = (gameState.currentRoom?.player1?.id === currentUser.id) ? 1 : 
+                                (gameState.currentRoom?.player2?.id === currentUser.id) ? 2 : 0;
             let msg = '';
+            
             if (p1Score > p2Score) {
-                if (localPlayer === 1) { currentUser.balance += CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER; await updateBalanceInDB(); msg = `🎉 فزت! +$${(CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER).toFixed(2)} (${p1Score}-${p2Score})`; }
-                else msg = `🔴 فاز اللاعب الأول (${p1Score} - ${p2Score})`;
+                if (localPlayer === 1) {
+                    currentUser.balance += CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER;
+                    await updateBalanceInDB();
+                    msg = `🎉 فزت! +$${(CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER).toFixed(2)} (${p1Score}-${p2Score})`;
+                } else {
+                    msg = `🔴 فاز اللاعب الأول (${p1Score} - ${p2Score})`;
+                }
             } else if (p2Score > p1Score) {
-                if (localPlayer === 2) { currentUser.balance += CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER; await updateBalanceInDB(); msg = `🎉 فزت! +$${(CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER).toFixed(2)} (${p1Score}-${p2Score})`; }
-                else msg = `🔵 فاز اللاعب الثاني (${p1Score} - ${p2Score})`;
+                if (localPlayer === 2) {
+                    currentUser.balance += CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER;
+                    await updateBalanceInDB();
+                    msg = `🎉 فزت! +$${(CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER).toFixed(2)} (${p1Score}-${p2Score})`;
+                } else {
+                    msg = `🔵 فاز اللاعب الثاني (${p1Score} - ${p2Score})`;
+                }
             } else {
                 currentUser.balance += CONFIG.BET_AMOUNT;
                 await updateBalanceInDB();
@@ -839,205 +892,333 @@
             document.getElementById('resultMessage').innerHTML = msg;
             document.getElementById('resultModal').classList.add('active');
             
-            if (gameState.currentRoom) {
-                await database.ref(`rooms/${gameState.currentRoom.id}`).update({ status: 'finished' });
-                setTimeout(() => database.ref(`rooms/${gameState.currentRoom.id}`).remove(), 4000);
+            // Clean up room
+            if (gameState.roomRef) {
+                await gameState.roomRef.update({ status: 'finished' });
+                setTimeout(() => gameState.roomRef.remove(), 3000);
             }
+            
+            if (gameState.gameRef) gameState.gameRef.off();
+            
             currentUser.activeRoomId = null;
+            currentUser.inGame = false;
             await updateBalanceInDB();
-            gameState.roomListeners.forEach(fn => fn());
-            gameState.roomListeners = [];
+            
             gameState.currentRoom = null;
+            gameState.roomRef = null;
+            gameState.gameRef = null;
+            
             document.getElementById('activeGameBadge').classList.remove('visible');
             camera.position.set(7, 5.5, 11);
             camera.lookAt(0, 0, 0);
+            
+            // Return to lobby
+            showLobby();
         }
-        
-        // ==================== دوال الغرف ====================
+
+        // ==================== Room Functions ====================
         async function createRoom() {
-            if (currentUser.activeRoomId) { showMessage('⚠️ لديك غرفة نشطة!', true); return; }
-            if (currentUser.balance < CONFIG.BET_AMOUNT) { showMessage(`⚠️ رصيدك غير كافي! تحتاج $${CONFIG.BET_AMOUNT}`, true); return; }
+            if (currentUser.inGame) {
+                showMessage('⚠️ أنت بالفعل في لعبة!', true);
+                return;
+            }
+            if (currentUser.balance < CONFIG.BET_AMOUNT) {
+                showMessage(`⚠️ رصيدك غير كافي! تحتاج $${CONFIG.BET_AMOUNT}`, true);
+                return;
+            }
             
             const btn = document.getElementById('createRoomBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="loading-spinner"></span> جاري الإنشاء...';
+            
             try {
                 const roomId = Date.now().toString();
-                await database.ref(`rooms/${roomId}`).set({
-                    id: roomId, player1: { id: currentUser.id, name: currentUser.name }, player2: null,
-                    status: 'waiting', bet: CONFIG.BET_AMOUNT, createdAt: Date.now(), expiresAt: Date.now() + CONFIG.ROOM_EXPIRE_TIME
-                });
+                const roomData = {
+                    id: roomId,
+                    player1: { id: currentUser.id, name: currentUser.name },
+                    player2: null,
+                    status: 'waiting',
+                    bet: CONFIG.BET_AMOUNT,
+                    createdAt: Date.now(),
+                    expiresAt: Date.now() + CONFIG.ROOM_EXPIRE_TIME
+                };
+                
+                await database.ref(`rooms/${roomId}`).set(roomData);
+                
                 currentUser.activeRoomId = roomId;
+                currentUser.inGame = true;
                 await updateBalanceInDB();
-                joinRoom(roomId);
-            } catch(e) { showMessage('❌ فشل إنشاء الغرفة', true); }
-            finally { btn.disabled = false; btn.innerHTML = '➕ إنشاء غرفة جديدة'; }
+                
+                showMessage('✅ تم إنشاء الغرفة! انتظر لاعب آخر...');
+                await joinRoom(roomId);
+                
+            } catch (error) {
+                console.error('Create room error:', error);
+                showMessage('❌ فشل إنشاء الغرفة', true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '➕ إنشاء غرفة جديدة';
+            }
         }
-        
+
         async function joinRoom(roomId) {
-            if (currentUser.activeRoomId && currentUser.activeRoomId !== roomId) { showMessage('⚠️ لديك غرفة نشطة!', true); return; }
-            const snap = await database.ref(`rooms/${roomId}`).once('value');
-            const room = snap.val();
-            if (!room) { showMessage('❌ الغرفة غير موجودة', true); return; }
-            if (room.status === 'finished') { showMessage('❌ انتهت الغرفة', true); loadRooms(); return; }
-            
-            if (room.player1?.id === currentUser.id) {
-                currentUser.activeRoomId = roomId;
-                await updateBalanceInDB();
-                gameState.currentRoom = room;
-                startWaiting(roomId);
+            if (currentUser.inGame && currentUser.activeRoomId !== roomId) {
+                showMessage('⚠️ أنت بالفعل في غرفة أخرى!', true);
                 return;
             }
+            
+            const roomSnap = await database.ref(`rooms/${roomId}`).once('value');
+            const room = roomSnap.val();
+            
+            if (!room) {
+                showMessage('❌ الغرفة غير موجودة', true);
+                loadRooms();
+                return;
+            }
+            
+            if (room.status === 'finished') {
+                showMessage('❌ انتهت هذه الغرفة', true);
+                loadRooms();
+                return;
+            }
+            
+            // If user is the creator
+            if (room.player1?.id === currentUser.id) {
+                currentUser.activeRoomId = roomId;
+                currentUser.inGame = true;
+                await updateBalanceInDB();
+                gameState.currentRoom = room;
+                startWaitingMode(roomId);
+                return;
+            }
+            
+            // If room is available for joining
             if (!room.player2 && room.status === 'waiting') {
-                if (currentUser.balance < CONFIG.BET_AMOUNT) { showMessage(`⚠️ رصيد غير كافي!`, true); return; }
+                if (currentUser.balance < CONFIG.BET_AMOUNT) {
+                    showMessage(`⚠️ رصيد غير كافي! تحتاج $${CONFIG.BET_AMOUNT}`, true);
+                    return;
+                }
+                
+                // Deduct bet
                 currentUser.balance -= CONFIG.BET_AMOUNT;
                 await updateBalanceInDB();
-                await database.ref(`rooms/${roomId}`).update({ player2: { id: currentUser.id, name: currentUser.name }, status: 'full', startTime: Date.now() });
+                
+                // Update room
+                await database.ref(`rooms/${roomId}`).update({
+                    player2: { id: currentUser.id, name: currentUser.name },
+                    status: 'full',
+                    startTime: Date.now()
+                });
+                
                 currentUser.activeRoomId = roomId;
+                currentUser.inGame = true;
                 await updateBalanceInDB();
-                gameState.currentRoom = { ...room, player2: { id: currentUser.id, name: currentUser.name }, status: 'full' };
+                
+                const updatedRoom = { ...room, player2: { id: currentUser.id, name: currentUser.name }, status: 'full' };
+                gameState.currentRoom = updatedRoom;
                 startGame(roomId);
-            } else showMessage('❌ الغرفة ممتلئة', true);
+            } else {
+                showMessage('❌ الغرفة ممتلئة', true);
+            }
         }
-        
-        function startWaiting(roomId) {
-            document.getElementById('waitingRoom').classList.remove('hidden');
+
+        function startWaitingMode(roomId) {
+            // Hide rooms grid, show waiting message
             document.getElementById('roomsGrid').style.display = 'none';
-            const cd = document.getElementById('countdownDisplay');
-            cd.classList.add('active');
-            cd.innerHTML = '⏳ انتظار لاعب آخر...<br><span style="font-size:0.8rem;">غرفة: ' + roomId.slice(-4) + '</span>';
+            document.getElementById('createRoomBtn').style.display = 'none';
+            const waitingMsg = document.getElementById('waitingMessage');
+            waitingMsg.classList.add('active');
+            document.getElementById('waitingRoomId').textContent = `غرفة: ${roomId.slice(-4)}`;
             document.getElementById('activeGameBadge').classList.add('visible');
-            document.getElementById('activeGameBadge').innerHTML = '🎮 غرفة: ' + roomId.slice(-4);
+            document.getElementById('activeGameBadge').innerHTML = `🎮 غرفة: ${roomId.slice(-4)}`;
             
-            const ref = database.ref(`rooms/${roomId}`);
-            const listener = ref.on('value', (snap) => {
-                const r = snap.val();
-                if (r && r.status === 'full') {
-                    ref.off();
-                    gameState.currentRoom = r;
+            // Listen for player joining
+            const roomRef = database.ref(`rooms/${roomId}`);
+            gameState.roomRef = roomRef;
+            
+            const listener = roomRef.on('value', async (snap) => {
+                const room = snap.val();
+                if (room && room.status === 'full') {
+                    roomRef.off('value', listener);
+                    gameState.currentRoom = room;
                     startGame(roomId);
-                } else if (!r) { ref.off(); backToRooms(); }
+                } else if (!room) {
+                    roomRef.off('value', listener);
+                    showMessage('❌ تم إلغاء الغرفة', true);
+                    exitToLobby();
+                }
             });
-            gameState.roomListeners.push(() => ref.off());
         }
-        
+
         async function startGame(roomId) {
+            // Hide waiting room
             document.getElementById('waitingRoom').classList.add('hidden');
-            document.getElementById('countdownDisplay').classList.remove('active');
+            document.getElementById('waitingMessage').classList.remove('active');
             
+            // Initialize game state
             gameState.gridColors = Array(CONFIG.GRID_SIZE).fill().map(() => Array(CONFIG.GRID_SIZE).fill(0));
             gameState.currentPlayer = 1;
             gameState.player1Throws = CONFIG.THROWS_PER_PLAYER;
             gameState.player2Throws = CONFIG.THROWS_PER_PLAYER;
             gameState.gameActive = true;
             
-            for (let i = 0; i < CONFIG.GRID_SIZE; i++)
-                for (let j = 0; j < CONFIG.GRID_SIZE; j++)
-                    updateCellColor(i, j, 0);
+            // Reset visual grid
+            resetAllCells();
             
             document.getElementById('currentTurn').textContent = '🔴 دور اللاعب الأول';
             startThrowTimer();
             document.getElementById('activeGameBadge').classList.add('visible');
             document.getElementById('activeGameBadge').innerHTML = '🎮 جولة نشطة';
             
-            // استعادة الحالة السابقة
-            const saved = await database.ref(`rooms/${roomId}/game`).once('value');
-            if (saved.val()) {
-                const data = saved.val();
+            // Setup Firebase listeners for game sync
+            gameState.roomRef = database.ref(`rooms/${roomId}`);
+            gameState.gameRef = database.ref(`rooms/${roomId}/game`);
+            
+            // Load saved game state if exists
+            const savedSnap = await gameState.gameRef.once('value');
+            if (savedSnap.exists()) {
+                const data = savedSnap.val();
                 if (data.gridColors) gameState.gridColors = data.gridColors;
                 gameState.currentPlayer = data.currentPlayer || 1;
                 gameState.player1Throws = data.player1Throws || CONFIG.THROWS_PER_PLAYER;
                 gameState.player2Throws = data.player2Throws || CONFIG.THROWS_PER_PLAYER;
-                for (let r=0; r<CONFIG.GRID_SIZE; r++)
-                    for (let c=0; c<CONFIG.GRID_SIZE; c++)
-                        if (gameState.gridColors[r][c]) updateCellColor(r, c, gameState.gridColors[r][c]);
+                
+                // Update visual grid
+                for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                    for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                        if (gameState.gridColors[r]?.[c]) {
+                            updateCellColor(r, c, gameState.gridColors[r][c]);
+                        }
+                    }
+                }
                 document.getElementById('currentTurn').textContent = gameState.currentPlayer === 1 ? '🔴 دور اللاعب الأول' : '🔵 دور اللاعب الثاني';
             }
             
-            const gameRef = database.ref(`rooms/${roomId}/game`);
-            const listener = gameRef.on('value', (snap) => {
+            // Listen for game updates from opponent
+            gameState.gameRef.on('value', (snap) => {
                 const data = snap.val();
                 if (data && gameState.gameActive && !gameState.bombActive) {
-                    for (let r=0; r<CONFIG.GRID_SIZE; r++)
-                        for (let c=0; c<CONFIG.GRID_SIZE; c++)
-                            if (data.gridColors?.[r]?.[c] !== gameState.gridColors[r]?.[c]) {
-                                gameState.gridColors[r][c] = data.gridColors[r][c];
-                                updateCellColor(r, c, data.gridColors[r][c]);
+                    // Update grid
+                    if (data.gridColors) {
+                        for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                            for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                                const newColor = data.gridColors[r]?.[c];
+                                if (newColor && gameState.gridColors[r]?.[c] !== newColor) {
+                                    gameState.gridColors[r][c] = newColor;
+                                    updateCellColor(r, c, newColor);
+                                }
                             }
+                        }
+                    }
                     gameState.currentPlayer = data.currentPlayer;
                     gameState.player1Throws = data.player1Throws;
                     gameState.player2Throws = data.player2Throws;
                     document.getElementById('currentTurn').textContent = gameState.currentPlayer === 1 ? '🔴 دور اللاعب الأول' : '🔵 دور اللاعب الثاني';
                 }
             });
-            gameState.roomListeners.push(() => gameRef.off());
         }
-        
-        async function backToRooms() {
+
+        function showLobby() {
+            document.getElementById('waitingRoom').classList.remove('hidden');
+            document.getElementById('roomsGrid').style.display = 'grid';
+            document.getElementById('createRoomBtn').style.display = 'block';
+            document.getElementById('waitingMessage').classList.remove('active');
+            document.getElementById('activeGameBadge').classList.remove('visible');
+            document.getElementById('currentTurn').textContent = '⏳ انتظار...';
+            document.getElementById('throwTimer').textContent = '--s';
+            
+            currentUser.inGame = false;
+            currentUser.activeRoomId = null;
+            
+            loadRooms();
+        }
+
+        async function exitToLobby() {
             if (timerInterval) clearInterval(timerInterval);
             gameState.gameActive = false;
             gameState.bombActive = false;
-            gameState.roomListeners.forEach(fn => fn());
-            gameState.roomListeners = [];
-            if (gameState.currentRoom) {
-                await database.ref(`rooms/${gameState.currentRoom.id}`).update({ status: 'finished' });
-                setTimeout(() => database.ref(`rooms/${gameState.currentRoom.id}`).remove(), 3000);
+            
+            if (gameState.roomRef) {
+                await gameState.roomRef.update({ status: 'finished' });
+                setTimeout(() => gameState.roomRef.remove(), 2000);
+                if (gameState.gameRef) gameState.gameRef.off();
             }
+            
             currentUser.activeRoomId = null;
+            currentUser.inGame = false;
             await updateBalanceInDB();
+            
             gameState.currentRoom = null;
-            document.getElementById('waitingRoom').classList.remove('hidden');
-            document.getElementById('roomsGrid').style.display = 'grid';
-            document.getElementById('activeGameBadge').classList.remove('visible');
+            gameState.roomRef = null;
+            gameState.gameRef = null;
+            
             camera.position.set(7, 5.5, 11);
             camera.lookAt(0, 0, 0);
-            loadRooms();
+            
+            showLobby();
         }
-        
-        function closeResult() {
+
+        function closeResultModal() {
             document.getElementById('resultModal').classList.remove('active');
-            backToRooms();
+            showLobby();
         }
-        
+
         function loadRooms() {
-            if (roomsListener) roomsListener();
-            roomsListener = database.ref('rooms').on('value', (snap) => {
+            const roomsRef = database.ref('rooms');
+            roomsRef.off('value');
+            
+            roomsRef.on('value', (snap) => {
                 const rooms = snap.val() || {};
                 const grid = document.getElementById('roomsGrid');
                 grid.innerHTML = '';
+                
                 const now = Date.now();
-                const list = Object.values(rooms).filter(r => r.status === 'waiting' && (!r.expiresAt || r.expiresAt > now)).slice(0, 8);
-                if (list.length === 0) grid.innerHTML = '<div style="grid-column:1/-1;color:#888;text-align:center;padding:25px;">✨ لا توجد غرف متاحة<br>أنشئ غرفة جديدة</div>';
-                list.forEach(room => {
-                    const card = document.createElement('div');
-                    card.className = 'room-card';
-                    card.innerHTML = `
-                        <div class="room-number">غرفة ${room.id.slice(-4)}</div>
-                        <div class="room-status available">🟢 متاحة</div>
-                        <div>💰 رهان: $${room.bet}</div>
-                        <div class="room-creator">👤 ${room.player1?.name || 'مجهول'}</div>
-                    `;
-                    card.onclick = () => joinRoom(room.id);
-                    grid.appendChild(card);
-                });
+                const roomList = Object.values(rooms).filter(r => {
+                    return r.status === 'waiting' && 
+                           (!r.expiresAt || r.expiresAt > now) &&
+                           r.player1?.id !== currentUser.id;
+                }).slice(0, 12);
+                
+                if (roomList.length === 0) {
+                    grid.innerHTML = '<div style="grid-column:1/-1;color:#888;text-align:center;padding:30px;">✨ لا توجد غرف متاحة<br>أنشئ غرفة جديدة وانتظر لاعباً آخر</div>';
+                } else {
+                    roomList.forEach(room => {
+                        const card = document.createElement('div');
+                        card.className = 'room-card';
+                        card.innerHTML = `
+                            <div class="room-number">غرفة ${room.id.slice(-4)}</div>
+                            <div class="room-status available">🟢 متاحة</div>
+                            <div>💰 رهان: $${room.bet}</div>
+                            <div class="room-creator">👤 ${room.player1?.name || 'مجهول'}</div>
+                        `;
+                        card.onclick = () => joinRoom(room.id);
+                        grid.appendChild(card);
+                    });
+                }
             });
         }
-        
-        // ==================== أحداث السحب ====================
+
+        // ==================== Drag Events ====================
         function setupDragEvents() {
             const canvas = renderer.domElement;
             canvas.style.cursor = 'grab';
             let dragging = false;
+            
             canvas.addEventListener('mousedown', (e) => {
                 if (!gameState.gameActive || gameState.bombActive) return;
-                const local = (gameState.currentRoom?.player1?.id === currentUser.id) ? 1 : (gameState.currentRoom?.player2?.id === currentUser.id) ? 2 : 0;
-                if (gameState.currentPlayer !== local) { showMessage('⏳ ليس دورك الآن!', true); return; }
+                const localPlayer = (gameState.currentRoom?.player1?.id === currentUser.id) ? 1 : 
+                                   (gameState.currentRoom?.player2?.id === currentUser.id) ? 2 : 0;
+                if (gameState.currentPlayer !== localPlayer) {
+                    showMessage('⏳ ليس دورك الآن!', true);
+                    return;
+                }
                 dragging = true;
                 gameState.dragStart = { x: e.clientX, y: e.clientY };
                 gameState.power = 0;
                 document.getElementById('powerBar').style.width = '0%';
                 canvas.style.cursor = 'grabbing';
             });
+            
             canvas.addEventListener('mousemove', (e) => {
                 if (!dragging || !gameState.gameActive) return;
                 const dx = gameState.dragStart.x - e.clientX;
@@ -1049,8 +1230,9 @@
                 if (gameState.currentPlayer === 1) leftBarrel.rotation.z = angle * Math.PI / 180;
                 else rightBarrel.rotation.z = -angle * Math.PI / 180;
             });
+            
             canvas.addEventListener('mouseup', () => {
-                if (!dragging || !gameState.gameActive) { dragging = false; canvas.style.cursor = 'grab'; return; }
+                if (!dragging) { canvas.style.cursor = 'grab'; return; }
                 dragging = false;
                 canvas.style.cursor = 'grab';
                 if (gameState.power > 8) shootBomb(gameState.power);
@@ -1059,12 +1241,25 @@
                 gameState.power = 0;
                 document.getElementById('powerBar').style.width = '0%';
             });
-            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); const t = e.touches[0]; canvas.dispatchEvent(new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY })); });
-            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); const t = e.touches[0]; canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY })); });
-            canvas.addEventListener('touchend', (e) => { e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mouseup', {})); });
+            
+            // Touch events
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const t = e.touches[0];
+                canvas.dispatchEvent(new MouseEvent('mousedown', { clientX: t.clientX, clientY: t.clientY }));
+            });
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const t = e.touches[0];
+                canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
+            });
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                canvas.dispatchEvent(new MouseEvent('mouseup', {}));
+            });
         }
-        
-        // ==================== الرسوم المتحركة ====================
+
+        // ==================== Animation Loop ====================
         function animate() {
             requestAnimationFrame(animate);
             if (gameState.cameraShake > 0 && !gameState.followCamera) {
@@ -1074,30 +1269,42 @@
             }
             renderer.render(scene, camera);
         }
-        
-        // ==================== التهيئة ====================
+
+        // ==================== Initialization ====================
         async function init() {
+            // Initialize 3D
             init3D();
             setupDragEvents();
             animate();
-            const userSnap = await database.ref(`users/${currentUser.id}`).once('value');
-            if (userSnap.val()) {
-                currentUser.balance = userSnap.val().balance;
-                currentUser.name = userSnap.val().name;
-                currentUser.activeRoomId = userSnap.val().activeRoomId;
-            }
-            document.getElementById('mainBalance').textContent = currentUser.balance;
+            
+            // Load user data
+            await loadUserFromDB();
+            
+            // Check if user was in an active game
             if (currentUser.activeRoomId) {
                 const roomSnap = await database.ref(`rooms/${currentUser.activeRoomId}`).once('value');
-                if (roomSnap.val() && roomSnap.val().status !== 'finished') joinRoom(currentUser.activeRoomId);
-                else { currentUser.activeRoomId = null; await updateBalanceInDB(); loadRooms(); }
-            } else loadRooms();
+                const room = roomSnap.val();
+                if (room && room.status === 'waiting') {
+                    showMessage('⚠️ استئناف الغرفة السابقة...');
+                    joinRoom(currentUser.activeRoomId);
+                } else if (room && room.status === 'full') {
+                    showMessage('⚠️ استئناف اللعبة السابقة...');
+                    joinRoom(currentUser.activeRoomId);
+                } else {
+                    currentUser.activeRoomId = null;
+                    await updateBalanceInDB();
+                    showLobby();
+                }
+            } else {
+                showLobby();
+            }
         }
         
+        // Expose functions to window
         window.createRoom = createRoom;
         window.joinRoom = joinRoom;
-        window.backToRooms = backToRooms;
-        window.closeResult = closeResult;
+        window.exitToLobby = exitToLobby;
+        window.closeResultModal = closeResultModal;
         
         init();
     </script>
