@@ -2,1336 +2,1038 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدفع بومب | لعبة متعددة اللاعبين</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BOOMB | مدفع المربعات</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Cairo', sans-serif;
+            user-select: none;
         }
 
         body {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #0f0f1a 100%);
             min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        /* حاوية اللعبة الرئيسية */
+        .game-container {
+            width: 100vw;
+            height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            flex-direction: column;
+            background: #050510;
             position: relative;
         }
 
-        body::before {
-            content: "";
+        /* رأس اللعبة */
+        .game-header {
+            background: linear-gradient(90deg, #ff3366, #ff6b3d);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .balance-display {
+            background: rgba(0,0,0,0.5);
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+        }
+
+        .balance-display span {
+            color: #ffd700;
+            font-size: 1.3rem;
+        }
+
+        /* ========== غرفة الانتظار ========== */
+        .waiting-room {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 40%),
-                        radial-gradient(circle at 80% 70%, rgba(255, 0, 0, 0.05) 0%, transparent 40%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1400px;
-            background: rgba(10, 10, 10, 0.96);
+            background: rgba(0,0,0,0.95);
             backdrop-filter: blur(10px);
-            border-radius: 30px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 215, 0, 0.2);
-            border: 2px solid rgba(255, 215, 0, 0.3);
-            overflow: hidden;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ========== نظام الإشعارات المنبثقة ========== */
-        .notification-container {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 10px;
-            pointer-events: none;
+            z-index: 200;
+            transition: all 0.3s ease;
         }
 
-        .notification {
-            background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid;
-            border-radius: 50px;
-            padding: 12px 30px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            animation: slideDown 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
-            max-width: 400px;
-            text-align: center;
-            pointer-events: none;
-        }
-
-        .notification.success {
-            border-color: #00ff00;
-            color: #00ff00;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-        }
-
-        .notification.error {
-            border-color: #ff0000;
-            color: #ff0000;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
-        }
-
-        .notification.info {
-            border-color: #ffd700;
-            color: #ffd700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeOut {
-            to {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-        }
-
-        .header {
-            background: linear-gradient(90deg, #ff0000 0%, #0000ff 100%);
-            padding: 20px;
-            text-align: center;
-            color: white;
-            font-size: 2rem;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .content {
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* ========== شاشة غرفة الانتظار ========== */
-        .waiting-room {
+        .waiting-room.hidden {
             display: none;
-            text-align: center;
         }
 
-        .waiting-room.active {
-            display: block;
+        .waiting-content {
+            background: linear-gradient(145deg, #1a1a2a, #0a0a1a);
+            border-radius: 30px;
+            padding: 40px;
+            text-align: center;
+            border: 2px solid #ffd700;
+            max-width: 500px;
+            width: 90%;
         }
 
         .waiting-title {
+            font-size: 2rem;
             color: #ffd700;
-            font-size: 1.8rem;
             margin-bottom: 30px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
-        .seats-container {
+        .rooms-grid {
             display: flex;
+            gap: 20px;
             justify-content: center;
-            gap: 40px;
             margin-bottom: 30px;
-            flex-wrap: wrap;
         }
 
-        .seat {
-            width: 150px;
-            height: 150px;
-            border: 3px solid #ffd700;
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        .room-card {
+            background: rgba(255,215,0,0.1);
+            border: 2px solid #ffd700;
+            border-radius: 20px;
+            padding: 20px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            background: rgba(255, 215, 0, 0.05);
-            font-weight: bold;
-            position: relative;
+            transition: all 0.3s;
+            min-width: 150px;
         }
 
-        .seat:hover:not(.occupied) {
+        .room-card:hover:not(.disabled) {
             transform: scale(1.05);
-            background: rgba(255, 215, 0, 0.15);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            background: rgba(255,215,0,0.2);
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
         }
 
-        .seat.occupied {
-            background: rgba(255, 215, 0, 0.2);
+        .room-card.disabled {
+            opacity: 0.5;
             cursor: not-allowed;
-            opacity: 0.7;
         }
 
-        .seat-label {
+        .room-number {
+            font-size: 2rem;
             color: #ffd700;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-
-        .seat-status {
-            color: #00ff00;
-            font-size: 0.9rem;
-        }
-
-        .seat.occupied .seat-status {
-            color: #ff0000;
-        }
-
-        .player-id {
-            color: #fff;
-            font-size: 0.8rem;
-            margin-top: 5px;
-            word-break: break-all;
-        }
-
-        .countdown {
-            font-size: 3rem;
-            color: #ff0000;
             font-weight: bold;
+        }
+
+        .room-status {
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .room-status.available {
+            color: #00ff00;
+        }
+
+        .room-status.occupied {
+            color: #ff4444;
+        }
+
+        .room-bet {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            color: white;
+        }
+
+        .create-room-btn {
+            background: #ffd700;
+            color: #000;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .create-room-btn:hover {
+            transform: scale(1.05);
+            background: #ffaa00;
+        }
+
+        .countdown-display {
+            font-size: 4rem;
+            color: #ffd700;
             margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
             display: none;
         }
 
-        .countdown.active {
+        .countdown-display.active {
             display: block;
-            animation: pulse 1s infinite;
+            animation: pulse 0.5s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
         }
 
-        .game-info {
-            background: rgba(255, 215, 0, 0.1);
-            border: 2px solid rgba(255, 215, 0, 0.3);
+        /* ========== منطقة اللعب ========== */
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: #0a0a1a;
+        }
+
+        /* النصف العلوي - شبكة المربعات 10x10 */
+        .grid-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(180deg, #0f0f1f, #050510);
+        }
+
+        .grid-container {
+            background: #1a1a2a;
+            border: 3px solid #ffd700;
             border-radius: 10px;
-            padding: 15px;
-            color: #ffd700;
-            text-align: center;
-            font-size: 1.1rem;
+            padding: 10px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        /* ========== شاشة اللعبة ========== */
-        .game-screen {
-            display: none;
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 2px;
+            background: #2a2a3a;
         }
 
-        .game-screen.active {
-            display: block;
+        .grid-cell {
+            aspect-ratio: 1;
+            background: #3a3a4a;
+            border-radius: 4px;
+            transition: all 0.1s ease;
+            cursor: pointer;
         }
 
-        .game-header {
+        .grid-cell.colored-red {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            box-shadow: 0 0 10px rgba(255,68,68,0.5);
+        }
+
+        .grid-cell.colored-blue {
+            background: linear-gradient(135deg, #4444ff, #0000cc);
+            box-shadow: 0 0 10px rgba(68,68,255,0.5);
+        }
+
+        /* النصف السفلي - المدافع */
+        .cannons-area {
+            height: 35%;
+            background: linear-gradient(0deg, #1a1a2a, #0f0f1f);
+            border-top: 3px solid #ffd700;
+            position: relative;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            padding: 0 10%;
+        }
+
+        .cannon {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            cursor: grab;
+            transition: transform 0.05s linear;
+        }
+
+        .cannon:active {
+            cursor: grabbing;
+        }
+
+        .cannon-base {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at 30% 30%, #ffaa44, #aa4422);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            border: 3px solid #ffd700;
+        }
+
+        .cannon-barrel {
+            position: absolute;
+            width: 60px;
+            height: 20px;
+            background: linear-gradient(90deg, #ffaa44, #cc6622);
+            border-radius: 10px;
+            bottom: 50px;
+            left: 50%;
+            transform-origin: left center;
+            transition: transform 0.02s linear;
+        }
+
+        .cannon-left .cannon-barrel {
+            left: auto;
+            right: 50%;
+            transform-origin: right center;
+        }
+
+        .power-bar-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .power-bar {
+            height: 20px;
+            background: linear-gradient(90deg, #00ff00, #ffff00, #ff0000);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.02s linear;
+        }
+
+        .current-turn {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 8px 20px;
+            border-radius: 30px;
             color: #ffd700;
             font-weight: bold;
+            font-size: 1.2rem;
+            border: 1px solid #ffd700;
+            z-index: 50;
         }
 
-        .player-info {
-            display: flex;
-            gap: 40px;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .player-stats {
-            background: rgba(255, 215, 0, 0.1);
-            border: 2px solid;
-            border-radius: 10px;
-            padding: 15px 25px;
-            min-width: 200px;
-            text-align: center;
-        }
-
-        .player-stats.red {
-            border-color: #ff0000;
-            color: #ff0000;
-        }
-
-        .player-stats.blue {
-            border-color: #0000ff;
-            color: #0000ff;
-        }
-
-        .player-stats.active {
-            box-shadow: 0 0 20px currentColor;
-            transform: scale(1.05);
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .game-canvas-container {
-            background: #000;
-            border: 3px solid #ffd700;
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 500px;
-        }
-
-        #gameCanvas {
-            display: block;
-            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1e 100%);
-        }
-
-        .timer {
+        .throw-timer {
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(255, 0, 0, 0.8);
-            color: white;
+            background: rgba(0,0,0,0.8);
             padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 1.2rem;
+            border-radius: 50px;
+            font-size: 1.5rem;
             font-weight: bold;
-            z-index: 100;
-            display: none;
+            color: #ff4444;
+            font-family: monospace;
+            z-index: 50;
         }
 
-        .timer.active {
-            display: block;
-            animation: timerPulse 1s infinite;
-        }
-
-        @keyframes timerPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .controls-info {
-            background: rgba(0, 255, 0, 0.1);
-            border: 2px solid rgba(0, 255, 0, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            color: #00ff00;
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .game-result {
-            display: none;
+        /* نافذة النتيجة */
+        .result-modal {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .result-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .result-content {
+            background: linear-gradient(145deg, #1a1a2a, #0a0a1a);
             border: 3px solid #ffd700;
-            border-radius: 20px;
+            border-radius: 30px;
             padding: 40px;
             text-align: center;
-            z-index: 1000;
-            min-width: 400px;
-        }
-
-        .game-result.active {
-            display: block;
+            min-width: 300px;
         }
 
         .result-title {
             font-size: 2rem;
             color: #ffd700;
             margin-bottom: 20px;
-            font-weight: bold;
         }
 
-        .result-content {
+        .result-message {
             color: white;
             font-size: 1.2rem;
             margin-bottom: 20px;
-            line-height: 1.8;
         }
 
-        .result-button {
+        .result-btn {
             background: #ffd700;
             color: #000;
             border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
+            padding: 10px 30px;
+            border-radius: 30px;
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
         }
 
-        .result-button:hover {
-            background: #ff8c00;
-            transform: scale(1.05);
-        }
-
-        .overlay {
-            display: none;
+        /* أزرار التحكم */
+        .control-btn {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 999;
-        }
-
-        .overlay.active {
-            display: block;
-        }
-
-        .error-message {
-            background: rgba(255, 0, 0, 0.2);
-            border: 2px solid #ff0000;
-            color: #ff0000;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            display: none;
-        }
-
-        .error-message.active {
-            display: block;
-        }
-
-        /* ========== مستويات الثروة ========== */
-        .level-bronze { 
-            background: linear-gradient(135deg, #cd7f32, #8b4513); 
-            color: #fff; 
-            padding: 3px 12px;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .level-silver { 
-            background: linear-gradient(135deg, #c0c0c0, #808080); 
-            color: #000; 
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .level-gold { 
-            background: linear-gradient(135deg, #ffd700, #ff8c00); 
-            color: #000; 
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .level-platinum { 
-            background: linear-gradient(135deg, #e5e4e2, #b5b4b2); 
-            color: #000; 
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 0.8rem;
         }
 
         @media (max-width: 768px) {
-            .seats-container {
-                flex-direction: column;
-                align-items: center;
+            .cannons-area {
+                padding: 0 5%;
             }
-
-            .seat {
-                width: 120px;
-                height: 120px;
+            .cannon {
+                width: 80px;
+                height: 80px;
             }
-
-            .player-info {
-                flex-direction: column;
-                gap: 20px;
+            .cannon-base {
+                width: 60px;
+                height: 60px;
             }
-
-            .game-result {
-                min-width: 90%;
-                padding: 20px;
+            .current-turn {
+                font-size: 0.9rem;
+                top: 10px;
             }
         }
     </style>
-    <!-- Firebase Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
-    <div id="notificationContainer" class="notification-container"></div>
+<div class="game-container">
+    <div class="game-header">
+        <div>💣 BOOMB</div>
+        <div class="balance-display">💰 الرصيد: $<span id="mainBalance">0</span></div>
+    </div>
 
-    <div class="container">
-        <div class="header">🎮 مدفع بومب 💣</div>
-        
-        <div class="content">
-            <!-- غرفة الانتظار -->
-            <div class="waiting-room active" id="waitingRoom">
-                <div class="waiting-title">غرفة الانتظار</div>
-                <div class="error-message" id="errorMessage"></div>
-                
-                <div class="seats-container">
-                    <div class="seat" onclick="reserveSeat(1)">
-                        <div class="seat-label">🔴 المقعد الأول</div>
-                        <div class="seat-status" id="seat1Status">متاح</div>
-                        <div class="player-id" id="seat1PlayerId"></div>
-                    </div>
-                    <div class="seat" onclick="reserveSeat(2)">
-                        <div class="seat-label">🔵 المقعد الثاني</div>
-                        <div class="seat-status" id="seat2Status">متاح</div>
-                        <div class="player-id" id="seat2PlayerId"></div>
-                    </div>
-                </div>
+    <div class="game-area">
+        <div class="current-turn" id="currentTurn">انتظر...</div>
+        <div class="throw-timer" id="throwTimer">10s</div>
 
-                <div class="countdown" id="countdown"></div>
-                
-                <div class="game-info" id="gameInfo">
-                    انتظر لاعب آخر ليحجز المقعد الآخر
-                </div>
+        <!-- منطقة الشبكة 10x10 -->
+        <div class="grid-area">
+            <div class="grid-container">
+                <div class="game-grid" id="gameGrid"></div>
             </div>
+        </div>
 
-            <!-- شاشة اللعبة -->
-            <div class="game-screen" id="gameScreen">
-                <div class="game-header">
-                    <div>الجولة: <span id="roundNumber">1</span>/3</div>
-                    <div>الرصيد: $<span id="playerBalance">0</span></div>
-                </div>
-
-                <div class="player-info">
-                    <div class="player-stats red" id="player1Stats">
-                        <div class="stat-label">اللاعب الأول 🔴</div>
-                        <div class="stat-value" id="player1Throws">3</div>
-                        <div class="stat-label">رميات متبقية</div>
-                    </div>
-                    <div class="player-stats blue" id="player2Stats">
-                        <div class="stat-label">اللاعب الثاني 🔵</div>
-                        <div class="stat-value" id="player2Throws">3</div>
-                        <div class="stat-label">رميات متبقية</div>
-                    </div>
-                </div>
-
-                <div class="game-canvas-container">
-                    <canvas id="gameCanvas" width="1000" height="600"></canvas>
-                    <div class="timer" id="throwTimer">10</div>
-                </div>
-
-                <div class="controls-info" id="controlsInfo">
-                    <div>🖱️ اسحب المدفع للخلف لزيادة القوة، ثم اترك الماوس للرمي</div>
-                    <div id="currentPlayerInfo">انتظر دورك...</div>
-                </div>
+        <!-- منطقة المدافع -->
+        <div class="cannons-area" id="cannonsArea">
+            <div class="cannon cannon-left" id="cannonLeft">
+                <div class="cannon-base"></div>
+                <div class="cannon-barrel"></div>
+            </div>
+            <div class="power-bar-container">
+                <div class="power-bar" id="powerBar"></div>
+            </div>
+            <div class="cannon cannon-right" id="cannonRight">
+                <div class="cannon-base"></div>
+                <div class="cannon-barrel"></div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- نتيجة اللعبة -->
-    <div class="overlay" id="overlay"></div>
-    <div class="game-result" id="gameResult">
-        <div class="result-title" id="resultTitle">انتهت الجولة</div>
-        <div class="result-content" id="resultContent"></div>
-        <button class="result-button" onclick="backToWaitingRoom()">العودة إلى غرفة الانتظار</button>
+<div class="control-btn" id="backBtn" onclick="backToRooms()">🏠 العودة للغرف</div>
+
+<!-- غرفة الانتظار -->
+<div class="waiting-room" id="waitingRoom">
+    <div class="waiting-content">
+        <div class="waiting-title">🎮 غرف اللعب</div>
+        <div class="rooms-grid" id="roomsGrid"></div>
+        <button class="create-room-btn" onclick="createRoom()">➕ إنشاء غرفة جديدة</button>
+        <div class="countdown-display" id="countdownDisplay"></div>
     </div>
-
-    <script>
-        // ==================== تهيئة Firebase ====================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCvPo4HlsNhyf1WBmTzIr6CdR1c2lQ5sHU",
-            authDomain: "boomb-fa3e7.firebaseapp.com",
-            databaseURL: "https://boomb-fa3e7-default-rtdb.firebaseio.com",
-            projectId: "boomb-fa3e7",
-            storageBucket: "boomb-fa3e7.firebasestorage.app",
-            messagingSenderId: "499624996530",
-            appId: "1:499624996530:web:235f71e450845c748523ab"
-        };
-
-        // تهيئة Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database(app);
-
-        // ==================== نظام الإشعارات ====================
-        function showNotification(message, type = 'info') {
-            const container = document.getElementById('notificationContainer');
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            container.appendChild(notification);
-
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        // ==================== إعدادات اللعبة ====================
-        const GAME_CONFIG = {
-            SEAT_PRICE: 10, // سعر الجولة
-            WIN_MULTIPLIER: 1.8, // مضاعف الفوز
-            COUNTDOWN_TIME: 15, // وقت العد التنازلي قبل بدء اللعبة
-            THROW_TIME: 10, // وقت الرمية الواحدة
-            THROWS_PER_PLAYER: 3, // عدد الرميات لكل لاعب
-            GRID_COLS: 10,
-            GRID_ROWS: 6,
-            CANNON_WIDTH: 40,
-            CANNON_HEIGHT: 40,
-            BOMB_RADIUS: 8
-        };
-
-        // ==================== متغيرات الحالة ====================
-        let gameState = {
-            seats: {
-                1: null,
-                2: null
-            },
-            countdownInterval: null,
-            countdownValue: GAME_CONFIG.COUNTDOWN_TIME,
-            currentPlayer: 1,
-            player1Throws: GAME_CONFIG.THROWS_PER_PLAYER,
-            player2Throws: GAME_CONFIG.THROWS_PER_PLAYER,
-            throwTimer: GAME_CONFIG.THROW_TIME,
-            throwTimerInterval: null,
-            gameActive: false,
-            grid: [],
-            cannonPower: 0,
-            isDragging: false,
-            gameEnded: false,
-            currentGameId: null
-        };
-
-        // ==================== معلومات اللاعب الحالي ====================
-        let currentUser = {
-            telegramId: new URLSearchParams(window.location.search).get('telegram_id') || 'player_' + Math.random().toString(36).substr(2, 9),
-            playerId: new URLSearchParams(window.location.search).get('player_id') || 'ID_' + Math.random().toString(36).substr(2, 9),
-            balance: parseFloat(new URLSearchParams(window.location.search).get('balance')) || 100,
-            depositCount: parseInt(new URLSearchParams(window.location.search).get('deposit_count')) || 0,
-            withdrawalCount: parseInt(new URLSearchParams(window.location.search).get('withdrawal_count')) || 0,
-            joinDate: new Date().toISOString(),
-            isAdmin: new URLSearchParams(window.location.search).get('is_admin') === 'true'
-        };
-
-        // ==================== Canvas والرسم ====================
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // ==================== دوال قاعدة البيانات ====================
-        async function updateUserBalance(userId, newBalance) {
-            try {
-                await database.ref(`users/${userId}`).update({
-                    balance: newBalance,
-                    lastSeen: Date.now()
-                });
-                console.log('تم تحديث الرصيد في قاعدة البيانات');
-                return true;
-            } catch (error) {
-                console.error('خطأ في تحديث الرصيد:', error);
-                showNotification('❌ خطأ في تحديث الرصيد', 'error');
-                return false;
-            }
-        }
-
-        async function saveUserData() {
-            try {
-                await database.ref(`users/${currentUser.telegramId}`).set({
-                    telegramId: currentUser.telegramId,
-                    playerId: currentUser.playerId,
-                    balance: currentUser.balance,
-                    depositCount: currentUser.depositCount || 0,
-                    withdrawalCount: currentUser.withdrawalCount || 0,
-                    joinDate: currentUser.joinDate,
-                    lastSeen: Date.now(),
-                    isAdmin: currentUser.isAdmin || false
-                });
-                console.log('تم حفظ بيانات المستخدم');
-            } catch (error) {
-                console.error('خطأ في حفظ بيانات المستخدم:', error);
-            }
-        }
-
-        async function saveGameResult(gameData) {
-            try {
-                const gameRef = await database.ref('games/history').push(gameData);
-                return gameRef.key;
-            } catch (error) {
-                console.error('خطأ في حفظ نتيجة اللعبة:', error);
-                return null;
-            }
-        }
-
-        // ==================== مستوى الثروة ====================
-        function getWealthLevel(depositCount) {
-            if (depositCount >= 500) return { name: 'پلاتينيوم', class: 'level-platinum' };
-            if (depositCount >= 100) return { name: 'ذهبي', class: 'level-gold' };
-            if (depositCount >= 50) return { name: 'فضي', class: 'level-silver' };
-            return { name: 'برونزي', class: 'level-bronze' };
-        }
-
-        // ==================== دوال غرفة الانتظار ====================
-        async function reserveSeat(seatNumber) {
-            if (gameState.seats[seatNumber] !== null) {
-                showError('هذا المقعد محجوز بالفعل');
-                return;
-            }
-
-            if (currentUser.balance < GAME_CONFIG.SEAT_PRICE) {
-                showError(`رصيدك غير كافي. تحتاج $${GAME_CONFIG.SEAT_PRICE} على الأقل`);
-                return;
-            }
-
-            // خصم الرصيد فوراً من قاعدة البيانات
-            const newBalance = currentUser.balance - GAME_CONFIG.SEAT_PRICE;
-            const updated = await updateUserBalance(currentUser.telegramId, newBalance);
-            
-            if (!updated) {
-                showError('فشل في تحديث الرصيد. حاول مرة أخرى');
-                return;
-            }
-
-            // تحديث الرصيد محلياً بعد التأكد من التحديث في قاعدة البيانات
-            currentUser.balance = newBalance;
-            document.getElementById('playerBalance').textContent = currentUser.balance.toFixed(2);
-
-            gameState.seats[seatNumber] = {
-                telegramId: currentUser.telegramId,
-                playerId: currentUser.playerId,
-                reservedAt: Date.now()
-            };
-
-            // إنشاء معرف للعبة الحالية
-            if (!gameState.currentGameId) {
-                gameState.currentGameId = Date.now().toString();
-            }
-
-            // حفظ الحجز في Firebase
-            await database.ref(`games/active/${gameState.currentGameId}/seats/${seatNumber}`).set({
-                player: currentUser,
-                seatNumber,
-                timestamp: Date.now()
-            });
-
-            updateSeatsDisplay();
-            showNotification(`✅ تم حجز المقعد ${seatNumber}`, 'success');
-
-            if (gameState.seats[1] !== null && gameState.seats[2] !== null) {
-                startCountdown();
-            }
-        }
-
-        function updateSeatsDisplay() {
-            for (let i = 1; i <= 2; i++) {
-                const seat = gameState.seats[i];
-                const statusEl = document.getElementById(`seat${i}Status`);
-                const playerIdEl = document.getElementById(`seat${i}PlayerId`);
-                const seatEl = document.querySelector(`.seat:nth-child(${i})`);
-
-                if (seat) {
-                    statusEl.textContent = 'محجوز';
-                    playerIdEl.textContent = seat.playerId;
-                    seatEl.classList.add('occupied');
-                } else {
-                    statusEl.textContent = 'متاح';
-                    playerIdEl.textContent = '';
-                    seatEl.classList.remove('occupied');
-                }
-            }
-        }
-
-        function showError(message) {
-            const errorEl = document.getElementById('errorMessage');
-            errorEl.textContent = message;
-            errorEl.classList.add('active');
-            setTimeout(() => {
-                errorEl.classList.remove('active');
-            }, 3000);
-        }
-
-        function startCountdown() {
-            gameState.countdownValue = GAME_CONFIG.COUNTDOWN_TIME;
-            const countdownEl = document.getElementById('countdown');
-            countdownEl.classList.add('active');
-            document.getElementById('gameInfo').textContent = 'يبدأ اللعب بعد انتهاء العد التنازلي...';
-
-            gameState.countdownInterval = setInterval(() => {
-                gameState.countdownValue--;
-                countdownEl.textContent = gameState.countdownValue;
-
-                if (gameState.countdownValue <= 0) {
-                    clearInterval(gameState.countdownInterval);
-                    countdownEl.classList.remove('active');
-                    startGame();
-                }
-            }, 1000);
-        }
-
-        function startGame() {
-            // تحديث الرصيد في الشاشة
-            document.getElementById('playerBalance').textContent = currentUser.balance.toFixed(2);
-
-            // إخفاء غرفة الانتظار وإظهار اللعبة
-            document.getElementById('waitingRoom').classList.remove('active');
-            document.getElementById('gameScreen').classList.add('active');
-
-            // تهيئة الشبكة
-            initializeGrid();
-
-            // تهيئة Canvas
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-
-            // إضافة مستمعي الأحداث
-            canvas.addEventListener('mousedown', onCanvasMouseDown);
-            canvas.addEventListener('mousemove', onCanvasMouseMove);
-            canvas.addEventListener('mouseup', onCanvasMouseUp);
-            canvas.addEventListener('mouseleave', onCanvasMouseUp);
-            canvas.addEventListener('touchstart', onCanvasTouchStart);
-            canvas.addEventListener('touchmove', onCanvasTouchMove);
-            canvas.addEventListener('touchend', onCanvasTouchEnd);
-
-            gameState.gameActive = true;
-            gameState.gameEnded = false;
-
-            // بدء مؤقت الرمية
-            startThrowTimer();
-
-            // رسم اللعبة
-            drawGame();
-
-            showNotification('🎮 بدأت اللعبة! دور اللاعب الأول', 'info');
-        }
-
-        // ==================== تهيئة الشبكة ====================
-        function initializeGrid() {
-            gameState.grid = [];
-            for (let row = 0; row < GAME_CONFIG.GRID_ROWS; row++) {
-                gameState.grid[row] = [];
-                for (let col = 0; col < GAME_CONFIG.GRID_COLS; col++) {
-                    gameState.grid[row][col] = 0; // 0 = لم يتم تلوينه، 1 = أحمر، 2 = أزرق
-                }
-            }
-        }
-
-        // ==================== تغيير حجم Canvas ====================
-        function resizeCanvas() {
-            const container = canvas.parentElement;
-            const width = Math.min(container.clientWidth - 20, 1000);
-            canvas.width = width;
-            canvas.height = 600;
-            if (gameState.gameActive && !gameState.gameEnded) {
-                drawGame();
-            }
-        }
-
-        // ==================== رسم اللعبة ====================
-        function drawGame() {
-            // مسح الخلفية
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // رسم الشبكة
-            drawGrid();
-
-            // رسم المدافع
-            drawCannons();
-
-            // إذا كانت اللعبة نشطة، استمر في الرسم
-            if (gameState.gameActive && !gameState.gameEnded) {
-                requestAnimationFrame(drawGame);
-            }
-        }
-
-        function drawGrid() {
-            const cellWidth = (canvas.width * 0.6) / GAME_CONFIG.GRID_COLS;
-            const cellHeight = (canvas.height * 0.8) / GAME_CONFIG.GRID_ROWS;
-            const startX = (canvas.width * 0.2);
-            const startY = (canvas.height * 0.1);
-
-            for (let row = 0; row < GAME_CONFIG.GRID_ROWS; row++) {
-                for (let col = 0; col < GAME_CONFIG.GRID_COLS; col++) {
-                    const x = startX + col * cellWidth;
-                    const y = startY + row * cellHeight;
-
-                    // تحديد اللون
-                    if (gameState.grid[row][col] === 0) {
-                        ctx.fillStyle = '#ffffff';
-                    } else if (gameState.grid[row][col] === 1) {
-                        ctx.fillStyle = '#ff0000';
-                    } else if (gameState.grid[row][col] === 2) {
-                        ctx.fillStyle = '#0000ff';
-                    }
-
-                    // رسم المربع
-                    ctx.fillRect(x, y, cellWidth - 2, cellHeight - 2);
-                    ctx.strokeStyle = '#333';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(x, y, cellWidth - 2, cellHeight - 2);
-                }
-            }
-        }
-
-        function drawCannons() {
-            const cannonY = canvas.height * 0.85;
-            const cannonLeftX = canvas.width * 0.15;
-            const cannonRightX = canvas.width * 0.85;
-
-            // المدفع الأحمر (اللاعب الأول)
-            ctx.fillStyle = '#ff0000';
-            ctx.beginPath();
-            ctx.arc(cannonLeftX, cannonY, GAME_CONFIG.CANNON_WIDTH / 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // رسم فوهة المدفع الأحمر
-            const angle1 = -Math.PI / 4 - (gameState.cannonPower / 100) * (Math.PI / 2);
-            const barrelLength = 30;
-            ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(cannonLeftX, cannonY);
-            ctx.lineTo(
-                cannonLeftX + Math.cos(angle1) * barrelLength,
-                cannonY + Math.sin(angle1) * barrelLength
-            );
-            ctx.stroke();
-
-            // المدفع الأزرق (اللاعب الثاني)
-            ctx.fillStyle = '#0000ff';
-            ctx.beginPath();
-            ctx.arc(cannonRightX, cannonY, GAME_CONFIG.CANNON_WIDTH / 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // رسم فوهة المدفع الأزرق
-            const angle2 = Math.PI + Math.PI / 4 + (gameState.cannonPower / 100) * (Math.PI / 2);
-            ctx.strokeStyle = '#0000ff';
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(cannonRightX, cannonY);
-            ctx.lineTo(
-                cannonRightX + Math.cos(angle2) * barrelLength,
-                cannonY + Math.sin(angle2) * barrelLength
-            );
-            ctx.stroke();
-
-            // رسم مؤشر القوة
-            if (gameState.isDragging) {
-                ctx.fillStyle = 'rgba(255, 215, 0, 0.5)';
-                ctx.fillRect(10, 10, (gameState.cannonPower / 100) * (canvas.width - 20), 20);
-                ctx.strokeStyle = '#ffd700';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(10, 10, canvas.width - 20, 20);
-
-                // نص القوة
-                ctx.fillStyle = '#ffd700';
-                ctx.font = 'bold 14px Cairo';
-                ctx.fillText(`القوة: ${Math.round(gameState.cannonPower)}%`, 20, 28);
-            }
-        }
-
-        // ==================== معالجات أحداث الماوس ====================
-        function onCanvasMouseDown(e) {
-            if (!gameState.gameActive || gameState.gameEnded) return;
-
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const cannonY = canvas.height * 0.85;
-            const cannonX = gameState.currentPlayer === 1 ? canvas.width * 0.15 : canvas.width * 0.85;
-
-            const distance = Math.sqrt((x - cannonX) ** 2 + (y - cannonY) ** 2);
-
-            if (distance < GAME_CONFIG.CANNON_WIDTH) {
-                gameState.isDragging = true;
-                gameState.cannonPower = 0;
-            }
-        }
-
-        function onCanvasMouseMove(e) {
-            if (!gameState.isDragging) return;
-
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const cannonY = canvas.height * 0.85;
-            const cannonX = gameState.currentPlayer === 1 ? canvas.width * 0.15 : canvas.width * 0.85;
-
-            const distance = Math.sqrt((x - cannonX) ** 2 + (y - cannonY) ** 2);
-            gameState.cannonPower = Math.min(100, distance / 2);
-        }
-
-        function onCanvasMouseUp(e) {
-            if (!gameState.isDragging) return;
-            gameState.isDragging = false;
-
-            if (gameState.cannonPower > 0) {
-                fireCannon();
-            }
-        }
-
-        // ==================== معالجات أحداث اللمس ====================
-        function onCanvasTouchStart(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const mouseEvent = new MouseEvent('mousedown', {
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-            canvas.dispatchEvent(mouseEvent);
-        }
-
-        function onCanvasTouchMove(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const mouseEvent = new MouseEvent('mousemove', {
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-            canvas.dispatchEvent(mouseEvent);
-        }
-
-        function onCanvasTouchEnd(e) {
-            e.preventDefault();
-            const mouseEvent = new MouseEvent('mouseup', {});
-            canvas.dispatchEvent(mouseEvent);
-        }
-
-        // ==================== إطلاق المدفع ====================
-        function fireCannon() {
-            const cannonY = canvas.height * 0.85;
-            const cannonX = gameState.currentPlayer === 1 ? canvas.width * 0.15 : canvas.width * 0.85;
-
-            // حساب الزاوية والسرعة
-            const angle = gameState.currentPlayer === 1 
-                ? -Math.PI / 4 - (gameState.cannonPower / 100) * (Math.PI / 2)
-                : Math.PI + Math.PI / 4 + (gameState.cannonPower / 100) * (Math.PI / 2);
-
-            const speed = (gameState.cannonPower / 100) * 15;
-
-            // إنشاء القنبلة
-            const bomb = {
-                x: cannonX,
-                y: cannonY,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                player: gameState.currentPlayer,
-                active: true
-            };
-
-            // محاكاة الرمية
-            simulateBomb(bomb);
-
-            // تقليل عدد الرميات
-            if (gameState.currentPlayer === 1) {
-                gameState.player1Throws--;
-                document.getElementById('player1Throws').textContent = gameState.player1Throws;
-            } else {
-                gameState.player2Throws--;
-                document.getElementById('player2Throws').textContent = gameState.player2Throws;
-            }
-
-            // التحقق من انتهاء الجولة
-            if (gameState.player1Throws === 0 && gameState.player2Throws === 0) {
-                endGame();
-            } else {
-                // الانتقال إلى اللاعب التالي
-                switchPlayer();
-            }
-
-            gameState.cannonPower = 0;
-        }
-
-        // ==================== محاكاة الرمية ====================
-        function simulateBomb(bomb) {
-            const gravity = 0.3;
-            const steps = 100;
-
-            for (let i = 0; i < steps; i++) {
-                bomb.vy += gravity;
-                bomb.x += bomb.vx;
-                bomb.y += bomb.vy;
-
-                // التحقق من الخروج عن الحدود
-                if (bomb.x < 0 || bomb.x > canvas.width || bomb.y > canvas.height) {
-                    break;
-                }
-
-                // التحقق من الاصطدام بالشبكة
-                const gridStartX = (canvas.width * 0.2);
-                const gridStartY = (canvas.height * 0.1);
-                const cellWidth = (canvas.width * 0.6) / GAME_CONFIG.GRID_COLS;
-                const cellHeight = (canvas.height * 0.8) / GAME_CONFIG.GRID_ROWS;
-
-                if (bomb.x >= gridStartX && bomb.x <= gridStartX + canvas.width * 0.6 &&
-                    bomb.y >= gridStartY && bomb.y <= gridStartY + canvas.height * 0.8) {
-
-                    const col = Math.floor((bomb.x - gridStartX) / cellWidth);
-                    const row = Math.floor((bomb.y - gridStartY) / cellHeight);
-
-                    if (col >= 0 && col < GAME_CONFIG.GRID_COLS && row >= 0 && row < GAME_CONFIG.GRID_ROWS) {
-                        if (gameState.grid[row][col] === 0) {
-                            gameState.grid[row][col] = bomb.player;
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-
-        // ==================== تبديل اللاعب ====================
-        function switchPlayer() {
-            gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
-            updatePlayerStats();
-            startThrowTimer();
-        }
-
-        function updatePlayerStats() {
-            const player1Stats = document.getElementById('player1Stats');
-            const player2Stats = document.getElementById('player2Stats');
-
-            if (gameState.currentPlayer === 1) {
-                player1Stats.classList.add('active');
-                player2Stats.classList.remove('active');
-            } else {
-                player1Stats.classList.remove('active');
-                player2Stats.classList.add('active');
-            }
-
-            const playerName = gameState.currentPlayer === 1 ? 'اللاعب الأول 🔴' : 'اللاعب الثاني 🔵';
-            document.getElementById('currentPlayerInfo').textContent = `دور ${playerName}`;
-        }
-
-        // ==================== مؤقت الرمية ====================
-        function startThrowTimer() {
-            gameState.throwTimer = GAME_CONFIG.THROW_TIME;
-            const timerEl = document.getElementById('throwTimer');
-            timerEl.classList.add('active');
-            timerEl.textContent = gameState.throwTimer;
-
-            clearInterval(gameState.throwTimerInterval);
-            gameState.throwTimerInterval = setInterval(() => {
-                gameState.throwTimer--;
-                timerEl.textContent = gameState.throwTimer;
-
-                if (gameState.throwTimer <= 0) {
-                    clearInterval(gameState.throwTimerInterval);
-                    timerEl.classList.remove('active');
-                    
-                    // خصم الرمية تلقائياً
-                    if (gameState.currentPlayer === 1) {
-                        gameState.player1Throws--;
-                        document.getElementById('player1Throws').textContent = gameState.player1Throws;
-                    } else {
-                        gameState.player2Throws--;
-                        document.getElementById('player2Throws').textContent = gameState.player2Throws;
-                    }
-
-                    if (gameState.player1Throws === 0 && gameState.player2Throws === 0) {
-                        endGame();
-                    } else {
-                        switchPlayer();
-                    }
-                }
-            }, 1000);
-        }
-
-        // ==================== انتهاء اللعبة ====================
-        async function endGame() {
-            gameState.gameActive = false;
-            gameState.gameEnded = true;
-            clearInterval(gameState.throwTimerInterval);
-
-            // حساب النتيجة
-            let player1Score = 0;
-            let player2Score = 0;
-
-            for (let row = 0; row < GAME_CONFIG.GRID_ROWS; row++) {
-                for (let col = 0; col < GAME_CONFIG.GRID_COLS; col++) {
-                    if (gameState.grid[row][col] === 1) player1Score++;
-                    else if (gameState.grid[row][col] === 2) player2Score++;
-                }
-            }
-
-            let resultText = '';
-            let winner = null;
-            let amountChanged = 0;
-
-            // تحديد الفائز وتحديث الرصيد في قاعدة البيانات فوراً
-            if (player1Score > player2Score) {
-                // اللاعب الأول فاز
-                const winAmount = GAME_CONFIG.SEAT_PRICE * GAME_CONFIG.WIN_MULTIPLIER;
-                amountChanged = winAmount;
-                
-                // تحديث رصيد الفائز في قاعدة البيانات
-                if (gameState.seats[1] && gameState.seats[1].telegramId === currentUser.telegramId) {
-                    const newBalance = currentUser.balance + winAmount;
-                    await updateUserBalance(currentUser.telegramId, newBalance);
-                    currentUser.balance = newBalance;
-                }
-                
-                resultText = `🎉 فاز اللاعب الأول 🔴<br>النقاط: ${player1Score} - ${player2Score}<br>جائزة: $${winAmount.toFixed(2)} (${GAME_CONFIG.WIN_MULTIPLIER}x)`;
-                winner = 'player1';
-                
-            } else if (player2Score > player1Score) {
-                // اللاعب الثاني فاز
-                const winAmount = GAME_CONFIG.SEAT_PRICE * GAME_CONFIG.WIN_MULTIPLIER;
-                amountChanged = winAmount;
-                
-                // تحديث رصيد الفائز في قاعدة البيانات
-                if (gameState.seats[2] && gameState.seats[2].telegramId === currentUser.telegramId) {
-                    const newBalance = currentUser.balance + winAmount;
-                    await updateUserBalance(currentUser.telegramId, newBalance);
-                    currentUser.balance = newBalance;
-                }
-                
-                resultText = `🎉 فاز اللاعب الثاني 🔵<br>النقاط: ${player1Score} - ${player2Score}<br>جائزة: $${winAmount.toFixed(2)} (${GAME_CONFIG.WIN_MULTIPLIER}x)`;
-                winner = 'player2';
-                
-            } else {
-                // تعادل - إعادة المبالغ للاعبين
-                amountChanged = GAME_CONFIG.SEAT_PRICE;
-                
-                // إعادة الرصيد للاعبين في قاعدة البيانات
-                if (gameState.seats[1] && gameState.seats[1].telegramId === currentUser.telegramId) {
-                    const newBalance = currentUser.balance + GAME_CONFIG.SEAT_PRICE;
-                    await updateUserBalance(currentUser.telegramId, newBalance);
-                    currentUser.balance = newBalance;
-                }
-                
-                if (gameState.seats[2] && gameState.seats[2].telegramId === currentUser.telegramId) {
-                    const newBalance = currentUser.balance + GAME_CONFIG.SEAT_PRICE;
-                    await updateUserBalance(currentUser.telegramId, newBalance);
-                    currentUser.balance = newBalance;
-                }
-                
-                resultText = `🤝 تعادل<br>النقاط: ${player1Score} - ${player2Score}<br>تم إعادة مبلغ الرهان ($${GAME_CONFIG.SEAT_PRICE}) للاعبين`;
-                winner = 'draw';
-            }
-
-            // تحديث الرصيد في الشاشة
-            document.getElementById('playerBalance').textContent = currentUser.balance.toFixed(2);
-
-            // حفظ نتيجة اللعبة في Firebase
-            await saveGameResult({
-                gameId: gameState.currentGameId,
-                player1: gameState.seats[1],
-                player2: gameState.seats[2],
-                player1Score,
-                player2Score,
-                winner,
-                seatPrice: GAME_CONFIG.SEAT_PRICE,
-                winMultiplier: GAME_CONFIG.WIN_MULTIPLIER,
-                amountChanged,
-                timestamp: Date.now()
-            });
-
-            // عرض النتيجة
-            document.getElementById('resultTitle').textContent = 'انتهت الجولة';
-            document.getElementById('resultContent').innerHTML = resultText;
-            document.getElementById('overlay').classList.add('active');
-            document.getElementById('gameResult').classList.add('active');
-
-            // حذف اللعبة النشطة
-            if (gameState.currentGameId) {
-                await database.ref(`games/active/${gameState.currentGameId}`).remove();
-            }
-        }
-
-        async function backToWaitingRoom() {
-            // إعادة تعيين الحالة
-            gameState = {
-                seats: {
-                    1: null,
-                    2: null
-                },
-                countdownInterval: null,
-                countdownValue: GAME_CONFIG.COUNTDOWN_TIME,
-                currentPlayer: 1,
-                player1Throws: GAME_CONFIG.THROWS_PER_PLAYER,
-                player2Throws: GAME_CONFIG.THROWS_PER_PLAYER,
-                throwTimer: GAME_CONFIG.THROW_TIME,
-                throwTimerInterval: null,
-                gameActive: false,
-                grid: [],
-                cannonPower: 0,
-                isDragging: false,
-                gameEnded: false,
-                currentGameId: null
-            };
-
-            // إزالة مستمعي الأحداث
-            canvas.removeEventListener('mousedown', onCanvasMouseDown);
-            canvas.removeEventListener('mousemove', onCanvasMouseMove);
-            canvas.removeEventListener('mouseup', onCanvasMouseUp);
-            canvas.removeEventListener('mouseleave', onCanvasMouseUp);
-            canvas.removeEventListener('touchstart', onCanvasTouchStart);
-            canvas.removeEventListener('touchmove', onCanvasTouchMove);
-            canvas.removeEventListener('touchend', onCanvasTouchEnd);
-            window.removeEventListener('resize', resizeCanvas);
-
-            // إظهار غرفة الانتظار وإخفاء اللعبة
-            document.getElementById('gameScreen').classList.remove('active');
-            document.getElementById('waitingRoom').classList.add('active');
-            document.getElementById('overlay').classList.remove('active');
-            document.getElementById('gameResult').classList.remove('active');
-
-            // تحديث عرض المقاعد
-            updateSeatsDisplay();
-
-            // تحديث الرصيد
-            document.getElementById('playerBalance').textContent = currentUser.balance.toFixed(2);
-
-            // إعادة تعيين معلومات اللعبة
-            document.getElementById('gameInfo').textContent = 'انتظر لاعب آخر ليحجز المقعد الآخر';
-        }
-
-        // ==================== التهيئة الأولية ====================
-        window.addEventListener('load', async () => {
-            // حفظ بيانات المستخدم في Firebase
-            await saveUserData();
-            
-            // تحديث العرض
-            updateSeatsDisplay();
-            document.getElementById('playerBalance').textContent = currentUser.balance.toFixed(2);
-            
-            // عرض مستوى الثروة
-            const wealthLevel = getWealthLevel(currentUser.depositCount || 0);
-            showNotification(`مرحباً ${currentUser.playerId} | مستوى ${wealthLevel.name}`, 'info');
-            
-            console.log('تم تهيئة اللعبة بنجاح');
+</div>
+
+<!-- نافذة النتيجة -->
+<div class="result-modal" id="resultModal">
+    <div class="result-content">
+        <div class="result-title" id="resultTitle"></div>
+        <div class="result-message" id="resultMessage"></div>
+        <button class="result-btn" onclick="closeResult()">موافق</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+    // ==================== تهيئة Firebase ====================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCvPo4HlsNhyf1WBmTzIr6CdR1c2lQ5sHU",
+        authDomain: "boomb-fa3e7.firebaseapp.com",
+        databaseURL: "https://boomb-fa3e7-default-rtdb.firebaseio.com",
+        projectId: "boomb-fa3e7",
+        storageBucket: "boomb-fa3e7.firebasestorage.app",
+        messagingSenderId: "499624996530",
+        appId: "1:499624996530:web:235f71e450845c748523ab"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database(app);
+
+    // ==================== إعدادات اللعبة ====================
+    const CONFIG = {
+        BET_AMOUNT: 10,
+        GRID_SIZE: 10,
+        THROW_TIME: 15,
+        THROWS_PER_PLAYER: 3
+    };
+
+    // ==================== بيانات المستخدم ====================
+    let currentUser = {
+        id: new URLSearchParams(window.location.search).get('user_id') || 'user_' + Math.random().toString(36).substr(2, 8),
+        name: new URLSearchParams(window.location.search).get('username') || 'زائر',
+        balance: 100
+    };
+
+    // ==================== حالة اللعبة ====================
+    let gameState = {
+        currentRoom: null,
+        rooms: {},
+        grid: [],
+        currentPlayer: 1,
+        player1Throws: CONFIG.THROWS_PER_PLAYER,
+        player2Throws: CONFIG.THROWS_PER_PLAYER,
+        gameActive: false,
+        isDragging: false,
+        power: 0,
+        startDragX: 0,
+        startDragY: 0,
+        roomListener: null,
+        gameListener: null
+    };
+
+    // ==================== عناصر DOM ====================
+    const waitingRoom = document.getElementById('waitingRoom');
+    const roomsGrid = document.getElementById('roomsGrid');
+    const mainBalance = document.getElementById('mainBalance');
+    const gameGrid = document.getElementById('gameGrid');
+    const powerBar = document.getElementById('powerBar');
+    const currentTurnEl = document.getElementById('currentTurn');
+    const throwTimerEl = document.getElementById('throwTimer');
+    const cannonLeft = document.getElementById('cannonLeft');
+    const cannonRight = document.getElementById('cannonRight');
+    const countdownDisplay = document.getElementById('countdownDisplay');
+    const resultModal = document.getElementById('resultModal');
+
+    // ==================== دوال مساعدة ====================
+    function showNotification(msg, type = 'info') {
+        // نافذة منبثقة بسيطة
+        alert(msg);
+    }
+
+    async function updateBalanceInDB() {
+        await database.ref(`users/${currentUser.id}`).set({
+            id: currentUser.id,
+            name: currentUser.name,
+            balance: currentUser.balance,
+            lastSeen: Date.now()
         });
-    </script>
+        mainBalance.textContent = currentUser.balance;
+    }
+
+    // ==================== إنشاء شبكة 10x10 ====================
+    function createGrid() {
+        gameGrid.innerHTML = '';
+        for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+            for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                gameGrid.appendChild(cell);
+            }
+        }
+    }
+
+    function updateGridDisplay() {
+        const cells = gameGrid.children;
+        for (let i = 0; i < cells.length; i++) {
+            const row = Math.floor(i / CONFIG.GRID_SIZE);
+            const col = i % CONFIG.GRID_SIZE;
+            const color = gameState.grid[row]?.[col];
+            cells[i].className = 'grid-cell';
+            if (color === 1) cells[i].classList.add('colored-red');
+            if (color === 2) cells[i].classList.add('colored-blue');
+        }
+    }
+
+    function resetGrid() {
+        gameState.grid = Array(CONFIG.GRID_SIZE).fill().map(() => Array(CONFIG.GRID_SIZE).fill(0));
+        updateGridDisplay();
+    }
+
+    // ==================== فيزياء القنبلة ====================
+    function shootCannon(power) {
+        if (!gameState.gameActive) return;
+
+        const isLeft = gameState.currentPlayer === 1;
+        const startX = isLeft ? 150 : window.innerWidth - 150;
+        const startY = window.innerHeight * 0.7;
+        
+        // حساب الزاوية والسرعة
+        const angle = isLeft ? -Math.PI / 4 : Math.PI - Math.PI / 4;
+        const velocity = 8 + (power / 100) * 12;
+        
+        let bombX = startX;
+        let bombY = startY;
+        let vx = Math.cos(angle) * velocity;
+        let vy = Math.sin(angle) * velocity;
+        const gravity = 0.4;
+        
+        const gridRect = gameGrid.getBoundingClientRect();
+        
+        function animateBomb() {
+            vx *= 0.99;
+            vy += gravity;
+            bombX += vx;
+            bombY += vy;
+            
+            // رسم القنبلة (تأثير بصري)
+            const bombDiv = document.createElement('div');
+            bombDiv.style.position = 'fixed';
+            bombDiv.style.width = '12px';
+            bombDiv.style.height = '12px';
+            bombDiv.style.borderRadius = '50%';
+            bombDiv.style.background = isLeft ? '#ff0000' : '#0000ff';
+            bombDiv.style.left = bombX + 'px';
+            bombDiv.style.top = bombY + 'px';
+            bombDiv.style.pointerEvents = 'none';
+            bombDiv.style.zIndex = '1000';
+            bombDiv.style.boxShadow = '0 0 10px currentColor';
+            document.body.appendChild(bombDiv);
+            
+            setTimeout(() => bombDiv.remove(), 100);
+            
+            // التحقق من اصطدام الشبكة
+            if (bombY > gridRect.top && bombY < gridRect.bottom && 
+                bombX > gridRect.left && bombX < gridRect.right) {
+                
+                const cellWidth = gridRect.width / CONFIG.GRID_SIZE;
+                const cellHeight = gridRect.height / CONFIG.GRID_SIZE;
+                const col = Math.floor((bombX - gridRect.left) / cellWidth);
+                const row = Math.floor((bombY - gridRect.top) / cellHeight);
+                
+                if (row >= 0 && row < CONFIG.GRID_SIZE && col >= 0 && col < CONFIG.GRID_SIZE) {
+                    if (gameState.grid[row][col] === 0) {
+                        gameState.grid[row][col] = gameState.currentPlayer;
+                        updateGridDisplay();
+                    }
+                }
+            }
+            
+            // استمرار الحركة حتى الخروج من الشاشة
+            if (bombX > 0 && bombX < window.innerWidth && bombY < window.innerHeight) {
+                requestAnimationFrame(animateBomb);
+            } else {
+                // انتهى الرمي
+                afterShoot();
+            }
+        }
+        
+        requestAnimationFrame(animateBomb);
+    }
+    
+    function afterShoot() {
+        // تقليل الرميات
+        if (gameState.currentPlayer === 1) {
+            gameState.player1Throws--;
+        } else {
+            gameState.player2Throws--;
+        }
+        
+        // التحقق من انتهاء اللعبة
+        if (gameState.player1Throws === 0 && gameState.player2Throws === 0) {
+            endGame();
+        } else {
+            switchPlayer();
+        }
+    }
+    
+    function switchPlayer() {
+        gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+        currentTurnEl.textContent = `دور ${gameState.currentPlayer === 1 ? '🔴 اللاعب الأول' : '🔵 اللاعب الثاني'}`;
+        startThrowTimer();
+    }
+    
+    // ==================== مؤقت الرمية ====================
+    let timerInterval = null;
+    
+    function startThrowTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        let timeLeft = CONFIG.THROW_TIME;
+        throwTimerEl.textContent = `${timeLeft}s`;
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            throwTimerEl.textContent = `${timeLeft}s`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                // انتهاء الوقت - خصم رمية تلقائياً
+                if (gameState.currentPlayer === 1) {
+                    gameState.player1Throws--;
+                } else {
+                    gameState.player2Throws--;
+                }
+                
+                if (gameState.player1Throws === 0 && gameState.player2Throws === 0) {
+                    endGame();
+                } else {
+                    switchPlayer();
+                }
+            }
+        }, 1000);
+    }
+    
+    // ==================== دوال التحكم بالمدفع ====================
+    let isDragging = false;
+    let startDrag = { x: 0, y: 0 };
+    
+    function onMouseDown(e) {
+        if (!gameState.gameActive) return;
+        const target = e.target.closest('.cannon');
+        if (!target) return;
+        
+        isDragging = true;
+        startDrag.x = e.clientX;
+        startDrag.y = e.clientY;
+        gameState.power = 0;
+        powerBar.style.width = '0%';
+    }
+    
+    function onMouseMove(e) {
+        if (!isDragging || !gameState.gameActive) return;
+        
+        const deltaX = startDrag.x - e.clientX;
+        const deltaY = startDrag.y - e.clientY;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        
+        gameState.power = Math.min(100, distance / 2);
+        powerBar.style.width = gameState.power + '%';
+        
+        // تدوير المدفع حسب القوة
+        const angle = Math.min(45, (gameState.power / 100) * 45);
+        if (gameState.currentPlayer === 1) {
+            cannonLeft.querySelector('.cannon-barrel').style.transform = `rotate(${angle}deg)`;
+        } else {
+            cannonRight.querySelector('.cannon-barrel').style.transform = `rotate(-${angle}deg)`;
+        }
+    }
+    
+    function onMouseUp(e) {
+        if (!isDragging || !gameState.gameActive) return;
+        isDragging = false;
+        
+        if (gameState.power > 5) {
+            shootCannon(gameState.power);
+        }
+        
+        // إعادة المدفع للوضع الطبيعي
+        cannonLeft.querySelector('.cannon-barrel').style.transform = 'rotate(0deg)';
+        cannonRight.querySelector('.cannon-barrel').style.transform = 'rotate(0deg)';
+        gameState.power = 0;
+        powerBar.style.width = '0%';
+    }
+    
+    // ==================== نهاية اللعبة ====================
+    function endGame() {
+        gameState.gameActive = false;
+        if (timerInterval) clearInterval(timerInterval);
+        
+        // حساب النقاط
+        let player1Score = 0, player2Score = 0;
+        for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+            for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                if (gameState.grid[row][col] === 1) player1Score++;
+                if (gameState.grid[row][col] === 2) player2Score++;
+            }
+        }
+        
+        let resultMsg = '';
+        let winner = null;
+        
+        if (player1Score > player2Score) {
+            const winAmount = CONFIG.BET_AMOUNT * 1.8;
+            if (gameState.currentRoom?.player1?.id === currentUser.id) {
+                currentUser.balance += winAmount;
+                updateBalanceInDB();
+                resultMsg = `🎉 فزت! +$${winAmount.toFixed(2)} (${player1Score} - ${player2Score})`;
+            } else {
+                resultMsg = `🔴 فاز اللاعب الأول (${player1Score} - ${player2Score})`;
+            }
+        } else if (player2Score > player1Score) {
+            const winAmount = CONFIG.BET_AMOUNT * 1.8;
+            if (gameState.currentRoom?.player2?.id === currentUser.id) {
+                currentUser.balance += winAmount;
+                updateBalanceInDB();
+                resultMsg = `🎉 فزت! +$${winAmount.toFixed(2)} (${player1Score} - ${player2Score})`;
+            } else {
+                resultMsg = `🔵 فاز اللاعب الثاني (${player1Score} - ${player2Score})`;
+            }
+        } else {
+            // تعادل - إعادة المبلغ
+            currentUser.balance += CONFIG.BET_AMOUNT;
+            updateBalanceInDB();
+            resultMsg = `🤝 تعادل! تم إعادة $${CONFIG.BET_AMOUNT}`;
+        }
+        
+        document.getElementById('resultTitle').textContent = 'انتهت الجولة';
+        document.getElementById('resultMessage').innerHTML = resultMsg;
+        resultModal.classList.add('active');
+        
+        // حذف الغرفة من Firebase
+        if (gameState.currentRoom) {
+            database.ref(`rooms/${gameState.currentRoom.id}`).remove();
+        }
+        
+        // إلغاء الاستماع
+        if (gameState.roomListener) gameState.roomListener();
+        if (gameState.gameListener) gameState.gameListener();
+        
+        gameState.currentRoom = null;
+    }
+    
+    // ==================== دوال الغرف ====================
+    async function createRoom() {
+        if (currentUser.balance < CONFIG.BET_AMOUNT) {
+            showNotification(`⚠️ رصيدك غير كافي! تحتاج $${CONFIG.BET_AMOUNT}`);
+            return;
+        }
+        
+        const roomId = Date.now().toString();
+        const room = {
+            id: roomId,
+            player1: { id: currentUser.id, name: currentUser.name },
+            player2: null,
+            status: 'waiting',
+            bet: CONFIG.BET_AMOUNT,
+            createdAt: Date.now(),
+            grid: null,
+            currentPlayer: 1,
+            player1Throws: CONFIG.THROWS_PER_PLAYER,
+            player2Throws: CONFIG.THROWS_PER_PLAYER
+        };
+        
+        await database.ref(`rooms/${roomId}`).set(room);
+        joinRoom(roomId);
+    }
+    
+    async function joinRoom(roomId) {
+        const roomRef = database.ref(`rooms/${roomId}`);
+        const snapshot = await roomRef.once('value');
+        const room = snapshot.val();
+        
+        if (!room) {
+            showNotification('الغرفة غير موجودة');
+            return;
+        }
+        
+        if (room.player1?.id === currentUser.id) {
+            // أنت صاحب الغرفة
+            gameState.currentRoom = room;
+            startWaitingForPlayer(roomId);
+        } else if (!room.player2) {
+            // انضم كلاعب ثاني
+            if (currentUser.balance < CONFIG.BET_AMOUNT) {
+                showNotification(`⚠️ رصيدك غير كافي! تحتاج $${CONFIG.BET_AMOUNT}`);
+                return;
+            }
+            
+            await roomRef.update({
+                player2: { id: currentUser.id, name: currentUser.name },
+                status: 'full'
+            });
+            
+            gameState.currentRoom = { ...room, player2: { id: currentUser.id, name: currentUser.name }, status: 'full' };
+            startGame(roomId);
+        } else {
+            showNotification('الغرفة ممتلئة');
+        }
+    }
+    
+    function startWaitingForPlayer(roomId) {
+        waitingRoom.classList.remove('hidden');
+        roomsGrid.style.display = 'none';
+        countdownDisplay.classList.add('active');
+        countdownDisplay.textContent = '⏳ انتظار لاعب آخر...';
+        
+        const listener = database.ref(`rooms/${roomId}`).on('value', (snapshot) => {
+            const room = snapshot.val();
+            if (room && room.status === 'full') {
+                database.ref(`rooms/${roomId}`).off();
+                startGame(roomId);
+            }
+        });
+        gameState.roomListener = () => database.ref(`rooms/${roomId}`).off();
+    }
+    
+    async function startGame(roomId) {
+        waitingRoom.classList.add('hidden');
+        roomsGrid.style.display = 'flex';
+        countdownDisplay.classList.remove('active');
+        
+        // خصم الرهان
+        currentUser.balance -= CONFIG.BET_AMOUNT;
+        await updateBalanceInDB();
+        
+        // تهيئة الشبكة
+        resetGrid();
+        
+        // إعداد حالة اللعبة
+        gameState.gameActive = true;
+        gameState.currentPlayer = 1;
+        gameState.player1Throws = CONFIG.THROWS_PER_PLAYER;
+        gameState.player2Throws = CONFIG.THROWS_PER_PLAYER;
+        
+        currentTurnEl.textContent = 'دور 🔴 اللاعب الأول';
+        startThrowTimer();
+        
+        // إضافة مستمعي الأحداث
+        document.addEventListener('mousedown', onMouseDown);
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            onMouseDown(touch);
+        });
+        document.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            onMouseMove(touch);
+        });
+        document.addEventListener('touchend', onMouseUp);
+        
+        // عرض العد التنازلي
+        let countdown = 3;
+        const countdownInterval = setInterval(() => {
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+            } else {
+                currentTurnEl.textContent = `يبدأ خلال ${countdown}...`;
+                countdown--;
+            }
+        }, 1000);
+        
+        // حفظ حالة اللعبة في Firebase للمزامنة
+        const gameRef = database.ref(`rooms/${roomId}/game`);
+        gameState.gameListener = gameRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // مزامنة الشبكة واللاعبين
+                if (data.grid) gameState.grid = data.grid;
+                if (data.currentPlayer) gameState.currentPlayer = data.currentPlayer;
+                if (data.player1Throws) gameState.player1Throws = data.player1Throws;
+                if (data.player2Throws) gameState.player2Throws = data.player2Throws;
+                updateGridDisplay();
+            }
+        });
+        
+        // تحديث حالة اللعبة في Firebase بعد كل حركة
+        window.syncGameState = () => {
+            gameRef.set({
+                grid: gameState.grid,
+                currentPlayer: gameState.currentPlayer,
+                player1Throws: gameState.player1Throws,
+                player2Throws: gameState.player2Throws,
+                timestamp: Date.now()
+            });
+        };
+    }
+    
+    function closeResult() {
+        resultModal.classList.remove('active');
+        backToRooms();
+    }
+    
+    function backToRooms() {
+        // تنظيف
+        if (timerInterval) clearInterval(timerInterval);
+        document.removeEventListener('mousedown', onMouseDown);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        
+        gameState.gameActive = false;
+        gameState.currentRoom = null;
+        
+        waitingRoom.classList.remove('hidden');
+        roomsGrid.style.display = 'flex';
+        loadRooms();
+    }
+    
+    // ==================== عرض الغرف ====================
+    async function loadRooms() {
+        const roomsRef = database.ref('rooms');
+        roomsRef.on('value', (snapshot) => {
+            const rooms = snapshot.val() || {};
+            gameState.rooms = rooms;
+            
+            roomsGrid.innerHTML = '';
+            const roomList = Object.values(rooms).filter(r => r.status !== 'full').slice(0, 6);
+            
+            if (roomList.length === 0) {
+                roomsGrid.innerHTML = '<div style="grid-column:1/-1;color:#888;">لا توجد غرف متاحة، أنشئ غرفة جديدة</div>';
+            }
+            
+            roomList.forEach(room => {
+                const card = document.createElement('div');
+                card.className = 'room-card';
+                card.innerHTML = `
+                    <div class="room-number">غرفة ${room.id.slice(-4)}</div>
+                    <div class="room-status available">🟢 متاحة</div>
+                    <div class="room-bet">💰 رهان: $${room.bet}</div>
+                    <div>👤 ${room.player1?.name || 'مجهول'}</div>
+                `;
+                card.onclick = () => joinRoom(room.id);
+                roomsGrid.appendChild(card);
+            });
+        });
+    }
+    
+    // ==================== التهيئة ====================
+    async function init() {
+        // تحميل بيانات المستخدم من Firebase
+        const userRef = database.ref(`users/${currentUser.id}`);
+        const snapshot = await userRef.once('value');
+        const savedUser = snapshot.val();
+        
+        if (savedUser) {
+            currentUser.balance = savedUser.balance;
+            currentUser.name = savedUser.name;
+        } else {
+            await updateBalanceInDB();
+        }
+        
+        mainBalance.textContent = currentUser.balance;
+        createGrid();
+        loadRooms();
+    }
+    
+    init();
+</script>
 </body>
 </html>
