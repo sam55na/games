@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOOMB | لعبة المدفع 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BOOMB 3D | لعبة المدفع الاستراتيجية</title>
     <style>
         * {
             margin: 0;
@@ -14,10 +14,11 @@
 
         body {
             overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #050510 100%);
         }
 
-        /* UI Overlay */
+        /* ==================== UI Overlay ==================== */
         .ui-overlay {
             position: fixed;
             top: 0;
@@ -28,96 +29,131 @@
         }
 
         .game-header {
-            background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(0,0,0,0.7));
-            backdrop-filter: blur(12px);
-            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(0,0,0,0.85));
+            backdrop-filter: blur(15px);
+            padding: 12px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: #ffd700;
-            border-bottom: 1px solid rgba(255,215,0,0.4);
+            border-bottom: 1px solid rgba(255,215,0,0.3);
             pointer-events: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ffd700, #ffaa33);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .balance-display {
             background: rgba(0,0,0,0.6);
-            padding: 6px 18px;
-            border-radius: 30px;
+            padding: 8px 20px;
+            border-radius: 40px;
             border: 1px solid #ffd700;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
         }
 
         .balance-display span {
             color: #ffd700;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: bold;
+            margin-left: 5px;
         }
 
+        /* ==================== Game Info ==================== */
         .current-turn {
             position: fixed;
-            top: 75px;
+            top: 80px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.9);
-            padding: 8px 25px;
-            border-radius: 40px;
+            backdrop-filter: blur(10px);
+            padding: 10px 30px;
+            border-radius: 50px;
             color: #ffd700;
             font-weight: bold;
+            font-size: 1.1rem;
             border: 1px solid #ffd700;
             z-index: 100;
             pointer-events: none;
             white-space: nowrap;
+            box-shadow: 0 0 20px rgba(255,215,0,0.2);
         }
 
         .throw-timer {
             position: fixed;
-            top: 75px;
-            right: 20px;
+            top: 80px;
+            right: 25px;
             background: rgba(0,0,0,0.85);
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-size: 1.3rem;
+            backdrop-filter: blur(10px);
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 1.4rem;
             font-weight: bold;
             color: #ff6666;
+            font-family: monospace;
             z-index: 100;
             pointer-events: none;
             border: 1px solid #ff6666;
+            box-shadow: 0 0 15px rgba(255,102,102,0.3);
         }
 
         .power-bar-container {
             position: fixed;
-            bottom: 25px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            width: 280px;
-            background: rgba(0,0,0,0.75);
-            border-radius: 20px;
-            padding: 4px;
+            width: 320px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 30px;
+            padding: 6px;
             z-index: 100;
             pointer-events: none;
             border: 1px solid #ffd700;
+            backdrop-filter: blur(5px);
         }
 
         .power-bar {
-            height: 22px;
+            height: 24px;
             background: linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c);
-            border-radius: 16px;
+            border-radius: 25px;
             width: 0%;
             transition: width 0.02s linear;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
         }
 
-        /* Waiting Room */
+        .power-label {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffd700;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        /* ==================== Waiting Room ==================== */
         .waiting-room {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.96);
+            background: rgba(0,0,0,0.97);
             backdrop-filter: blur(20px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 200;
+            transition: all 0.3s ease;
         }
 
         .waiting-room.hidden {
@@ -125,115 +161,317 @@
         }
 
         .waiting-content {
-            background: linear-gradient(145deg, #1a1a2a, #0f0f1f);
-            border-radius: 30px;
-            padding: 35px;
+            background: linear-gradient(145deg, rgba(26,26,42,0.95), rgba(15,15,31,0.95));
+            border-radius: 40px;
+            padding: 40px;
             text-align: center;
             border: 2px solid #ffd700;
-            max-width: 700px;
+            max-width: 800px;
             width: 90%;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
         }
 
         .waiting-title {
-            font-size: 1.8rem;
+            font-size: 2rem;
             color: #ffd700;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
 
         .rooms-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 12px;
-            margin-bottom: 25px;
-            max-height: 380px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            max-height: 400px;
             overflow-y: auto;
-            min-height: 200px;
+            padding: 5px;
         }
 
         .room-card {
-            background: rgba(255,215,0,0.1);
+            background: linear-gradient(145deg, rgba(255,215,0,0.1), rgba(255,215,0,0.05));
             border: 1px solid #ffd700;
-            border-radius: 16px;
-            padding: 12px;
+            border-radius: 20px;
+            padding: 15px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
         }
 
         .room-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-5px);
             background: rgba(255,215,0,0.2);
+            box-shadow: 0 10px 25px rgba(255,215,0,0.3);
         }
 
         .room-number {
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: #ffd700;
             font-weight: bold;
+            font-family: monospace;
         }
 
         .room-status {
-            font-size: 0.7rem;
-            margin-top: 6px;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .room-status.available {
+            background: rgba(46,204,113,0.2);
             color: #2ecc71;
+            border: 1px solid #2ecc71;
         }
 
         .room-creator {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             color: #aaa;
-            margin-top: 5px;
+            margin-top: 10px;
+        }
+
+        .room-bet {
+            font-size: 0.9rem;
+            color: #ffd700;
+            margin-top: 8px;
         }
 
         .create-room-btn {
-            background: #ffd700;
+            background: linear-gradient(135deg, #ffd700, #ffaa33);
             color: #000;
             border: none;
-            padding: 12px 30px;
-            border-radius: 40px;
+            padding: 12px 35px;
+            border-radius: 50px;
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            margin-top: 10px;
         }
 
         .create-room-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
+        }
+
+        .create-room-btn:hover:not(:disabled) {
+            transform: scale(1.03);
+            box-shadow: 0 5px 20px rgba(255,215,0,0.4);
         }
 
         .waiting-message {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             color: #ffd700;
-            margin: 20px 0;
+            margin: 25px 0;
             display: none;
+            animation: pulse 1s infinite;
         }
 
         .waiting-message.active {
             display: block;
-            animation: pulse 0.8s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.03); opacity: 0.9; }
         }
 
         .active-game-badge {
             position: fixed;
-            top: 70px;
+            top: 75px;
             left: 20px;
-            background: rgba(255,68,68,0.9);
+            background: linear-gradient(135deg, #ff4444, #cc3333);
             color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
+            padding: 5px 15px;
+            border-radius: 25px;
+            font-size: 0.75rem;
             z-index: 100;
             pointer-events: none;
             display: none;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(255,68,68,0.3);
         }
 
         .active-game-badge.visible {
             display: block;
         }
 
+        /* ==================== Game Area ==================== */
+        .game-area {
+            position: fixed;
+            top: 100px;
+            left: 0;
+            right: 0;
+            bottom: 120px;
+            display: none;
+            background: linear-gradient(180deg, #0a0a1a, #050510);
+        }
+
+        .game-area.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
+            background: rgba(26,26,42,0.8);
+            padding: 15px;
+            border-radius: 20px;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #2a2a3a, #1a1a2a);
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .grid-cell.colored-red {
+            background: linear-gradient(145deg, #ff5555, #cc3333);
+            box-shadow: 0 0 12px rgba(255,68,68,0.5);
+        }
+
+        .grid-cell.colored-blue {
+            background: linear-gradient(145deg, #5555ff, #3333cc);
+            box-shadow: 0 0 12px rgba(68,68,255,0.5);
+        }
+
+        /* Cannons Area */
+        .cannons-area {
+            height: 100px;
+            background: linear-gradient(0deg, #1a1a2a, #0f0f1f);
+            border-top: 2px solid #ffd700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15%;
+            position: relative;
+        }
+
+        .cannon {
+            text-align: center;
+            cursor: grab;
+            transition: transform 0.05s linear;
+        }
+
+        .cannon:active {
+            cursor: grabbing;
+        }
+
+        .cannon-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+            transition: transform 0.02s linear;
+        }
+
+        .cannon-left .cannon-icon {
+            transform: rotate(-20deg);
+        }
+
+        .cannon-right .cannon-icon {
+            transform: rotate(20deg) scaleX(-1);
+        }
+
+        .cannon-power {
+            font-size: 0.7rem;
+            color: #ffd700;
+            margin-top: 5px;
+        }
+
+        /* ==================== Admin Panel ==================== */
+        .admin-panel {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ffd700;
+            border-radius: 15px;
+            padding: 15px;
+            z-index: 150;
+            width: 250px;
+            transform: translateX(280px);
+            transition: transform 0.3s ease;
+        }
+
+        .admin-panel.open {
+            transform: translateX(0);
+        }
+
+        .admin-toggle {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            background: #ffd700;
+            color: #000;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 151;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .admin-panel h4 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .admin-panel input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #1a1a2a;
+            border: 1px solid #ffd700;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .admin-panel button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #ffd700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .admin-panel .test-result {
+            font-size: 0.7rem;
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        /* ==================== Result Modal ==================== */
         .result-modal {
             position: fixed;
             top: 0;
@@ -241,6 +479,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(20px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -258,46 +497,73 @@
         .result-content {
             background: linear-gradient(145deg, #1a1a2a, #0a0a1a);
             border: 2px solid #ffd700;
-            border-radius: 30px;
-            padding: 35px;
+            border-radius: 40px;
+            padding: 40px;
             text-align: center;
-            min-width: 280px;
+            min-width: 320px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .result-title {
             font-size: 1.8rem;
             color: #ffd700;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .result-message {
             color: white;
-            font-size: 1rem;
-            margin-bottom: 20px;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
         }
 
         .result-btn {
             background: #ffd700;
             color: #000;
             border: none;
-            padding: 8px 25px;
-            border-radius: 30px;
+            padding: 10px 35px;
+            border-radius: 40px;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .result-btn:hover {
+            transform: scale(1.05);
+            background: #ffaa33;
         }
 
         .back-btn {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.6);
+            bottom: 25px;
+            left: 25px;
+            background: rgba(0,0,0,0.7);
             color: #ffd700;
             border: 1px solid #ffd700;
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 8px 18px;
+            border-radius: 30px;
             cursor: pointer;
             z-index: 100;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            backdrop-filter: blur(5px);
+        }
+
+        .back-btn:hover {
+            background: rgba(0,0,0,0.9);
+            transform: scale(1.02);
         }
 
         .loading-spinner {
@@ -317,28 +583,46 @@
         }
 
         @media (max-width: 600px) {
-            .current-turn { font-size: 0.8rem; top: 65px; }
-            .throw-timer { font-size: 1rem; top: 65px; }
-            .power-bar-container { width: 220px; bottom: 15px; }
+            .current-turn { font-size: 0.8rem; top: 70px; padding: 6px 18px; }
+            .throw-timer { font-size: 1rem; top: 70px; padding: 6px 15px; }
+            .power-bar-container { width: 240px; bottom: 20px; }
+            .cannons-area { padding: 0 10%; }
+            .cannon-icon { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
+    <!-- UI Overlay -->
     <div class="ui-overlay">
         <div class="game-header">
-            <div>💣 BOOMB 3D</div>
+            <div class="logo">💣 BOOMB 3D</div>
             <div class="balance-display">💰 الرصيد: $<span id="mainBalance">0</span></div>
         </div>
     </div>
 
+    <!-- Game Info -->
     <div class="current-turn" id="currentTurn">⏳ انتظار...</div>
     <div class="throw-timer" id="throwTimer">--s</div>
     <div class="power-bar-container">
+        <div class="power-label">⚡ اسحب للخلف لتحديد القوة</div>
         <div class="power-bar" id="powerBar"></div>
     </div>
-    <div class="active-game-badge" id="activeGameBadge">🎮 في لعبة</div>
-    <button class="back-btn" id="backBtn" onclick="window.exitGame()">🏠 خروج</button>
+    <div class="active-game-badge" id="activeGameBadge">🎮 في لعبة نشطة</div>
+    <button class="back-btn" id="backBtn" onclick="window.exitGame()">🏠 العودة للغرف</button>
 
+    <!-- Admin Panel (Hidden by default, appears for admin) -->
+    <div class="admin-toggle" id="adminToggle" style="display: none;">👑</div>
+    <div class="admin-panel" id="adminPanel">
+        <h4>👑 لوحة التحكم</h4>
+        <input type="text" id="adminUserId" placeholder="معرف المستخدم" value="">
+        <input type="number" id="adminAmount" placeholder="المبلغ" value="100">
+        <button onclick="adminAddBalance()">➕ إضافة رصيد</button>
+        <button onclick="adminRemoveBalance()">➖ خصم رصيد</button>
+        <button onclick="adminResetGame()">🔄 إعادة تعيين اللعبة</button>
+        <div class="test-result" id="testResult"></div>
+    </div>
+
+    <!-- Waiting Room -->
     <div class="waiting-room" id="waitingRoom">
         <div class="waiting-content">
             <div class="waiting-title">🎮 غرف اللعب</div>
@@ -348,11 +632,29 @@
             <button class="create-room-btn" id="createRoomBtn">➕ إنشاء غرفة جديدة</button>
             <div class="waiting-message" id="waitingMessage">
                 ⏳ انتظار لاعب آخر...<br>
-                <span id="waitingRoomCode"></span>
+                <span id="waitingRoomCode" style="font-size:0.9rem; color:#aaa;"></span>
             </div>
         </div>
     </div>
 
+    <!-- Game Area -->
+    <div class="game-area" id="gameArea">
+        <div class="grid-container">
+            <div class="game-grid" id="gameGrid"></div>
+        </div>
+        <div class="cannons-area" id="cannonsArea">
+            <div class="cannon cannon-left" id="cannonLeft">
+                <div class="cannon-icon">🔫</div>
+                <div class="cannon-power">اللاعب 🔴</div>
+            </div>
+            <div class="cannon cannon-right" id="cannonRight">
+                <div class="cannon-icon">🔫</div>
+                <div class="cannon-power">اللاعب 🔵</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
     <div class="result-modal" id="resultModal">
         <div class="result-content">
             <div class="result-title" id="resultTitle"></div>
@@ -365,7 +667,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
-        // ==================== FIREBASE ====================
+        // ==================== FIREBASE CONFIGURATION ====================
         const firebaseConfig = {
             apiKey: "AIzaSyCvPo4HlsNhyf1WBmTzIr6CdR1c2lQ5sHU",
             authDomain: "boomb-fa3e7.firebaseapp.com",
@@ -379,22 +681,24 @@
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.database(app);
 
-        // ==================== CONFIG ====================
+        // ==================== GAME CONFIGURATION ====================
         const CONFIG = {
-            BET: 10,
+            BET_AMOUNT: 10,
             GRID_SIZE: 10,
             THROW_TIME: 15,
-            THROWS: 3,
-            WIN_MULT: 1.8
+            THROWS_PER_PLAYER: 3,
+            WIN_MULTIPLIER: 1.8,
+            ADMIN_IDS: ['admin_001', 'admin_sam55na'] // قائمة معرفات المشرفين
         };
 
-        // ==================== USER ====================
+        // ==================== USER DATA ====================
         let currentUser = {
             id: 'user_' + Math.random().toString(36).substr(2, 8),
             name: 'زائر_' + Math.floor(Math.random() * 1000),
             balance: 100,
             inGame: false,
-            roomId: null
+            roomId: null,
+            isAdmin: false
         };
 
         // ==================== GAME STATE ====================
@@ -404,11 +708,12 @@
             roomData: null,
             grid: [],
             currentPlayer: 1,
-            p1Throws: CONFIG.THROWS,
-            p2Throws: CONFIG.THROWS,
+            player1Throws: CONFIG.THROWS_PER_PLAYER,
+            player2Throws: CONFIG.THROWS_PER_PLAYER,
             dragging: false,
             power: 0,
-            bombActive: false
+            bombActive: false,
+            dragStartX: 0
         };
 
         // ==================== DOM Elements ====================
@@ -416,32 +721,44 @@
         let roomListener = null;
         let gameListener = null;
 
-        // ==================== HELPERS ====================
-        function showToast(msg, isError = false) {
-            const div = document.createElement('div');
-            div.textContent = msg;
-            div.style.cssText = `
-                position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-                background: ${isError ? '#e74c3c' : '#2c3e50'}; color: white;
-                padding: 8px 20px; border-radius: 40px; z-index: 1000;
-                font-weight: bold; white-space: nowrap; font-size: 0.9rem;
+        // ==================== HELPER FUNCTIONS ====================
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 120px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${isError ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : 'linear-gradient(135deg, #2c3e50, #1a2632)'};
+                color: white;
+                padding: 12px 28px;
+                border-radius: 50px;
+                z-index: 1000;
+                font-weight: bold;
+                font-size: 0.9rem;
+                white-space: nowrap;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+                animation: slideUp 0.3s ease;
             `;
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 2500);
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
         }
 
-        async function saveUser() {
+        async function saveUserToDB() {
             await db.ref(`users/${currentUser.id}`).set({
                 id: currentUser.id,
                 name: currentUser.name,
                 balance: currentUser.balance,
                 inGame: currentUser.inGame,
-                roomId: currentUser.roomId
+                roomId: currentUser.roomId,
+                isAdmin: currentUser.isAdmin,
+                lastSeen: Date.now()
             });
             document.getElementById('mainBalance').textContent = currentUser.balance;
         }
 
-        async function loadUser() {
+        async function loadUserFromDB() {
             const snap = await db.ref(`users/${currentUser.id}`).once('value');
             if (snap.exists()) {
                 const data = snap.val();
@@ -449,72 +766,286 @@
                 currentUser.name = data.name;
                 currentUser.inGame = data.inGame || false;
                 currentUser.roomId = data.roomId;
+                currentUser.isAdmin = data.isAdmin || CONFIG.ADMIN_IDS.includes(currentUser.id);
             } else {
-                await saveUser();
+                currentUser.isAdmin = CONFIG.ADMIN_IDS.includes(currentUser.id);
+                await saveUserToDB();
             }
             document.getElementById('mainBalance').textContent = currentUser.balance;
+            
+            // Show admin panel if user is admin
+            if (currentUser.isAdmin) {
+                document.getElementById('adminToggle').style.display = 'flex';
+            }
         }
 
-        // ==================== GRID VISUAL (Simple 2D for testing) ====================
-        function createSimpleGrid() {
-            const gridContainer = document.createElement('div');
-            gridContainer.style.cssText = `
-                display: grid;
-                grid-template-columns: repeat(10, 1fr);
-                gap: 2px;
-                background: #1a1a2a;
-                padding: 10px;
-                border-radius: 10px;
-                margin: 20px;
-                max-width: 500px;
-                margin: 20px auto;
-            `;
+        // ==================== ADMIN FUNCTIONS ====================
+        window.adminAddBalance = async function() {
+            const userId = document.getElementById('adminUserId').value || currentUser.id;
+            const amount = parseFloat(document.getElementById('adminAmount').value);
+            if (isNaN(amount)) return showToast('❌ أدخل مبلغ صحيح', true);
             
-            for (let i = 0; i < 100; i++) {
-                const cell = document.createElement('div');
-                cell.style.cssText = `
-                    aspect-ratio: 1;
-                    background: #3a3a4a;
-                    border-radius: 4px;
-                    transition: all 0.1s;
-                `;
-                cell.dataset.index = i;
-                gridContainer.appendChild(cell);
+            const userRef = db.ref(`users/${userId}`);
+            const snap = await userRef.once('value');
+            const currentBalance = snap.exists() ? snap.val().balance : 0;
+            await userRef.update({ balance: currentBalance + amount });
+            
+            document.getElementById('testResult').innerHTML = `✅ تم إضافة $${amount} للمستخدم ${userId.slice(-6)}`;
+            document.getElementById('testResult').style.background = '#2ecc7133';
+            showToast(`✅ تم إضافة $${amount}`);
+            
+            if (userId === currentUser.id) {
+                currentUser.balance += amount;
+                document.getElementById('mainBalance').textContent = currentUser.balance;
+            }
+        };
+        
+        window.adminRemoveBalance = async function() {
+            const userId = document.getElementById('adminUserId').value || currentUser.id;
+            const amount = parseFloat(document.getElementById('adminAmount').value);
+            if (isNaN(amount)) return showToast('❌ أدخل مبلغ صحيح', true);
+            
+            const userRef = db.ref(`users/${userId}`);
+            const snap = await userRef.once('value');
+            const currentBalance = snap.exists() ? snap.val().balance : 0;
+            await userRef.update({ balance: Math.max(0, currentBalance - amount) });
+            
+            document.getElementById('testResult').innerHTML = `✅ تم خصم $${amount} من المستخدم ${userId.slice(-6)}`;
+            document.getElementById('testResult').style.background = '#e74c3c33';
+            showToast(`✅ تم خصم $${amount}`);
+            
+            if (userId === currentUser.id) {
+                currentUser.balance = Math.max(0, currentUser.balance - amount);
+                document.getElementById('mainBalance').textContent = currentUser.balance;
+            }
+        };
+        
+        window.adminResetGame = async function() {
+            const roomsSnap = await db.ref('rooms').once('value');
+            const rooms = roomsSnap.val() || {};
+            for (const roomId in rooms) {
+                await db.ref(`rooms/${roomId}`).remove();
+            }
+            document.getElementById('testResult').innerHTML = '✅ تم حذف جميع الغرف';
+            document.getElementById('testResult').style.background = '#ffd70033';
+            showToast('✅ تم إعادة تعيين جميع الغرف');
+            loadRooms();
+        };
+        
+        // Toggle admin panel
+        document.getElementById('adminToggle').onclick = () => {
+            const panel = document.getElementById('adminPanel');
+            panel.classList.toggle('open');
+        };
+
+        // ==================== GRID FUNCTIONS ====================
+        function createGridVisual() {
+            const gridContainer = document.getElementById('gameGrid');
+            gridContainer.innerHTML = '';
+            
+            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    gridContainer.appendChild(cell);
+                }
+            }
+        }
+        
+        function updateGridVisual() {
+            const cells = document.querySelectorAll('#gameGrid .grid-cell');
+            for (let i = 0; i < cells.length; i++) {
+                const row = Math.floor(i / CONFIG.GRID_SIZE);
+                const col = i % CONFIG.GRID_SIZE;
+                const value = gameState.grid[row]?.[col];
+                cells[i].className = 'grid-cell';
+                if (value === 1) cells[i].classList.add('colored-red');
+                else if (value === 2) cells[i].classList.add('colored-blue');
+            }
+        }
+        
+        function resetGrid() {
+            gameState.grid = Array(CONFIG.GRID_SIZE).fill().map(() => Array(CONFIG.GRID_SIZE).fill(0));
+            updateGridVisual();
+        }
+
+        // ==================== SHOOT MECHANICS ====================
+        function shoot(power) {
+            if (gameState.bombActive || !gameState.active) return;
+            
+            const isLeft = gameState.currentPlayer === 1;
+            const powerPercent = power / 100;
+            
+            // Calculate affected cells based on power
+            const affectedRadius = Math.floor(1 + powerPercent * 3);
+            const startRow = Math.floor(Math.random() * CONFIG.GRID_SIZE);
+            const startCol = Math.floor(Math.random() * CONFIG.GRID_SIZE);
+            
+            // Simulate bomb trajectory - color cells in a line
+            for (let step = 0; step < 15 + Math.floor(powerPercent * 20); step++) {
+                const row = Math.min(CONFIG.GRID_SIZE - 1, Math.max(0, startRow + (isLeft ? -step : step) / 2));
+                const col = Math.min(CONFIG.GRID_SIZE - 1, Math.max(0, startCol + Math.sin(step) * affectedRadius));
+                
+                if (gameState.grid[Math.floor(row)]?.[Math.floor(col)] === 0) {
+                    gameState.grid[Math.floor(row)][Math.floor(col)] = gameState.currentPlayer;
+                }
             }
             
-            const gameArea = document.querySelector('.game-area');
-            if (!gameArea) {
-                const area = document.createElement('div');
-                area.className = 'game-area';
-                area.style.cssText = `
-                    position: fixed;
-                    top: 120px;
-                    left: 0;
-                    right: 0;
-                    bottom: 100px;
-                    overflow-y: auto;
-                    display: none;
-                `;
-                area.id = 'gameArea';
-                document.body.appendChild(area);
+            // Also color random cells based on power
+            const cellsToColor = Math.floor(2 + powerPercent * 8);
+            for (let i = 0; i < cellsToColor; i++) {
+                const row = Math.floor(Math.random() * CONFIG.GRID_SIZE);
+                const col = Math.floor(Math.random() * CONFIG.GRID_SIZE);
+                if (gameState.grid[row][col] === 0) {
+                    gameState.grid[row][col] = gameState.currentPlayer;
+                }
             }
             
-            const area = document.getElementById('gameArea');
-            area.innerHTML = '';
-            area.appendChild(gridContainer);
-            return gridContainer;
+            updateGridVisual();
+            
+            // Visual feedback
+            const cannonIcon = isLeft ? document.querySelector('#cannonLeft .cannon-icon') : document.querySelector('#cannonRight .cannon-icon');
+            cannonIcon.style.transform = isLeft ? 'rotate(-40deg)' : 'rotate(40deg) scaleX(-1)';
+            setTimeout(() => {
+                cannonIcon.style.transform = isLeft ? 'rotate(-20deg)' : 'rotate(20deg) scaleX(-1)';
+            }, 150);
+            
+            showToast(`💥 رمية بقوة ${Math.round(power)}%`);
+            
+            gameState.bombActive = true;
+            setTimeout(() => {
+                gameState.bombActive = false;
+                afterShoot();
+            }, 500);
+        }
+        
+        function afterShoot() {
+            if (gameState.currentPlayer === 1) gameState.player1Throws--;
+            else gameState.player2Throws--;
+            
+            if (gameState.player1Throws === 0 && gameState.player2Throws === 0) {
+                endGame();
+            } else {
+                switchPlayer();
+            }
+            saveGameState();
+        }
+        
+        function switchPlayer() {
+            gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+            const turnText = gameState.currentPlayer === 1 ? '🔴 دور اللاعب الأول' : '🔵 دور اللاعب الثاني';
+            document.getElementById('currentTurn').textContent = turnText;
+            startTimer();
+        }
+        
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            let timeLeft = CONFIG.THROW_TIME;
+            document.getElementById('throwTimer').textContent = `${timeLeft}s`;
+            
+            timerInterval = setInterval(() => {
+                if (!gameState.active) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                timeLeft--;
+                document.getElementById('throwTimer').textContent = `${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    if (gameState.currentPlayer === 1) gameState.player1Throws--;
+                    else gameState.player2Throws--;
+                    
+                    if (gameState.player1Throws === 0 && gameState.player2Throws === 0) {
+                        endGame();
+                    } else {
+                        switchPlayer();
+                    }
+                    saveGameState();
+                }
+            }, 1000);
+        }
+        
+        async function saveGameState() {
+            if (!gameState.roomId) return;
+            await db.ref(`rooms/${gameState.roomId}/game`).set({
+                grid: gameState.grid,
+                currentPlayer: gameState.currentPlayer,
+                player1Throws: gameState.player1Throws,
+                player2Throws: gameState.player2Throws,
+                timestamp: Date.now()
+            });
+        }
+        
+        async function endGame() {
+            gameState.active = false;
+            if (timerInterval) clearInterval(timerInterval);
+            if (gameListener) gameListener();
+            
+            // Calculate scores
+            let player1Score = 0, player2Score = 0;
+            for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
+                for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
+                    if (gameState.grid[row][col] === 1) player1Score++;
+                    if (gameState.grid[row][col] === 2) player2Score++;
+                }
+            }
+            
+            const isPlayer1 = gameState.roomData?.player1?.id === currentUser.id;
+            let resultMessage = '';
+            let won = false;
+            
+            if (player1Score > player2Score) {
+                if (isPlayer1) {
+                    const winAmount = CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER;
+                    currentUser.balance += winAmount;
+                    await saveUserToDB();
+                    resultMessage = `🎉 فزت! +$${winAmount.toFixed(2)} (${player1Score} - ${player2Score})`;
+                    won = true;
+                } else {
+                    resultMessage = `🔴 فاز اللاعب الأول (${player1Score} - ${player2Score})`;
+                }
+            } else if (player2Score > player1Score) {
+                if (!isPlayer1) {
+                    const winAmount = CONFIG.BET_AMOUNT * CONFIG.WIN_MULTIPLIER;
+                    currentUser.balance += winAmount;
+                    await saveUserToDB();
+                    resultMessage = `🎉 فزت! +$${winAmount.toFixed(2)} (${player1Score} - ${player2Score})`;
+                    won = true;
+                } else {
+                    resultMessage = `🔵 فاز اللاعب الثاني (${player1Score} - ${player2Score})`;
+                }
+            } else {
+                currentUser.balance += CONFIG.BET_AMOUNT;
+                await saveUserToDB();
+                resultMessage = `🤝 تعادل! تم إعادة $${CONFIG.BET_AMOUNT}`;
+            }
+            
+            document.getElementById('resultTitle').textContent = won ? '🏆 فوز! 🏆' : 'انتهت الجولة';
+            document.getElementById('resultMessage').innerHTML = resultMessage;
+            document.getElementById('resultModal').classList.add('active');
+            
+            if (gameState.roomId) {
+                await db.ref(`rooms/${gameState.roomId}`).remove();
+            }
+            
+            currentUser.inGame = false;
+            currentUser.roomId = null;
+            await saveUserToDB();
+            
+            showLobby();
         }
 
         // ==================== ROOM FUNCTIONS ====================
-        async function createRoom() {
-            console.log('createRoom called');
-            
+        window.createRoom = async function() {
             if (currentUser.inGame) {
                 showToast('⚠️ أنت بالفعل في لعبة!', true);
                 return;
             }
-            if (currentUser.balance < CONFIG.BET) {
-                showToast(`⚠️ رصيدك غير كافي! تحتاج $${CONFIG.BET}`, true);
+            if (currentUser.balance < CONFIG.BET_AMOUNT) {
+                showToast(`⚠️ رصيدك غير كافي! تحتاج $${CONFIG.BET_AMOUNT}`, true);
                 return;
             }
             
@@ -524,39 +1055,34 @@
             
             try {
                 const roomId = Date.now().toString();
-                console.log('Creating room with ID:', roomId);
-                
                 const roomData = {
                     id: roomId,
                     player1: { id: currentUser.id, name: currentUser.name },
                     player2: null,
                     status: 'waiting',
-                    bet: CONFIG.BET,
+                    bet: CONFIG.BET_AMOUNT,
                     createdAt: Date.now()
                 };
                 
                 await db.ref(`rooms/${roomId}`).set(roomData);
-                console.log('Room created successfully');
                 
                 currentUser.inGame = true;
                 currentUser.roomId = roomId;
-                await saveUser();
+                await saveUserToDB();
                 
                 showToast('✅ تم إنشاء الغرفة! انتظر لاعب آخر...');
                 enterWaitingRoom(roomId);
                 
             } catch (error) {
                 console.error('Create room error:', error);
-                showToast('❌ فشل إنشاء الغرفة: ' + error.message, true);
+                showToast('❌ فشل إنشاء الغرفة', true);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '➕ إنشاء غرفة جديدة';
             }
-        }
-
-        async function joinRoom(roomId) {
-            console.log('joinRoom called:', roomId);
-            
+        };
+        
+        window.joinRoom = async function(roomId) {
             if (currentUser.inGame && currentUser.roomId !== roomId) {
                 showToast('⚠️ أنت بالفعل في لعبة!', true);
                 return;
@@ -579,24 +1105,23 @@
             
             // If user is the creator
             if (room.player1?.id === currentUser.id) {
-                console.log('User is creator, entering waiting room');
                 currentUser.inGame = true;
                 currentUser.roomId = roomId;
-                await saveUser();
+                await saveUserToDB();
                 enterWaitingRoom(roomId);
                 return;
             }
             
-            // If room is available
+            // If room is available for joining
             if (!room.player2 && room.status === 'waiting') {
-                if (currentUser.balance < CONFIG.BET) {
+                if (currentUser.balance < CONFIG.BET_AMOUNT) {
                     showToast(`⚠️ رصيد غير كافي!`, true);
                     return;
                 }
                 
                 // Deduct bet
-                currentUser.balance -= CONFIG.BET;
-                await saveUser();
+                currentUser.balance -= CONFIG.BET_AMOUNT;
+                await saveUserToDB();
                 
                 // Update room
                 await db.ref(`rooms/${roomId}`).update({
@@ -606,18 +1131,16 @@
                 
                 currentUser.inGame = true;
                 currentUser.roomId = roomId;
-                await saveUser();
+                await saveUserToDB();
                 
                 const updatedRoom = { ...room, player2: { id: currentUser.id, name: currentUser.name }, status: 'full' };
                 startGame(roomId, updatedRoom);
             } else {
                 showToast('❌ الغرفة ممتلئة', true);
             }
-        }
-
+        };
+        
         function enterWaitingRoom(roomId) {
-            console.log('Entering waiting room for:', roomId);
-            
             document.getElementById('roomsGrid').style.display = 'none';
             document.getElementById('createRoomBtn').style.display = 'none';
             const waitingMsg = document.getElementById('waitingMessage');
@@ -631,7 +1154,6 @@
             const roomRef = db.ref(`rooms/${roomId}`);
             roomListener = roomRef.on('value', async (snap) => {
                 const room = snap.val();
-                console.log('Room update:', room?.status);
                 if (room && room.status === 'full') {
                     roomRef.off();
                     startGame(roomId, room);
@@ -642,16 +1164,14 @@
                 }
             });
         }
-
-        function startGame(roomId, room) {
-            console.log('Starting game for room:', roomId);
-            
+        
+        async function startGame(roomId, room) {
             document.getElementById('waitingRoom').classList.add('hidden');
             document.getElementById('waitingMessage').classList.remove('active');
             
             // Show game area
             const gameArea = document.getElementById('gameArea');
-            if (gameArea) gameArea.style.display = 'block';
+            gameArea.classList.add('active');
             
             // Initialize game state
             gameState = {
@@ -660,138 +1180,122 @@
                 roomData: room,
                 grid: Array(CONFIG.GRID_SIZE).fill().map(() => Array(CONFIG.GRID_SIZE).fill(0)),
                 currentPlayer: 1,
-                p1Throws: CONFIG.THROWS,
-                p2Throws: CONFIG.THROWS,
+                player1Throws: CONFIG.THROWS_PER_PLAYER,
+                player2Throws: CONFIG.THROWS_PER_PLAYER,
                 dragging: false,
                 power: 0,
-                bombActive: false
+                bombActive: false,
+                dragStartX: 0
             };
+            
+            // Create and reset grid
+            createGridVisual();
+            resetGrid();
             
             document.getElementById('currentTurn').textContent = '🔴 دور اللاعب الأول';
             startTimer();
             document.getElementById('activeGameBadge').classList.add('visible');
             document.getElementById('activeGameBadge').innerHTML = '🎮 جولة نشطة';
             
-            // Create simple grid visual
-            createSimpleGrid();
+            // Load saved state if exists
+            const saved = await db.ref(`rooms/${roomId}/game`).once('value');
+            if (saved.exists()) {
+                const data = saved.val();
+                if (data.grid) gameState.grid = data.grid;
+                gameState.currentPlayer = data.currentPlayer || 1;
+                gameState.player1Throws = data.player1Throws || CONFIG.THROWS_PER_PLAYER;
+                gameState.player2Throws = data.player2Throws || CONFIG.THROWS_PER_PLAYER;
+                updateGridVisual();
+                document.getElementById('currentTurn').textContent = gameState.currentPlayer === 1 ? '🔴 دور اللاعب الأول' : '🔵 دور اللاعب الثاني';
+            }
             
-            // Load saved state
-            db.ref(`rooms/${roomId}/game`).once('value').then((saved) => {
-                if (saved.exists()) {
-                    const data = saved.val();
-                    if (data.grid) gameState.grid = data.grid;
-                    gameState.currentPlayer = data.currentPlayer || 1;
-                    gameState.p1Throws = data.p1Throws || CONFIG.THROWS;
-                    gameState.p2Throws = data.p2Throws || CONFIG.THROWS;
-                    document.getElementById('currentTurn').textContent = gameState.currentPlayer === 1 ? '🔴 دور اللاعب الأول' : '🔵 دور اللاعب الثاني';
-                }
-            });
-            
-            // Listen for game updates
+            // Listen for game updates from opponent
             if (gameListener) gameListener();
             gameListener = db.ref(`rooms/${roomId}/game`).on('value', (snap) => {
                 const data = snap.val();
                 if (data && gameState.active && !gameState.bombActive) {
+                    if (data.grid) {
+                        for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
+                            for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
+                                if (data.grid[r]?.[c] !== gameState.grid[r]?.[c]) {
+                                    gameState.grid[r][c] = data.grid[r][c];
+                                }
+                            }
+                        }
+                        updateGridVisual();
+                    }
                     gameState.currentPlayer = data.currentPlayer;
-                    gameState.p1Throws = data.p1Throws;
-                    gameState.p2Throws = data.p2Throws;
+                    gameState.player1Throws = data.player1Throws;
+                    gameState.player2Throws = data.player2Throws;
                     document.getElementById('currentTurn').textContent = gameState.currentPlayer === 1 ? '🔴 دور اللاعب الأول' : '🔵 دور اللاعب الثاني';
                 }
             });
+            
+            // Setup drag events for shooting
+            setupDragEvents();
         }
-
-        function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            let time = CONFIG.THROW_TIME;
-            document.getElementById('throwTimer').textContent = `${time}s`;
-            timerInterval = setInterval(() => {
-                if (!gameState.active) { clearInterval(timerInterval); return; }
-                time--;
-                document.getElementById('throwTimer').textContent = `${time}s`;
-                if (time <= 0) {
-                    clearInterval(timerInterval);
-                    if (gameState.currentPlayer === 1) gameState.p1Throws--;
-                    else gameState.p2Throws--;
-                    if (gameState.p1Throws === 0 && gameState.p2Throws === 0) endGame();
-                    else switchTurn();
-                    saveGameState();
+        
+        function setupDragEvents() {
+            const leftCannon = document.getElementById('cannonLeft');
+            const rightCannon = document.getElementById('cannonRight');
+            
+            const startDrag = (e, isLeft) => {
+                if (!gameState.active || gameState.bombActive) return;
+                const localPlayer = (gameState.roomData?.player1?.id === currentUser.id) ? 1 : 2;
+                if (gameState.currentPlayer !== localPlayer) {
+                    showToast('⏳ ليس دورك الآن!', true);
+                    return;
                 }
-            }, 1000);
-        }
-
-        function switchTurn() {
-            gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
-            document.getElementById('currentTurn').textContent = gameState.currentPlayer === 1 ? '🔴 دور اللاعب الأول' : '🔵 دور اللاعب الثاني';
-            startTimer();
-        }
-
-        async function saveGameState() {
-            if (!gameState.roomId) return;
-            await db.ref(`rooms/${gameState.roomId}/game`).set({
-                grid: gameState.grid,
-                currentPlayer: gameState.currentPlayer,
-                p1Throws: gameState.p1Throws,
-                p2Throws: gameState.p2Throws,
-                timestamp: Date.now()
+                if ((isLeft && gameState.currentPlayer !== 1) || (!isLeft && gameState.currentPlayer !== 2)) {
+                    showToast('⏳ هذا ليس مدفعك!', true);
+                    return;
+                }
+                gameState.dragging = true;
+                gameState.dragStartX = e.clientX;
+                gameState.power = 0;
+                document.getElementById('powerBar').style.width = '0%';
+            };
+            
+            const onDrag = (e) => {
+                if (!gameState.dragging || !gameState.active) return;
+                const dx = gameState.dragStartX - e.clientX;
+                const power = Math.min(100, Math.max(0, Math.abs(dx) / 2));
+                gameState.power = power;
+                document.getElementById('powerBar').style.width = power + '%';
+            };
+            
+            const endDrag = () => {
+                if (!gameState.dragging) return;
+                gameState.dragging = false;
+                if (gameState.power > 10 && gameState.active) {
+                    shoot(gameState.power);
+                }
+                gameState.power = 0;
+                document.getElementById('powerBar').style.width = '0%';
+            };
+            
+            leftCannon.addEventListener('mousedown', (e) => startDrag(e, true));
+            rightCannon.addEventListener('mousedown', (e) => startDrag(e, false));
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', endDrag);
+            
+            // Touch events
+            leftCannon.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startDrag(e.touches[0], true);
             });
+            rightCannon.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startDrag(e.touches[0], false);
+            });
+            document.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                onDrag(e.touches[0]);
+            });
+            document.addEventListener('touchend', endDrag);
         }
-
-        async function endGame() {
-            gameState.active = false;
-            if (timerInterval) clearInterval(timerInterval);
-            if (gameListener) gameListener();
-            
-            let p1Score = 0, p2Score = 0;
-            for (let r = 0; r < CONFIG.GRID_SIZE; r++) {
-                for (let c = 0; c < CONFIG.GRID_SIZE; c++) {
-                    if (gameState.grid[r]?.[c] === 1) p1Score++;
-                    if (gameState.grid[r]?.[c] === 2) p2Score++;
-                }
-            }
-            
-            const isPlayer1 = gameState.roomData?.player1?.id === currentUser.id;
-            let msg = '';
-            
-            if (p1Score > p2Score) {
-                if (isPlayer1) {
-                    currentUser.balance += CONFIG.BET * CONFIG.WIN_MULT;
-                    await saveUser();
-                    msg = `🎉 فزت! +$${(CONFIG.BET * CONFIG.WIN_MULT).toFixed(2)} (${p1Score}-${p2Score})`;
-                } else {
-                    msg = `🔴 فاز اللاعب الأول (${p1Score} - ${p2Score})`;
-                }
-            } else if (p2Score > p1Score) {
-                if (!isPlayer1) {
-                    currentUser.balance += CONFIG.BET * CONFIG.WIN_MULT;
-                    await saveUser();
-                    msg = `🎉 فزت! +$${(CONFIG.BET * CONFIG.WIN_MULT).toFixed(2)} (${p1Score}-${p2Score})`;
-                } else {
-                    msg = `🔵 فاز اللاعب الثاني (${p1Score} - ${p2Score})`;
-                }
-            } else {
-                currentUser.balance += CONFIG.BET;
-                await saveUser();
-                msg = `🤝 تعادل! تم إعادة $${CONFIG.BET}`;
-            }
-            
-            document.getElementById('resultTitle').textContent = 'انتهت الجولة';
-            document.getElementById('resultMessage').innerHTML = msg;
-            document.getElementById('resultModal').classList.add('active');
-            
-            if (gameState.roomId) {
-                await db.ref(`rooms/${gameState.roomId}`).remove();
-            }
-            
-            currentUser.inGame = false;
-            currentUser.roomId = null;
-            await saveUser();
-            
-            showLobby();
-        }
-
+        
         function showLobby() {
-            console.log('Showing lobby');
-            
             document.getElementById('waitingRoom').classList.remove('hidden');
             document.getElementById('roomsGrid').style.display = 'grid';
             document.getElementById('createRoomBtn').style.display = 'block';
@@ -799,9 +1303,8 @@
             document.getElementById('activeGameBadge').classList.remove('visible');
             document.getElementById('currentTurn').textContent = '⏳ انتظار...';
             document.getElementById('throwTimer').textContent = '--s';
-            
-            const gameArea = document.getElementById('gameArea');
-            if (gameArea) gameArea.style.display = 'none';
+            document.getElementById('gameArea').classList.remove('active');
+            document.getElementById('powerBar').style.width = '0%';
             
             currentUser.inGame = false;
             currentUser.roomId = null;
@@ -815,10 +1318,8 @@
             
             loadRooms();
         }
-
-        async function exitGame() {
-            console.log('Exiting game');
-            
+        
+        window.exitGame = async function() {
             if (timerInterval) clearInterval(timerInterval);
             gameState.active = false;
             
@@ -833,19 +1334,17 @@
             
             currentUser.inGame = false;
             currentUser.roomId = null;
-            await saveUser();
+            await saveUserToDB();
             
             showLobby();
-        }
-
-        function closeResult() {
+        };
+        
+        window.closeResult = function() {
             document.getElementById('resultModal').classList.remove('active');
             showLobby();
-        }
-
+        };
+        
         function loadRooms() {
-            console.log('Loading rooms');
-            
             const roomsRef = db.ref('rooms');
             roomsRef.off('value');
             
@@ -854,124 +1353,46 @@
                 const grid = document.getElementById('roomsGrid');
                 grid.innerHTML = '';
                 
-                // عرض جميع الغرف المتاحة (بما فيها الغرف التي أنشأها المستخدم)
-                const availableRooms = Object.values(rooms).filter(r => 
-                    r.status === 'waiting'
-                );
-                
-                console.log('Available rooms:', availableRooms.length);
-                console.log('All rooms:', Object.keys(rooms));
+                const availableRooms = Object.values(rooms).filter(r => r.status === 'waiting');
                 
                 if (availableRooms.length === 0) {
-                    grid.innerHTML = '<div style="grid-column:1/-1;color:#888;text-align:center;padding:30px;">✨ لا توجد غرف متاحة<br>أنشئ غرفة جديدة</div>';
+                    grid.innerHTML = `
+                        <div style="grid-column:1/-1;text-align:center;padding:40px;">
+                            <div style="font-size:3rem; margin-bottom:10px;">✨</div>
+                            <div style="color:#888;">لا توجد غرف متاحة</div>
+                            <div style="color:#666; font-size:0.8rem;">أنشئ غرفة جديدة وانتظر لاعباً آخر</div>
+                        </div>
+                    `;
                 } else {
                     availableRooms.forEach(room => {
                         const isOwnRoom = room.player1?.id === currentUser.id;
                         const card = document.createElement('div');
                         card.className = 'room-card';
                         card.innerHTML = `
-                            <div class="room-number">غرفة ${room.id.slice(-4)}</div>
-                            <div class="room-status">${isOwnRoom ? '🟡 غرفتك' : '🟢 متاحة'}</div>
-                            <div>💰 رهان: $${room.bet}</div>
+                            <div class="room-number">🏠 غرفة ${room.id.slice(-4)}</div>
+                            <div class="room-status available">${isOwnRoom ? '🟡 غرفتك' : '🟢 متاحة'}</div>
+                            <div class="room-bet">💰 رهان: $${room.bet}</div>
                             <div class="room-creator">👤 ${room.player1?.name}</div>
                         `;
-                        card.onclick = () => joinRoom(room.id);
+                        card.onclick = () => window.joinRoom(room.id);
                         grid.appendChild(card);
                     });
                 }
             });
         }
-
-        // ==================== DRAG EVENTS (Simple) ====================
-        function setupDragEvents() {
-            const canvas = document.createElement('div');
-            canvas.style.cssText = `
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 150px;
-                background: linear-gradient(0deg, #1a1a2a, #0f0f1f);
-                border-top: 2px solid #ffd700;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0 20%;
-                z-index: 50;
-            `;
-            
-            const leftCannon = document.createElement('div');
-            leftCannon.innerHTML = '🔴 مدفع أحمر';
-            leftCannon.style.cssText = 'color:#ff6666; font-size:1.2rem; font-weight:bold;';
-            
-            const rightCannon = document.createElement('div');
-            rightCannon.innerHTML = '🔵 مدفع أزرق';
-            rightCannon.style.cssText = 'color:#6666ff; font-size:1.2rem; font-weight:bold;';
-            
-            canvas.appendChild(leftCannon);
-            canvas.appendChild(rightCannon);
-            document.body.appendChild(canvas);
-            
-            let dragging = false;
-            let startX = 0;
-            
-            canvas.addEventListener('mousedown', (e) => {
-                if (!gameState.active || gameState.bombActive) return;
-                const isPlayer1 = gameState.roomData?.player1?.id === currentUser.id;
-                const localPlayer = isPlayer1 ? 1 : 2;
-                if (gameState.currentPlayer !== localPlayer) {
-                    showToast('⏳ ليس دورك الآن!', true);
-                    return;
-                }
-                dragging = true;
-                startX = e.clientX;
-                gameState.power = 0;
-                document.getElementById('powerBar').style.width = '0%';
-            });
-            
-            canvas.addEventListener('mousemove', (e) => {
-                if (!dragging || !gameState.active) return;
-                const dx = startX - e.clientX;
-                const dist = Math.min(100, Math.abs(dx) / 2);
-                gameState.power = dist;
-                document.getElementById('powerBar').style.width = dist + '%';
-            });
-            
-            canvas.addEventListener('mouseup', () => {
-                if (!dragging) return;
-                dragging = false;
-                if (gameState.power > 8 && gameState.active) {
-                    showToast(`💥 رميت بقوة ${Math.round(gameState.power)}%`);
-                    // Simulate shot
-                    if (gameState.currentPlayer === 1) gameState.p1Throws--;
-                    else gameState.p2Throws--;
-                    if (gameState.p1Throws === 0 && gameState.p2Throws === 0) endGame();
-                    else switchTurn();
-                    saveGameState();
-                }
-                gameState.power = 0;
-                document.getElementById('powerBar').style.width = '0%';
-            });
-        }
-
-        // ==================== INIT ====================
+        
+        // ==================== INITIALIZATION ====================
         async function init() {
-            console.log('Initializing game...');
-            
-            await loadUser();
-            console.log('User loaded:', currentUser);
-            
-            setupDragEvents();
+            await loadUserFromDB();
             
             if (currentUser.inGame && currentUser.roomId) {
                 const roomSnap = await db.ref(`rooms/${currentUser.roomId}`).once('value');
                 if (roomSnap.exists()) {
-                    console.log('Resuming game in room:', currentUser.roomId);
-                    joinRoom(currentUser.roomId);
+                    window.joinRoom(currentUser.roomId);
                 } else {
                     currentUser.inGame = false;
                     currentUser.roomId = null;
-                    await saveUser();
+                    await saveUserToDB();
                     showLobby();
                 }
             } else {
@@ -979,10 +1400,11 @@
             }
         }
         
-        window.createRoom = createRoom;
-        window.joinRoom = joinRoom;
-        window.exitGame = exitGame;
-        window.closeResult = closeResult;
+        // Make functions globally available
+        window.createRoom = window.createRoom;
+        window.joinRoom = window.joinRoom;
+        window.exitGame = window.exitGame;
+        window.closeResult = window.closeResult;
         
         init();
     </script>
