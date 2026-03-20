@@ -19,9 +19,9 @@
             justify-content: center;
             align-items: center;
             font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
         }
 
-        /* حاوية اللعبة الرئيسية */
         .game-wrapper {
             width: 100vw;
             height: 100vh;
@@ -35,7 +35,7 @@
             background: linear-gradient(145deg, #0f0f1f, #080812);
             border-radius: 40px;
             padding: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,215,0,0.2);
         }
 
@@ -133,7 +133,6 @@
             display: block;
         }
 
-        /* شريط المعلومات العلوي */
         .info-bar {
             display: flex;
             justify-content: space-between;
@@ -192,12 +191,13 @@
             border: 2px solid #ffd700;
             width: min(70vh, 90vw);
             height: min(70vh, 90vw);
+            position: relative;
         }
 
         .cell {
             background: linear-gradient(145deg, #2a2a3a, #1a1a2a);
             border-radius: 6px;
-            transition: all 0.1s ease;
+            transition: all 0.08s ease;
             box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);
         }
 
@@ -209,6 +209,11 @@
         .cell.blue {
             background: linear-gradient(145deg, #5555ff, #3333cc);
             box-shadow: 0 0 10px rgba(68,68,255,0.5);
+        }
+
+        .cell.hit-effect {
+            transform: scale(1.08);
+            filter: brightness(1.3);
         }
 
         /* المدافع وشريط القوة */
@@ -250,11 +255,11 @@
 
         /* شريط القوة العمودي */
         .power-side {
-            width: 40px;
+            width: 45px;
             background: rgba(0,0,0,0.6);
             border-radius: 30px;
             border: 1px solid #ffd700;
-            height: 150px;
+            height: 140px;
             position: relative;
             margin: 0 15px;
         }
@@ -290,7 +295,6 @@
             z-index: 1000;
         }
 
-        /* زر الخروج الصغير */
         .exit-btn {
             position: fixed;
             bottom: 15px;
@@ -310,7 +314,6 @@
             background: rgba(0,0,0,0.8);
         }
 
-        /* نافذة النتيجة */
         .result-modal {
             position: fixed;
             top: 0;
@@ -354,7 +357,7 @@
 
         @media (max-width: 700px) {
             .cannon-icon { font-size: 2.5rem; }
-            .power-side { height: 100px; width: 30px; }
+            .power-side { height: 100px; width: 35px; }
             .game-grid { width: min(60vh, 85vw); height: min(60vh, 85vw); }
         }
     </style>
@@ -362,7 +365,6 @@
 <body>
 <div class="game-wrapper">
     <div class="game-container">
-        <!-- غرفة الانتظار -->
         <div class="waiting-room" id="waitingRoom">
             <div class="waiting-card">
                 <div class="waiting-title">🎮 غرف اللعب</div>
@@ -375,7 +377,6 @@
             </div>
         </div>
 
-        <!-- شاشة اللعبة -->
         <div class="game-board" id="gameBoard">
             <div class="info-bar">
                 <div class="turn-indicator" id="turnText">⏳ انتظار...</div>
@@ -424,16 +425,13 @@
 
 <script>
     // ==================== SOUND SYSTEM ====================
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
     
     function initAudio() {
         if (!audioCtx) {
-            audioCtx = new AudioContext();
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
     }
     
     function playSound(freq, duration, type = 'sine', volume = 0.3) {
@@ -453,22 +451,21 @@
     }
     
     function playShoot() {
-        playSound(200, 0.08, 'triangle', 0.4);
-        setTimeout(() => playSound(150, 0.1, 'sine', 0.3), 30);
+        playSound(180, 0.1, 'triangle', 0.4);
+        setTimeout(() => playSound(130, 0.12, 'sine', 0.3), 40);
     }
     
     function playHit() {
-        playSound(400, 0.05, 'sine', 0.25);
-        setTimeout(() => playSound(300, 0.08, 'sine', 0.2), 20);
+        playSound(380, 0.06, 'sine', 0.3);
     }
     
     function playBounce() {
-        playSound(250, 0.03, 'triangle', 0.2);
+        playSound(220, 0.04, 'triangle', 0.2);
     }
     
     function playGameOver() {
-        playSound(300, 0.2, 'sine', 0.3);
-        setTimeout(() => playSound(200, 0.3, 'sine', 0.3), 150);
+        playSound(280, 0.2, 'sine', 0.3);
+        setTimeout(() => playSound(180, 0.3, 'sine', 0.3), 150);
     }
 
     // ==================== FIREBASE ====================
@@ -492,9 +489,10 @@
         GRID: 10,
         THROW_TIME: 15,
         THROWS: 3,
-        GRAVITY: 0.45,
-        BOUNCE: 0.68,
-        FRICTION: 0.99
+        GRAVITY: 0.28,
+        BOUNCE: 0.72,
+        FRICTION: 0.995,
+        SPEED_MULT: 5.5
     };
     
     // ==================== USER ====================
@@ -527,7 +525,6 @@
     // ==================== DOM ELEMENTS ====================
     let canvas, ctx;
     let animationId = null;
-    let currentBall = null;
     
     // ==================== GRID FUNCTIONS ====================
     function createGrid() {
@@ -558,7 +555,7 @@
         updateGrid();
     }
     
-    // ==================== BALL PHYSICS WITH TRAIL ====================
+    // ==================== BALL PHYSICS - حرية كاملة خارج الحلبة ====================
     class Ball {
         constructor(x, y, vx, vy, player) {
             this.x = x;
@@ -569,44 +566,23 @@
             this.radius = 12;
             this.trail = [];
             this.active = true;
+            this.bounds = null;
         }
         
-        update(bounds) {
+        update() {
             this.vy += CONFIG.GRAVITY;
             this.vx *= CONFIG.FRICTION;
             this.vy *= CONFIG.FRICTION;
             this.x += this.vx;
             this.y += this.vy;
             
-            // Save trail
+            // Save trail for visual effect
             this.trail.push({ x: this.x, y: this.y });
             if (this.trail.length > 12) this.trail.shift();
             
-            // Wall collisions
-            if (this.x - this.radius < bounds.left) {
-                this.x = bounds.left + this.radius;
-                this.vx = -this.vx * CONFIG.BOUNCE;
-                playBounce();
-            }
-            if (this.x + this.radius > bounds.right) {
-                this.x = bounds.right - this.radius;
-                this.vx = -this.vx * CONFIG.BOUNCE;
-                playBounce();
-            }
-            if (this.y - this.radius < bounds.top) {
-                this.y = bounds.top + this.radius;
-                this.vy = -this.vy * CONFIG.BOUNCE;
-                playBounce();
-            }
-            if (this.y + this.radius > bounds.bottom) {
-                this.y = bounds.bottom - this.radius;
-                this.vy = -this.vy * CONFIG.BOUNCE;
-                playBounce();
-            }
-            
-            // Check if out of bounds
-            if (this.x < bounds.left - 200 || this.x > bounds.right + 200 ||
-                this.y < bounds.top - 200 || this.y > bounds.bottom + 200) {
+            // لا نحد الكرة داخل أي حدود - تتحرك بحرية
+            // فقط نتحقق إذا خرجت بعيداً جداً لإنهاء الرمية
+            if (Math.abs(this.x) > 3000 || Math.abs(this.y) > 3000) {
                 this.active = false;
             }
         }
@@ -617,15 +593,15 @@
             // Draw trail
             for (let i = 0; i < this.trail.length; i++) {
                 const t = this.trail[i];
-                const alpha = i / this.trail.length * 0.5;
+                const alpha = (i / this.trail.length) * 0.4;
                 ctx.beginPath();
-                ctx.arc(t.x, t.y, this.radius * (i / this.trail.length), 0, Math.PI * 2);
+                ctx.arc(t.x, t.y, this.radius * (0.5 + i / this.trail.length * 0.5), 0, Math.PI * 2);
                 ctx.fillStyle = this.player === 1 ? `rgba(255, 80, 80, ${alpha})` : `rgba(80, 80, 255, ${alpha})`;
                 ctx.fill();
             }
             
             // Draw ball with glow
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = 18;
             ctx.shadowColor = this.player === 1 ? '#ff4444' : '#4444ff';
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -639,9 +615,26 @@
             ctx.fillStyle = 'rgba(255,255,200,0.8)';
             ctx.fill();
         }
+        
+        checkGridCollision(gridRect, cellWidth, cellHeight) {
+            // التحقق من أن الكرة داخل منطقة الشبكة فقط
+            if (this.x >= gridRect.left && this.x <= gridRect.right &&
+                this.y >= gridRect.top && this.y <= gridRect.bottom) {
+                
+                const relX = this.x - gridRect.left;
+                const relY = this.y - gridRect.top;
+                const col = Math.floor(relX / cellWidth);
+                const row = Math.floor(relY / cellHeight);
+                
+                if (row >= 0 && row < CONFIG.GRID && col >= 0 && col < CONFIG.GRID) {
+                    return { row, col };
+                }
+            }
+            return null;
+        }
     }
     
-    // ==================== SHOOT FUNCTION ====================
+    // ==================== SHOOT FUNCTION - كرة بطيئة وحرية كاملة ====================
     async function shoot(power, angleRad, isLeft) {
         if (gameState.isShooting || !gameState.active) return;
         if (gameState.myRole !== gameState.currentPlayer) {
@@ -649,36 +642,31 @@
             return;
         }
         
-        // تفعيل الصوت
         initAudio();
         playShoot();
         
-        const wrapper = document.querySelector('.game-grid');
-        const wrapperRect = wrapper.getBoundingClientRect();
+        const gridElement = document.querySelector('.game-grid');
+        const gridRect = gridElement.getBoundingClientRect();
         const canvasRect = canvas.getBoundingClientRect();
         
-        // Position relative to canvas
-        const startX = (wrapperRect.left + (isLeft ? 30 : wrapperRect.width - 30)) - canvasRect.left;
-        const startY = (wrapperRect.bottom - 20) - canvasRect.top;
+        // نقطة انطلاق الكرة من المدفع
+        const startX = (gridRect.left + (isLeft ? 25 : gridRect.width - 25)) - canvasRect.left;
+        const startY = (gridRect.bottom - 15) - canvasRect.top;
         
-        const speed = 7 + (power / 100) * 12;
+        // سرعة بطيئة لرؤية واضحة للاصطدامات
+        const speed = CONFIG.SPEED_MULT + (power / 100) * 7;
         const vx = Math.cos(angleRad) * speed * (isLeft ? 1 : -1);
         const vy = Math.sin(angleRad) * speed * -1;
         
-        const bounds = {
-            left: wrapperRect.left - canvasRect.left,
-            right: wrapperRect.right - canvasRect.left,
-            top: wrapperRect.top - canvasRect.top,
-            bottom: wrapperRect.bottom - canvasRect.top
-        };
-        
         const ball = new Ball(startX, startY, vx, vy, gameState.currentPlayer);
-        currentBall = ball;
         gameState.isShooting = true;
         
-        const cellWidth = wrapperRect.width / CONFIG.GRID;
-        const cellHeight = wrapperRect.height / CONFIG.GRID;
+        const cellWidth = gridRect.width / CONFIG.GRID;
+        const cellHeight = gridRect.height / CONFIG.GRID;
         let lastHit = null;
+        
+        // حفظ مرجع للحدود لتحديثها عند تغيير حجم الشاشة
+        let currentGridRect = gridRect;
         
         function animate() {
             if (!ball.active) {
@@ -689,34 +677,51 @@
                 return;
             }
             
-            ball.update(bounds);
+            // تحديث حدود الشبكة (في حال تغير حجم الشاشة)
+            const newGridRect = document.querySelector('.game-grid').getBoundingClientRect();
+            const newCanvasRect = canvas.getBoundingClientRect();
+            
+            ball.update();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ball.draw();
             
-            // Check cell collision
-            const relX = ball.x - bounds.left;
-            const relY = ball.y - bounds.top;
-            const col = Math.floor(relX / cellWidth);
-            const row = Math.floor(relY / cellHeight);
+            // تحديث حدود الاصطدام بالنسبة للكانفاس
+            const gridBounds = {
+                left: newGridRect.left - newCanvasRect.left,
+                right: newGridRect.right - newCanvasRect.left,
+                top: newGridRect.top - newCanvasRect.top,
+                bottom: newGridRect.bottom - newCanvasRect.top
+            };
             
-            if (row >= 0 && row < CONFIG.GRID && col >= 0 && col < CONFIG.GRID) {
-                const cellKey = `${row}-${col}`;
-                if (lastHit !== cellKey && gameState.grid[row][col] === 0) {
-                    gameState.grid[row][col] = gameState.currentPlayer;
-                    updateGrid();
-                    playHit();
-                    
-                    // Visual hit effect
-                    const cellDiv = document.querySelector(`.cell[data-index="${row * CONFIG.GRID + col}"]`);
-                    if (cellDiv) {
-                        cellDiv.style.transform = 'scale(1.1)';
-                        setTimeout(() => cellDiv.style.transform = '', 100);
+            // التحقق من اصطدام الكرة بالشبكة (فقط داخل الحلبة)
+            if (ball.x >= gridBounds.left && ball.x <= gridBounds.right &&
+                ball.y >= gridBounds.top && ball.y <= gridBounds.bottom) {
+                
+                const relX = ball.x - gridBounds.left;
+                const relY = ball.y - gridBounds.top;
+                const col = Math.floor(relX / cellWidth);
+                const row = Math.floor(relY / cellHeight);
+                
+                if (row >= 0 && row < CONFIG.GRID && col >= 0 && col < CONFIG.GRID) {
+                    const cellKey = `${row}-${col}`;
+                    if (lastHit !== cellKey && gameState.grid[row][col] === 0) {
+                        // تلوين المربع
+                        gameState.grid[row][col] = gameState.currentPlayer;
+                        updateGrid();
+                        playHit();
+                        
+                        // تأثير بصري
+                        const cellDiv = document.querySelector(`.cell[data-index="${row * CONFIG.GRID + col}"]`);
+                        if (cellDiv) {
+                            cellDiv.classList.add('hit-effect');
+                            setTimeout(() => cellDiv.classList.remove('hit-effect'), 150);
+                        }
+                        lastHit = cellKey;
+                        
+                        // ارتداد طفيف عند الاصطدام
+                        ball.vx *= 0.96;
+                        ball.vy *= -0.2;
                     }
-                    lastHit = cellKey;
-                    
-                    // Small bounce on hit
-                    ball.vx *= 0.97;
-                    ball.vy *= -0.25;
                 }
             }
             
@@ -756,7 +761,6 @@
         const playerName = gameState.currentPlayer === 1 ? '🔴 اللاعب 1' : '🔵 اللاعب 2';
         document.getElementById('turnText').textContent = `${playerName} | ${throws} رميات ${isMyTurn ? '👈 دورك' : ''}`;
         
-        // Update cannons active state
         const leftCannon = document.getElementById('cannonLeft');
         const rightCannon = document.getElementById('cannonRight');
         leftCannon.classList.toggle('active', gameState.currentPlayer === 1);
@@ -944,7 +948,6 @@
         updateUI();
         resetTimer();
         
-        // Setup canvas
         canvas = document.getElementById('ballCanvas');
         ctx = canvas.getContext('2d');
         
@@ -955,7 +958,6 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         
-        // Sync listener
         const roomRef = db.ref(`rooms/${gameState.roomId}`);
         gameState.gameListener = roomRef.on('value', (snap) => {
             const room = snap.val();
@@ -1012,7 +1014,6 @@
             gameState.power = Math.min(100, distance / 1.5);
             powerFill.style.height = gameState.power + '%';
             
-            // Rotate cannon
             const angle = Math.atan2(dy, dx);
             const rotate = Math.min(45, Math.max(-45, angle * 180 / Math.PI * 0.6));
             const cannon = currentIsLeft ? leftCannon : rightCannon;
@@ -1049,7 +1050,6 @@
         document.addEventListener('mousemove', onDrag);
         document.addEventListener('mouseup', endDrag);
         
-        // Touch
         leftCannon.addEventListener('touchstart', (e) => { e.preventDefault(); startDrag(e.touches[0], true); });
         rightCannon.addEventListener('touchstart', (e) => { e.preventDefault(); startDrag(e.touches[0], false); });
         document.addEventListener('touchmove', (e) => { e.preventDefault(); onDrag(e.touches[0]); });
@@ -1147,7 +1147,6 @@
         setInterval(loadRooms, 5000);
         document.getElementById('createBtn').onclick = createRoom;
         
-        // Initialize audio on first user interaction
         document.body.addEventListener('click', () => initAudio(), { once: true });
     }
     
