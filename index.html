@@ -211,57 +211,88 @@
             box-shadow: 0 0 10px rgba(68,68,255,0.5);
         }
 
-        .cell.hit-effect {
-            transform: scale(1.08);
+        .cell.hit {
+            transform: scale(1.1);
             filter: brightness(1.3);
         }
 
-        /* المدافع وشريط القوة */
+        /* المدافع - تصميم جديد وجميل */
         .cannons-area {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             gap: 30px;
             margin-top: 10px;
+            position: relative;
+        }
+
+        .cannon-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
         }
 
         .cannon {
-            flex: 1;
-            text-align: center;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(145deg, #3a3a4a, #2a2a3a);
+            border-radius: 50%;
+            position: relative;
             cursor: pointer;
+            transition: all 0.05s linear;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 2px solid #ffd700;
+        }
+
+        .cannon::before {
+            content: "";
+            position: absolute;
+            width: 45px;
+            height: 20px;
+            background: linear-gradient(90deg, #ffaa44, #cc8844);
+            border-radius: 20px;
+            top: 35px;
             transition: all 0.05s linear;
         }
 
-        .cannon-icon {
-            font-size: 4rem;
-            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
-            transition: transform 0.05s ease;
+        .cannon-left::before {
+            right: -35px;
+            transform-origin: left center;
         }
 
-        .cannon.active .cannon-icon {
-            filter: drop-shadow(0 0 15px #ffd700);
-            text-shadow: 0 0 10px #ffd700;
+        .cannon-right::before {
+            left: -35px;
+            transform-origin: right center;
+        }
+
+        .cannon.active {
+            box-shadow: 0 0 20px #ffd700, inset 0 1px 0 rgba(255,255,255,0.2);
+            border-color: #ffaa33;
         }
 
         .cannon-label {
             color: #888;
             font-size: 0.8rem;
-            margin-top: 5px;
+            margin-top: 10px;
+            font-weight: bold;
         }
 
         .cannon.active .cannon-label {
             color: #ffd700;
+            text-shadow: 0 0 5px #ffd700;
         }
 
         /* شريط القوة العمودي */
         .power-side {
-            width: 45px;
-            background: rgba(0,0,0,0.6);
+            width: 50px;
+            background: rgba(0,0,0,0.7);
             border-radius: 30px;
-            border: 1px solid #ffd700;
-            height: 140px;
+            border: 2px solid #ffd700;
+            height: 150px;
             position: relative;
-            margin: 0 15px;
+            margin: 0 20px;
         }
 
         .power-fill {
@@ -276,12 +307,32 @@
 
         .power-text {
             position: absolute;
-            top: -25px;
+            top: -28px;
             left: 50%;
             transform: translateX(-50%);
             color: #ffd700;
             font-size: 0.7rem;
             white-space: nowrap;
+            font-weight: bold;
+        }
+
+        /* مؤشر الاتجاه */
+        .direction-arrow {
+            position: fixed;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 40px solid #ffd700;
+            transform-origin: bottom center;
+            pointer-events: none;
+            z-index: 200;
+            display: none;
+            filter: drop-shadow(0 0 8px rgba(255,215,0,0.8));
+        }
+
+        .direction-arrow.active {
+            display: block;
         }
 
         /* كرة الرمي */
@@ -356,8 +407,9 @@
         }
 
         @media (max-width: 700px) {
-            .cannon-icon { font-size: 2.5rem; }
-            .power-side { height: 100px; width: 35px; }
+            .cannon { width: 60px; height: 60px; }
+            .cannon::before { width: 30px; height: 15px; top: 28px; }
+            .power-side { height: 100px; width: 40px; margin: 0 10px; }
             .game-grid { width: min(60vh, 85vw); height: min(60vh, 85vw); }
         }
     </style>
@@ -389,9 +441,9 @@
             </div>
 
             <div class="cannons-area">
-                <div class="cannon" id="cannonLeft">
-                    <div class="cannon-icon">🔫</div>
-                    <div class="cannon-label">🔴 اللاعب 1</div>
+                <div class="cannon-wrapper">
+                    <div class="cannon cannon-left" id="cannonLeft"></div>
+                    <div class="cannon-label" id="labelLeft">🔴 اللاعب 1</div>
                 </div>
                 
                 <div class="power-side">
@@ -399,9 +451,9 @@
                     <div class="power-fill" id="powerFill"></div>
                 </div>
                 
-                <div class="cannon" id="cannonRight">
-                    <div class="cannon-icon">🔫</div>
-                    <div class="cannon-label">🔵 اللاعب 2</div>
+                <div class="cannon-wrapper">
+                    <div class="cannon cannon-right" id="cannonRight"></div>
+                    <div class="cannon-label" id="labelRight">🔵 اللاعب 2</div>
                 </div>
             </div>
         </div>
@@ -409,6 +461,7 @@
 </div>
 
 <canvas class="ball-canvas" id="ballCanvas"></canvas>
+<div class="direction-arrow" id="directionArrow"></div>
 <button class="exit-btn" id="exitBtn" onclick="window.exitGame()">🚪 خروج</button>
 
 <div class="result-modal" id="resultModal">
@@ -451,16 +504,12 @@
     }
     
     function playShoot() {
-        playSound(180, 0.1, 'triangle', 0.4);
-        setTimeout(() => playSound(130, 0.12, 'sine', 0.3), 40);
+        playSound(150, 0.1, 'triangle', 0.4);
+        setTimeout(() => playSound(120, 0.12, 'sine', 0.3), 40);
     }
     
     function playHit() {
-        playSound(380, 0.06, 'sine', 0.3);
-    }
-    
-    function playBounce() {
-        playSound(220, 0.04, 'triangle', 0.2);
+        playSound(350, 0.06, 'sine', 0.35);
     }
     
     function playGameOver() {
@@ -490,9 +539,9 @@
         THROW_TIME: 15,
         THROWS: 3,
         GRAVITY: 0.28,
-        BOUNCE: 0.72,
+        BOUNCE: 0.75,
         FRICTION: 0.995,
-        SPEED_MULT: 5.5
+        BASE_SPEED: 4.5
     };
     
     // ==================== USER ====================
@@ -555,7 +604,7 @@
         updateGrid();
     }
     
-    // ==================== BALL PHYSICS - حرية كاملة خارج الحلبة ====================
+    // ==================== BALL PHYSICS - حرية كاملة ====================
     class Ball {
         constructor(x, y, vx, vy, player) {
             this.x = x;
@@ -563,10 +612,9 @@
             this.vx = vx;
             this.vy = vy;
             this.player = player;
-            this.radius = 12;
+            this.radius = 14;
             this.trail = [];
             this.active = true;
-            this.bounds = null;
         }
         
         update() {
@@ -576,12 +624,11 @@
             this.x += this.vx;
             this.y += this.vy;
             
-            // Save trail for visual effect
+            // حفظ المسار
             this.trail.push({ x: this.x, y: this.y });
-            if (this.trail.length > 12) this.trail.shift();
+            if (this.trail.length > 10) this.trail.shift();
             
-            // لا نحد الكرة داخل أي حدود - تتحرك بحرية
-            // فقط نتحقق إذا خرجت بعيداً جداً لإنهاء الرمية
+            // تنتهي الرمية عندما تخرج الكرة بعيداً جداً
             if (Math.abs(this.x) > 3000 || Math.abs(this.y) > 3000) {
                 this.active = false;
             }
@@ -590,18 +637,18 @@
         draw() {
             if (!ctx) return;
             
-            // Draw trail
+            // رسم المسار
             for (let i = 0; i < this.trail.length; i++) {
                 const t = this.trail[i];
                 const alpha = (i / this.trail.length) * 0.4;
                 ctx.beginPath();
-                ctx.arc(t.x, t.y, this.radius * (0.5 + i / this.trail.length * 0.5), 0, Math.PI * 2);
+                ctx.arc(t.x, t.y, this.radius * (0.4 + i / this.trail.length * 0.6), 0, Math.PI * 2);
                 ctx.fillStyle = this.player === 1 ? `rgba(255, 80, 80, ${alpha})` : `rgba(80, 80, 255, ${alpha})`;
                 ctx.fill();
             }
             
-            // Draw ball with glow
-            ctx.shadowBlur = 18;
+            // رسم الكرة مع توهج
+            ctx.shadowBlur = 20;
             ctx.shadowColor = this.player === 1 ? '#ff4444' : '#4444ff';
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -609,32 +656,15 @@
             ctx.fill();
             ctx.shadowBlur = 0;
             
-            // Inner highlight
+            // الإضاءة الداخلية
             ctx.beginPath();
-            ctx.arc(this.x - 3, this.y - 3, 4, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,200,0.8)';
+            ctx.arc(this.x - 3, this.y - 3, 5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,220,0.9)';
             ctx.fill();
-        }
-        
-        checkGridCollision(gridRect, cellWidth, cellHeight) {
-            // التحقق من أن الكرة داخل منطقة الشبكة فقط
-            if (this.x >= gridRect.left && this.x <= gridRect.right &&
-                this.y >= gridRect.top && this.y <= gridRect.bottom) {
-                
-                const relX = this.x - gridRect.left;
-                const relY = this.y - gridRect.top;
-                const col = Math.floor(relX / cellWidth);
-                const row = Math.floor(relY / cellHeight);
-                
-                if (row >= 0 && row < CONFIG.GRID && col >= 0 && col < CONFIG.GRID) {
-                    return { row, col };
-                }
-            }
-            return null;
         }
     }
     
-    // ==================== SHOOT FUNCTION - كرة بطيئة وحرية كاملة ====================
+    // ==================== SHOOT FUNCTION ====================
     async function shoot(power, angleRad, isLeft) {
         if (gameState.isShooting || !gameState.active) return;
         if (gameState.myRole !== gameState.currentPlayer) {
@@ -650,11 +680,14 @@
         const canvasRect = canvas.getBoundingClientRect();
         
         // نقطة انطلاق الكرة من المدفع
-        const startX = (gridRect.left + (isLeft ? 25 : gridRect.width - 25)) - canvasRect.left;
-        const startY = (gridRect.bottom - 15) - canvasRect.top;
+        const cannonX = isLeft ? gridRect.left + 15 : gridRect.right - 15;
+        const cannonY = gridRect.bottom - 10;
         
-        // سرعة بطيئة لرؤية واضحة للاصطدامات
-        const speed = CONFIG.SPEED_MULT + (power / 100) * 7;
+        const startX = cannonX - canvasRect.left;
+        const startY = cannonY - canvasRect.top;
+        
+        // سرعة الكرة - بطيئة للرؤية الواضحة
+        const speed = CONFIG.BASE_SPEED + (power / 100) * 6;
         const vx = Math.cos(angleRad) * speed * (isLeft ? 1 : -1);
         const vy = Math.sin(angleRad) * speed * -1;
         
@@ -665,9 +698,6 @@
         const cellHeight = gridRect.height / CONFIG.GRID;
         let lastHit = null;
         
-        // حفظ مرجع للحدود لتحديثها عند تغيير حجم الشاشة
-        let currentGridRect = gridRect;
-        
         function animate() {
             if (!ball.active) {
                 cancelAnimationFrame(animationId);
@@ -677,15 +707,14 @@
                 return;
             }
             
-            // تحديث حدود الشبكة (في حال تغير حجم الشاشة)
-            const newGridRect = document.querySelector('.game-grid').getBoundingClientRect();
-            const newCanvasRect = canvas.getBoundingClientRect();
-            
             ball.update();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ball.draw();
             
-            // تحديث حدود الاصطدام بالنسبة للكانفاس
+            // تحديث حدود الشبكة
+            const newGridRect = document.querySelector('.game-grid').getBoundingClientRect();
+            const newCanvasRect = canvas.getBoundingClientRect();
+            
             const gridBounds = {
                 left: newGridRect.left - newCanvasRect.left,
                 right: newGridRect.right - newCanvasRect.left,
@@ -693,7 +722,7 @@
                 bottom: newGridRect.bottom - newCanvasRect.top
             };
             
-            // التحقق من اصطدام الكرة بالشبكة (فقط داخل الحلبة)
+            // التحقق من الاصطدام بالشبكة - فقط عندما تكون الكرة داخل حدود الشبكة
             if (ball.x >= gridBounds.left && ball.x <= gridBounds.right &&
                 ball.y >= gridBounds.top && ball.y <= gridBounds.bottom) {
                 
@@ -713,14 +742,14 @@
                         // تأثير بصري
                         const cellDiv = document.querySelector(`.cell[data-index="${row * CONFIG.GRID + col}"]`);
                         if (cellDiv) {
-                            cellDiv.classList.add('hit-effect');
-                            setTimeout(() => cellDiv.classList.remove('hit-effect'), 150);
+                            cellDiv.classList.add('hit');
+                            setTimeout(() => cellDiv.classList.remove('hit'), 150);
                         }
                         lastHit = cellKey;
                         
                         // ارتداد طفيف عند الاصطدام
                         ball.vx *= 0.96;
-                        ball.vy *= -0.2;
+                        ball.vy *= -0.25;
                     }
                 }
             }
@@ -763,8 +792,13 @@
         
         const leftCannon = document.getElementById('cannonLeft');
         const rightCannon = document.getElementById('cannonRight');
+        const leftLabel = document.getElementById('labelLeft');
+        const rightLabel = document.getElementById('labelRight');
+        
         leftCannon.classList.toggle('active', gameState.currentPlayer === 1);
         rightCannon.classList.toggle('active', gameState.currentPlayer === 2);
+        leftLabel.classList.toggle('active', gameState.currentPlayer === 1);
+        rightLabel.classList.toggle('active', gameState.currentPlayer === 2);
     }
     
     function resetTimer() {
@@ -974,11 +1008,12 @@
         setupDrag();
     }
     
-    // ==================== DRAG SYSTEM ====================
+    // ==================== DRAG SYSTEM with Direction Arrow ====================
     function setupDrag() {
         const leftCannon = document.getElementById('cannonLeft');
         const rightCannon = document.getElementById('cannonRight');
         const powerFill = document.getElementById('powerFill');
+        const directionArrow = document.getElementById('directionArrow');
         
         let dragging = false;
         let startX = 0, startY = 0;
@@ -1008,20 +1043,36 @@
         
         const onDrag = (e) => {
             if (!dragging) return;
-            const dx = startX - e.clientX;
-            const dy = startY - e.clientY;
+            
+            const currentX = e.clientX;
+            const currentY = e.clientY;
+            const dx = startX - currentX;
+            const dy = startY - currentY;
             const distance = Math.min(150, Math.sqrt(dx*dx + dy*dy));
             gameState.power = Math.min(100, distance / 1.5);
             powerFill.style.height = gameState.power + '%';
             
+            // حساب زاوية الاتجاه
             const angle = Math.atan2(dy, dx);
-            const rotate = Math.min(45, Math.max(-45, angle * 180 / Math.PI * 0.6));
+            const angleDeg = angle * 180 / Math.PI;
+            
+            // تحديث مؤشر الاتجاه
+            const cannonRect = (currentIsLeft ? leftCannon : rightCannon).getBoundingClientRect();
+            const arrowX = cannonRect.left + cannonRect.width / 2;
+            const arrowY = cannonRect.top + cannonRect.height / 2;
+            
+            directionArrow.style.left = (arrowX - 15) + 'px';
+            directionArrow.style.top = (arrowY - 10) + 'px';
+            directionArrow.style.transform = `rotate(${angleDeg + 90}deg)`;
+            directionArrow.classList.add('active');
+            
+            // تدوير المدفع
+            const rotate = Math.min(40, Math.max(-40, angleDeg * 0.6));
             const cannon = currentIsLeft ? leftCannon : rightCannon;
-            const icon = cannon.querySelector('.cannon-icon');
             if (currentIsLeft) {
-                icon.style.transform = `rotate(${-20 + rotate}deg)`;
+                cannon.style.transform = `rotate(${rotate}deg)`;
             } else {
-                icon.style.transform = `rotate(${20 - rotate}deg) scaleX(-1)`;
+                cannon.style.transform = `rotate(${-rotate}deg)`;
             }
         };
         
@@ -1029,10 +1080,10 @@
             if (!dragging) return;
             dragging = false;
             
+            directionArrow.classList.remove('active');
+            
             const cannon = currentIsLeft ? leftCannon : rightCannon;
-            const icon = cannon.querySelector('.cannon-icon');
-            if (currentIsLeft) icon.style.transform = 'rotate(-20deg)';
-            else icon.style.transform = 'rotate(20deg) scaleX(-1)';
+            cannon.style.transform = '';
             cannon.style.cursor = 'pointer';
             
             if (gameState.power > 8 && gameState.active) {
