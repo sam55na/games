@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>boooot - عجلة الحظ بالصور</title>
+    <title>boooot</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -193,15 +193,14 @@
     // رابط السكريبت الذي نشرته في Google Apps Script
     const GAS_URL = "https://script.google.com/macros/s/AKfycbypQJCdxaYdjeEmmZehxrGlaT2UNn4DX2SdXDf2ptuFt9-WwlJS7-CIPYFmwnkt5ATg/exec";
 
-    // قائمة الجوائز (6 جوائز) - مع إضافة أيقونات/رموز نصية كصور بديلة (لأن canvas النصي لا يدعم صور خارجية بسهولة بدون تحميل مسبق)
-    // تم استبدال النصوص برموز تعبيرية وصور نصية جذابة مع الاحتفاظ بقيم الجوائز الأصلية خلف الكواليس
+    // قائمة الجوائز (6 جوائز)
     const prizes = [
-        { label: "5000", icon: "⚡ 5000", displayIcon: "⚡", color: "#1a1a2e", textColor: "#ffd700" },
-        { label: "10000", icon: "⚡ 10000", displayIcon: "⚡", color: "#16213e", textColor: "#ffffff" },
-        { label: "50000", icon: "⚡ 50000", displayIcon: "⚡", color: "#0f3460", textColor: "#ffd700" },
-        { label: "100000", icon: "⚡ 100000", displayIcon: "⚡", color: "#e94560", textColor: "#ffffff" },
-        { label: "5%", icon: "⚡ 5%", displayIcon: "⚡", color: "#533483", textColor: "#ffd700" },
-        { label: "25%", icon: "⚡ 25%", displayIcon: "⚡", color: "#4eeff9", textColor: "#1a1a2e" }
+        { label: "⚡", color: "#1a1a2e", textColor: "#ffd700" },
+        { label: "⚡", color: "#16213e", textColor: "#ffffff" },
+        { label: "⚡", color: "#0f3460", textColor: "#ffd700" },
+        { label: "⚡", color: "#e94560", textColor: "#ffffff" },
+        { label: "⚡", color: "#533483", textColor: "#ffd700" },
+        { label: "⚡", color: "#4eeff9", textColor: "#1a1a2e" }
     ];
 
     // الحصول على بيانات المستخدم من رابط الصفحة
@@ -258,8 +257,11 @@
         if (lastSpinTime) {
             const timeSinceLastSpin = Date.now() - parseInt(lastSpinTime);
             if (timeSinceLastSpin < SPIN_LOCK_DURATION) {
+                // إذا مر أقل من دقيقة، نمنع التدوير
                 const remainingSeconds = Math.ceil((SPIN_LOCK_DURATION - timeSinceLastSpin) / 1000);
                 console.log(`⏳ تم التدوير مؤخراً. يرجى الانتظار ${remainingSeconds} ثانية`);
+                
+                // إخفاء زر التدوير نهائياً
                 if (spinBtn) spinBtn.style.display = 'none';
                 if (timerContainer) timerContainer.style.display = 'none';
                 if (loadingState) loadingState.style.display = 'none';
@@ -268,69 +270,37 @@
                     statusBadge.style.background = "rgba(255, 193, 7, 0.2)";
                     statusBadge.style.border = "1px solid #ffc107";
                 }
-                return true;
+                return true; // يوجد قفل نشط
             }
         }
-        return false;
+        return false; // لا يوجد قفل
     }
     // ==============================================
 
-    // دالة رسم العجلة مع أيقونات وصور نصية بدلاً من الأرقام فقط
+    // دالة رسم العجلة
     function drawWheel() {
         const arc = (2 * Math.PI) / prizes.length;
-        const centerX = 250, centerY = 250, radius = 250;
-        
         prizes.forEach((p, i) => {
             const angle = i * arc;
             
             // رسم القطاع
             ctx.beginPath();
             ctx.fillStyle = p.color;
-            ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, radius, angle, angle + arc);
+            ctx.moveTo(250, 250);
+            ctx.arc(250, 250, 250, angle, angle + arc);
             ctx.fill();
             
-            // رسم حدود بين القطاعات
-            ctx.beginPath();
-            ctx.strokeStyle = "rgba(255,215,0,0.5)";
-            ctx.lineWidth = 2;
-            ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, radius, angle, angle + arc);
-            ctx.stroke();
-            
-            // إضافة الرمز التعبيري (الصورة) بدلاً من النص الطويل
+            // إضافة النص على القطاع
             ctx.save();
-            ctx.translate(centerX, centerY);
+            ctx.translate(250, 250);
             ctx.rotate(angle + arc / 2);
-            
-            // استخدام أيقونة كبيرة وواضحة كصورة بديلة (رمز تعبيري + قيمة مختصرة)
-            // لجعلها تبدو كصورة، نستخدم خط النظام مع رموز إيموجي جذابة
-            let displayText = p.displayIcon;
-            
-            // إضافة قيمة صغيرة تحت الأيقونة لجعلها أوضح (اختياري، لكنه يحافظ على فكرة الجائزة)
-            ctx.font = "bold 36px 'Segoe UI Emoji', 'Apple Color Emoji', 'Cairo', sans-serif";
             ctx.fillStyle = p.textColor;
+            ctx.font = "bold 30px Cairo";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(displayText, 150, 0);
-            
-            // كتابة القيمة بشكل صغير أسفل الأيقونة (اختياري لتوضيح المبلغ)
-            ctx.font = "bold 20px Cairo";
-            ctx.fillStyle = p.textColor;
-            ctx.fillText(p.label, 150, 45);
-            
+            ctx.fillText(p.label, 180, 0);
             ctx.restore();
         });
-        
-        // رسم دائرة داخلية للتجميل
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 45, 0, 2 * Math.PI);
-        ctx.fillStyle = "#1a1a2e";
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI);
-        ctx.fillStyle = "#ffd700";
-        ctx.fill();
     }
 
     // دالة التهيئة والتحقق من أهلية المستخدم
@@ -341,17 +311,18 @@
         
         // التحقق من قفل التدوير أولاً
         if (checkSpinLock()) {
-            return;
+            return; // إذا كان هناك قفل، لا نكمل
         }
         
         try {
-            // تايمر احتياطي 10 ثوانٍ
+            // تايمر احتياطي 5 ثوانٍ (بدون إظهار الزر)
             const timeoutId = setTimeout(() => {
                 if (loadingState.style.display !== 'none') {
                     loadingState.style.display = 'none';
                     statusBadge.innerText = "❌ فشل الاتصال بالسكريبت";
                     statusBadge.style.background = "rgba(233, 69, 96, 0.2)";
                     statusBadge.style.border = "1px solid #e94560";
+                    // لا نظهر الزر أبداً في حالة فشل الاتصال
                     spinBtn.style.display = 'none';
                     timerContainer.style.display = 'none';
                 }
@@ -366,33 +337,39 @@
             
             const result = await response.json();
             
+            // إلغاء التايمر الاحتياطي
             clearTimeout(timeoutId);
             
+            // تحديث عدد مرات الاستخدام
             userData.usage = result.usageCount || 0;
+            
+            // إخفاء محمل التحميل
             loadingState.style.display = 'none';
             
+            // التحقق من إمكانية التدوير - الزر يظهر فقط هنا!
             if (result.canSpin) {
                 statusBadge.innerText = "✅ أنت مؤهل للتدوير!";
                 statusBadge.style.background = "rgba(76, 175, 80, 0.2)";
                 statusBadge.style.border = "1px solid #4CAF50";
-                spinBtn.style.display = 'block';
+                spinBtn.style.display = 'block'; // الزر يظهر فقط هنا
                 timerContainer.style.display = 'none';
             } else {
                 statusBadge.innerText = "⏳ يرجى الانتظار";
                 statusBadge.style.background = "rgba(255, 193, 7, 0.2)";
                 statusBadge.style.border = "1px solid #ffc107";
-                spinBtn.style.display = 'none';
+                spinBtn.style.display = 'none'; // تأكيد إخفاء الزر
                 timerContainer.style.display = 'block';
                 startCountdown(result.remainingTime);
             }
         } catch (e) { 
+            // في حالة فشل الاتصال - لا نظهر الزر أبداً
             console.log("خطأ في الاتصال: ", e);
             loadingState.style.display = 'none';
             statusBadge.innerText = "⚠️ خطأ في الاتصال، يرجى المحاولة لاحقاً";
             statusBadge.style.background = "rgba(233, 69, 96, 0.2)";
             statusBadge.style.border = "1px solid #e94560";
-            spinBtn.style.display = 'none';
-            timerContainer.style.display = 'none';
+            spinBtn.style.display = 'none'; // تأكيد إخفاء الزر
+            timerContainer.style.display = 'none'; // إخفاء المؤقت أيضاً
         }
     }
 
@@ -416,20 +393,29 @@
         setInterval(update, 1000);
     }
 
-    // دالة تحديد الجائزة المستهدفة بناءً على شروط محددة (نفس المنطق الأصلي)
+    // دالة تحديد الجائزة المستهدفة بناءً على شروط محددة
     function getTargetIndex() {
+        // أول مرة: 25%
         if (userData.usage === 0) return 5;
+        
+        // المرة الثانية مع وجود إيداع: 5000
         if (userData.usage === 1 && userData.deposits > 0) return 0;
+        
+        // المرة الثالثة: 5%
         if (userData.usage === 2) return 4;
-        if (userData.deposits > 250000 && userData.withdrawals === 0) return 1;
-        if (userData.deposits > 650000 && userData.withdrawals <= 200000) return 2;
-        if (userData.deposits > 1500000 && userData.withdrawals <= 400000) return 3;
+        
+        // شروط الجوائز الكبرى
+        if (userData.deposits > 250000 && userData.withdrawals === 0) return 1; // 10000
+        if (userData.deposits > 650000 && userData.withdrawals <= 200000) return 2; // 50000
+        if (userData.deposits > 1500000 && userData.withdrawals <= 400000) return 3; // 100000
+        
+        // القيمة الافتراضية: 5%
         return 4;
     }
 
     // دالة معالجة التدوير
     async function handleSpin() {
-        // قفل التدوير في الكاش المحلي فوراً
+        // ===== قفل التدوير في الكاش المحلي فوراً =====
         localStorage.setItem(SPIN_LOCK_KEY, Date.now().toString());
         
         // إخفاء زر التدوير فوراً
@@ -442,7 +428,7 @@
         
         // تحديد الجائزة وحساب زاوية الدوران
         const targetIdx = getTargetIndex();
-        // 10 دورات كاملة + الزاوية المستهدفة (كل قطاع 60 درجة، المؤشر في الأعلى)
+        // 10 دورات كاملة + الزاوية المستهدفة
         const totalRotation = (10 * 360) + (360 - (targetIdx * 60) - 30);
         
         // تدوير العجلة
@@ -451,9 +437,7 @@
         // بعد انتهاء الدوران (5.5 ثانية)
         setTimeout(async () => {
             const prize = prizes[targetIdx].label;
-            // عرض الجائزة في البوب أب مع أيقونة جذابة
-            const prizeIcon = prizes[targetIdx].displayIcon;
-            document.getElementById('prizeValue').innerHTML = `${prizeIcon} ${prize}`;
+            document.getElementById('prizeValue').innerText = prize;
             document.getElementById('resultPopup').classList.add('active');
             
             // إرسال النتيجة للسكريبت لحفظها
@@ -474,15 +458,9 @@
         }, 5500);
     }
 
-    // رسم العجلة وتشغيل التهيئة
+    // تشغيل الرسم والتهيئة عند تحميل الصفحة
     drawWheel();
     init();
-    
-    // إعادة رسم العجلة عند تغيير حجم الشاشة للحفاظ على الجودة (اختياري)
-    window.addEventListener('resize', () => {
-        // إعادة رسم بسيطة لضمان الوضوح (لن يؤثر على حالة العجلة)
-        drawWheel();
-    });
 </script>
 </body>
 </html>
