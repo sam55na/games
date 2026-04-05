@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>سلوتس المجرة - فتحة الأساطير</title>
+    <title>سلوتس الموسيقى - Reservoir Jackpot</title>
     <style>
         * {
             user-select: none;
@@ -14,60 +14,40 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0a0f1e 0%, #05080f 100%);
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Segoe UI', 'Poppins', 'Orbitron', monospace;
-            position: relative;
             padding: 20px;
         }
 
-        /* خلفية نجوم متحركة */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: radial-gradient(2px 2px at 20px 30px, #fff, rgba(0,0,0,0)),
-                              radial-gradient(1px 1px at 70px 150px, #ffd700, rgba(0,0,0,0));
-            background-size: 200px 200px, 150px 150px;
-            background-repeat: repeat;
-            opacity: 0.3;
-            pointer-events: none;
-            animation: starsMove 60s linear infinite;
-        }
-
-        @keyframes starsMove {
-            from { transform: translateY(0); }
-            to { transform: translateY(-200px); }
-        }
-
         .game-container {
-            background: linear-gradient(145deg, rgba(26, 31, 48, 0.95), rgba(10, 14, 24, 0.95));
+            background: linear-gradient(145deg, rgba(30, 20, 45, 0.95), rgba(15, 10, 25, 0.95));
             backdrop-filter: blur(12px);
             border-radius: 3rem;
             padding: 1.8rem;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.1), 0 0 0 2px rgba(255,215,0,0.3);
-            border: 1px solid rgba(255, 215, 0, 0.6);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.1), 0 0 0 2px rgba(255, 100, 150, 0.4);
+            border: 1px solid rgba(255, 100, 150, 0.6);
         }
 
         .slots-machine {
-            background: linear-gradient(145deg, #1e2438, #0f1320);
+            background: linear-gradient(145deg, #1e1638, #0f0a20);
             border-radius: 2rem;
             padding: 1.8rem;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 15px 25px -5px black;
         }
 
-        /* الشبكة الرئيسية */
+        /* حاوية رئيسية بحجم ثابت */
         .reels-wrapper {
             background: #020408;
             border-radius: 1.8rem;
             padding: 1.5rem;
-            border: 2px solid rgba(255, 215, 0, 0.4);
+            border: 2px solid rgba(255, 100, 150, 0.4);
             box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .reels-container {
@@ -77,99 +57,98 @@
             position: relative;
         }
 
-        /* كل عمود */
         .reel {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            position: relative;
         }
 
-        /* حاوية الرمز - حجم ثابت ومظهر مميز */
+        /* حاوية الرمز - حجم ثابت */
         .symbol-container {
-            background: linear-gradient(135deg, #2a3048, #161c30);
+            background: linear-gradient(135deg, #2a2048, #1a1030);
             border-radius: 1.2rem;
-            padding: 12px;
+            padding: 0;
+            width: 100%;
             aspect-ratio: 1 / 1;
+            min-width: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 0 #0a0e16, inset 0 1px 2px rgba(255,255,255,0.2);
+            box-shadow: 0 8px 0 #0a0a16, inset 0 1px 2px rgba(255,255,255,0.2);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
 
-        .symbol-container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+        @media (min-width: 768px) {
+            .symbol-container {
+                min-width: 100px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .symbol-container {
+                min-width: 55px;
+            }
+            .reels-container {
+                gap: 8px;
+            }
+            .reel {
+                gap: 8px;
+            }
         }
 
         .symbol {
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(255,215,0,0.6);
+            text-shadow: 0 0 10px rgba(255, 100, 150, 0.6);
             transition: all 0.1s ease;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
 
-        /* تأثيرات الإضاءة للفوز */
-        .symbol-container.win-glow {
-            animation: winPulse 0.5s ease-out 3;
-            box-shadow: 0 0 0 3px #ffd700, 0 0 20px 8px #ffaa33, inset 0 0 15px rgba(255,215,0,0.8);
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
+        @media (max-width: 600px) {
+            .symbol {
+                font-size: 1.8rem;
+            }
         }
 
-        .symbol-container.win-glow .symbol {
-            text-shadow: 0 0 15px white, 0 0 8px gold;
-            transform: scale(1.05);
+        /* تأثيرات الإضاءة */
+        .symbol-container.win-glow {
+            animation: winPulse 0.4s ease-out 3;
+            box-shadow: 0 0 0 3px #ff66aa, 0 0 20px 8px #ff3399, inset 0 0 15px rgba(255,100,150,0.8);
+            background: linear-gradient(135deg, #ff66aa, #cc3388);
+        }
+
+        .symbol-container.big-win-glow {
+            animation: bigWinPulse 0.6s ease-out 5;
+            box-shadow: 0 0 0 5px #ff44aa, 0 0 35px 15px #ff2288, inset 0 0 25px #ff66cc;
+            background: radial-gradient(circle, #ff66cc, #cc2288);
         }
 
         @keyframes winPulse {
-            0% { transform: scale(1); background: linear-gradient(135deg, #ffd700, #ff8c00); }
-            50% { transform: scale(1.08); background: linear-gradient(135deg, #ffea00, #ffaa00); }
-            100% { transform: scale(1); background: linear-gradient(135deg, #ffd700, #ff8c00); }
-        }
-
-        /* تأثير الفوز الكبير */
-        .symbol-container.big-win-glow {
-            animation: bigWinPulse 0.6s ease-out 5;
-            box-shadow: 0 0 0 5px #ff6600, 0 0 35px 15px #ff3300, inset 0 0 25px gold;
-            background: radial-gradient(circle, #ffaa00, #ff4400);
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
         }
 
         @keyframes bigWinPulse {
             0%, 100% { transform: scale(1); filter: brightness(1); }
-            25% { transform: scale(1.12); filter: brightness(1.5); }
+            25%, 75% { transform: scale(1.12); filter: brightness(1.5); }
             50% { transform: scale(1.06); filter: brightness(1.3); }
-            75% { transform: scale(1.12); filter: brightness(1.5); }
         }
 
-        /* حركة الدوران الواقعية - تأثير التدوير السلس */
+        /* حركة الدوران الواقعية */
         @keyframes reelSpinReal {
-            0% { transform: translateY(0px) rotateX(0deg); opacity: 1; }
-            10% { transform: translateY(-20px) rotateX(15deg); opacity: 0.9; }
-            30% { transform: translateY(15px) rotateX(-12deg); opacity: 1; }
-            50% { transform: translateY(-10px) rotateX(8deg); opacity: 0.95; }
-            70% { transform: translateY(8px) rotateX(-5deg); opacity: 1; }
-            90% { transform: translateY(-3px) rotateX(2deg); opacity: 1; }
-            100% { transform: translateY(0px) rotateX(0deg); opacity: 1; }
+            0% { transform: translateY(0px) rotateX(0deg); }
+            10% { transform: translateY(-20px) rotateX(15deg); }
+            30% { transform: translateY(15px) rotateX(-12deg); }
+            50% { transform: translateY(-10px) rotateX(8deg); }
+            70% { transform: translateY(8px) rotateX(-5deg); }
+            90% { transform: translateY(-3px) rotateX(2deg); }
+            100% { transform: translateY(0px) rotateX(0deg); }
         }
 
         .spinning-fast {
             animation: reelSpinReal 0.12s infinite linear;
-        }
-
-        .spinning-slow {
-            animation: reelSpinReal 0.2s infinite linear;
         }
 
         /* لوحة المعلومات */
@@ -183,30 +162,30 @@
             backdrop-filter: blur(8px);
             padding: 0.8rem 1.8rem;
             border-radius: 2rem;
-            border: 1px solid rgba(255, 215, 0, 0.5);
+            border: 1px solid rgba(255, 100, 150, 0.5);
             flex-wrap: wrap;
             gap: 15px;
         }
 
-        .balance-box, .win-box {
-            font-size: 1.2rem;
+        .balance-box, .win-box, .reservoir-box {
+            font-size: 1rem;
             font-weight: bold;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: baseline;
         }
 
-        .balance-box span:first-child, .win-box span:first-child {
-            color: #a9c0ff;
-            font-size: 0.9rem;
+        .balance-box span:first-child, .win-box span:first-child, .reservoir-box span:first-child {
+            color: #c9a0ff;
+            font-size: 0.85rem;
         }
 
-        .balance-value, .win-value {
-            color: #ffd700;
+        .balance-value, .win-value, .reservoir-value {
+            color: #ff88cc;
             font-family: 'Orbitron', monospace;
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: bold;
-            text-shadow: 0 0 8px orange;
+            text-shadow: 0 0 8px #ff66aa;
         }
 
         /* أزرار الرهان */
@@ -219,32 +198,31 @@
         }
 
         .bet-btn {
-            background: linear-gradient(135deg, #2a2f45, #1a1f30);
-            border: 2px solid rgba(255, 215, 0, 0.4);
+            background: linear-gradient(135deg, #2a2048, #1a1030);
+            border: 2px solid rgba(255, 100, 150, 0.4);
             padding: 10px 24px;
             border-radius: 2rem;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
-            color: #ffd700;
+            color: #ff88cc;
             cursor: pointer;
             transition: all 0.2s;
             font-family: 'Orbitron', monospace;
         }
 
         .bet-btn.active {
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            color: #000;
-            box-shadow: 0 0 20px gold;
-            border-color: gold;
+            background: linear-gradient(135deg, #ff66aa, #cc3388);
+            color: #fff;
+            box-shadow: 0 0 20px #ff66aa;
+            border-color: #ff66aa;
             transform: scale(1.05);
         }
 
         .bet-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(255,215,0,0.4);
+            box-shadow: 0 5px 20px rgba(255,100,150,0.4);
         }
 
-        /* أزرار التحكم */
         .button-bar {
             display: flex;
             justify-content: center;
@@ -253,46 +231,44 @@
         }
 
         .spin-btn, .reset-btn {
-            background: linear-gradient(135deg, #4a3a2a, #2a1a0a);
+            background: linear-gradient(135deg, #5a3a6a, #3a2a4a);
             border: none;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: bold;
             padding: 0.8rem 2.5rem;
             border-radius: 3rem;
-            color: #ffd700;
+            color: #ff88cc;
             font-family: inherit;
             cursor: pointer;
             transition: all 0.1s linear;
-            box-shadow: 0 6px 0 #1a0f05;
-            letter-spacing: 2px;
+            box-shadow: 0 6px 0 #2a1a3a;
         }
 
         .spin-btn:active, .reset-btn:active {
             transform: translateY(3px);
-            box-shadow: 0 3px 0 #1a0f05;
+            box-shadow: 0 3px 0 #2a1a3a;
         }
 
         .message-area {
             text-align: center;
             margin-top: 1rem;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: bold;
             background: rgba(0, 0, 0, 0.8);
             border-radius: 2rem;
             padding: 0.6rem;
-            color: #ffd700;
+            color: #ff88cc;
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,215,0,0.3);
+            border: 1px solid rgba(255,100,150,0.3);
         }
 
-        /* شاشة الفوز الكبير */
         .celebration-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, rgba(255,215,0,0.4), rgba(0,0,0,0.85));
+            background: radial-gradient(circle, rgba(255,100,150,0.4), rgba(0,0,0,0.85));
             display: flex;
             justify-content: center;
             align-items: center;
@@ -308,14 +284,14 @@
         }
 
         .celebration-text {
-            font-size: 3.5rem;
+            font-size: 2.5rem;
             font-weight: bold;
-            color: gold;
-            text-shadow: 0 0 20px orange, 0 0 40px red;
+            color: #ff88cc;
+            text-shadow: 0 0 20px #ff3399, 0 0 40px #ff0066;
             animation: bounceText 0.5s ease-out infinite;
             font-family: 'Orbitron', monospace;
             text-align: center;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             padding: 20px 40px;
             border-radius: 2rem;
             backdrop-filter: blur(10px);
@@ -324,15 +300,6 @@
         @keyframes bounceText {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.15); }
-        }
-
-        @media (max-width: 700px) {
-            .reels-container { gap: 8px; }
-            .symbol-container { padding: 6px; }
-            .symbol { font-size: 2rem; }
-            .bet-btn { padding: 6px 16px; font-size: 0.9rem; }
-            .spin-btn, .reset-btn { font-size: 1.1rem; padding: 0.6rem 1.5rem; }
-            .celebration-text { font-size: 2rem; padding: 15px 25px; }
         }
     </style>
 </head>
@@ -344,45 +311,44 @@
         </div>
 
         <div class="info-panel">
-            <div class="balance-box"><span>💰 الرصيد</span> <span class="balance-value" id="balance">10000</span></div>
+            <div class="balance-box"><span>💰 الرصيد</span> <span class="balance-value" id="balance">5000</span></div>
+            <div class="reservoir-box"><span>🎁 المخزن</span> <span class="reservoir-value" id="reservoir">0</span></div>
             <div class="win-box"><span>🏆 آخر ربح</span> <span class="win-value" id="lastWin">0</span></div>
         </div>
 
         <div class="bet-selector" id="betSelector">
-            <button data-bet="300" class="bet-btn">300</button>
-            <button data-bet="600" class="bet-btn">600</button>
-            <button data-bet="1200" class="bet-btn">1200</button>
-            <button data-bet="2400" class="bet-btn">2400</button>
-            <button data-bet="5000" class="bet-btn active">5000</button>
+            <button data-bet="100" class="bet-btn">100</button>
+            <button data-bet="250" class="bet-btn">250</button>
+            <button data-bet="500" class="bet-btn active">500</button>
+            <button data-bet="1000" class="bet-btn">1000</button>
+            <button data-bet="2500" class="bet-btn">2500</button>
         </div>
 
         <div class="button-bar">
-            <button class="spin-btn" id="spinBtn">🎰 دَوِّر</button>
+            <button class="spin-btn" id="spinBtn">🎵 دَوِّر</button>
             <button class="reset-btn" id="resetBtn">🔄 إعادة ضبط</button>
         </div>
-        <div class="message-area" id="messageBox">✨ رموز أسطورية | 10 خطوط دفع | تطابق 3,4,5 لتربح ✨</div>
+        <div class="message-area" id="messageBox">🎶 رموز موسيقية | المخزن يعيد 95% من الخسائر | تطابق 3,4,5 لتربح 🎶</div>
     </div>
 </div>
 
 <script>
     (function(){
-        // الرموز الأسطورية
+        // الرموز الموسيقية الجديدة
         const SYMBOLS = [
-            { id: "🏆", name: "كأس البطولة", value: 50 },
-            { id: "⚡", name: "صاعقة زيوس", value: 45 },
-            { id: "⚔️", name: "سيف القدر", value: 40 },
-            { id: "🥇", name: "ميدالية الشرف", value: 35 },
-            { id: "🏅", name: "وسام الأبطال", value: 30 },
-            { id: "♦", name: "الماسة الزرقاء", value: 25 },
-            { id: "♣", name: "النفل المحظوظ", value: 22 },
-            { id: "♠", name: "البستوني الأسطوري", value: 20 },
-            { id: "♥", name: "قلب النار", value: 18 }
+            { id: "🎻", name: "كمان", value: 50 },
+            { id: "🎸", name: "جيتار", value: 45 },
+            { id: "🎶", name: "نوتات", value: 40 },
+            { id: "🎵", name: "نوتة", value: 35 },
+            { id: "🎺", name: "بوق", value: 30 },
+            { id: "📯", name: "قرن", value: 25 }
         ];
 
         const ROWS = 3;
         const COLS = 5;
-        let currentBet = 5000;
-        let balance = 10000;
+        let currentBet = 500;
+        let balance = 5000;
+        let reservoir = 0;      // المخزن الذي يخزن الخسائر
         let currentGrid = [];
         let isSpinning = false;
         let audioCtx = null;
@@ -397,6 +363,7 @@
         // DOM elements
         const reelsContainer = document.getElementById('reelsContainer');
         const balanceSpan = document.getElementById('balance');
+        const reservoirSpan = document.getElementById('reservoir');
         const lastWinSpan = document.getElementById('lastWin');
         const spinBtn = document.getElementById('spinBtn');
         const resetBtn = document.getElementById('resetBtn');
@@ -415,43 +382,50 @@
             const gain = audioCtx.createGain();
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            osc.frequency.value = 750;
-            gain.gain.value = 0.08;
-            osc.type = 'sine';
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.25);
-            osc.stop(audioCtx.currentTime + 0.25);
-        }
-
-        function playStopSound() {
-            if (!audioCtx) initAudio();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.frequency.value = 450;
+            osc.frequency.value = 880;
             gain.gain.value = 0.1;
-            osc.type = 'triangle';
+            osc.type = 'sine';
             osc.start();
             gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
             osc.stop(audioCtx.currentTime + 0.2);
         }
 
+        // صوت توقف مثير وقصير (تأثير درامز/كلاب سريع)
+        function playStopSound() {
+            if (!audioCtx) initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // صوت نقر سريع مثير
+            const now = audioCtx.currentTime;
+            const gain = audioCtx.createGain();
+            gain.connect(audioCtx.destination);
+            gain.gain.value = 0.15;
+            
+            // نغمة سريعة
+            const osc = audioCtx.createOscillator();
+            osc.connect(gain);
+            osc.frequency.value = 1200;
+            osc.type = 'triangle';
+            osc.start(now);
+            osc.stop(now + 0.08);
+            
+            gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.1);
+        }
+
         function playBigWinSound() {
             if (!audioCtx) initAudio();
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 5; i++) {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                osc.frequency.value = 500 + i * 150;
-                gain.gain.value = 0.15;
+                osc.frequency.value = 600 + i * 120;
+                gain.gain.value = 0.12;
                 osc.type = 'square';
-                osc.start(audioCtx.currentTime + i * 0.12);
-                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + i * 0.12 + 0.35);
-                osc.stop(audioCtx.currentTime + i * 0.12 + 0.35);
+                osc.start(audioCtx.currentTime + i * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + i * 0.1 + 0.25);
+                osc.stop(audioCtx.currentTime + i * 0.1 + 0.25);
             }
         }
 
@@ -467,7 +441,7 @@
                     container.className = 'symbol-container';
                     const symbolSpan = document.createElement('div');
                     symbolSpan.className = 'symbol';
-                    symbolSpan.textContent = '🏆';
+                    symbolSpan.textContent = '🎵';
                     container.appendChild(symbolSpan);
                     container.setAttribute('data-row', r);
                     container.setAttribute('data-col', c);
@@ -505,7 +479,6 @@
             }
         }
 
-        // إزالة جميع تأثيرات الإضاءة
         function clearAllGlows() {
             for (let c = 0; c < COLS; c++) {
                 for (let r = 0; r < ROWS; r++) {
@@ -559,17 +532,17 @@
             overlay.className = 'celebration-overlay';
             const text = document.createElement('div');
             text.className = 'celebration-text';
-            text.innerHTML = `🎉 فوز أسطوري! 🎉<br>+${winAmount} نقطة 🎉`;
+            text.innerHTML = `🎉 فوز موسيقي! 🎉<br>+${winAmount} 🎵`;
             overlay.appendChild(text);
             document.body.appendChild(overlay);
             setTimeout(() => overlay.remove(), 2500);
         }
 
-        // دوران واقعي متدرج
+        // دوران واقعي مع نظام المخزن
         async function spinReelsRealistic() {
             if (isSpinning) return;
-            if (balance < currentBet) {
-                messageBox.innerHTML = "⚠️ رصيد غير كافٍ! اختر رهاناً أقل أو أعد الضبط ⚠️";
+            if (balance < currentBet && reservoir < currentBet) {
+                messageBox.innerHTML = "⚠️ رصيد ومخزن غير كافيين! اضغط إعادة ضبط ⚠️";
                 return;
             }
 
@@ -577,20 +550,27 @@
             spinBtn.disabled = true;
             resetBtn.disabled = true;
             
-            // إزالة الإضاءات القديمة
             clearAllGlows();
-            
             playSpinSound();
             
-            // خصم الرهان
-            balance -= currentBet;
+            // خصم الرهان (أولاً من الرصيد، ثم من المخزن إذا لزم)
+            let deductedFromBalance = Math.min(balance, currentBet);
+            let deductedFromReservoir = currentBet - deductedFromBalance;
+            
+            balance -= deductedFromBalance;
+            if (deductedFromReservoir > 0) {
+                reservoir -= deductedFromReservoir;
+                if (reservoir < 0) reservoir = 0;
+            }
+            
             balanceSpan.textContent = balance;
-            messageBox.innerHTML = "🌀 جاري الدوران... 🌀";
+            reservoirSpan.textContent = reservoir;
+            messageBox.innerHTML = "🎶 جاري العزف... 🎶";
             
             // إنشاء الشبكة النهائية
             const finalGrid = generateRandomGrid();
             
-            // بدء الدوران لجميع الأعمدة
+            // بدء الدوران
             const reelElements = [];
             for (let c = 0; c < COLS; c++) {
                 const reelDiv = reelsContainer.children[c];
@@ -598,7 +578,6 @@
                 for (let r = 0; r < ROWS; r++) {
                     const container = reelDiv.children[r];
                     container.classList.add('spinning-fast');
-                    // تغيير الرموز بسرعة أثناء الدوران
                     const symbolSpan = container.querySelector('.symbol');
                     const interval = setInterval(() => {
                         if (container.classList.contains('spinning-fast')) {
@@ -616,7 +595,6 @@
                     setTimeout(() => {
                         playStopSound();
                         const reelDiv = reelElements[col];
-                        // إيقاف الدوران لهذا العمود
                         for (let r = 0; r < ROWS; r++) {
                             const container = reelDiv.children[r];
                             container.classList.remove('spinning-fast');
@@ -628,51 +606,63 @@
                             symbolSpan.textContent = finalGrid[r][col].id;
                         }
                         resolve();
-                    }, 200 + col * 180);
+                    }, 150 + col * 150);
                 });
             }
             
-            // تطبيق الشبكة الكاملة
             currentGrid = finalGrid.map(row => [...row]);
             
             // حساب الأرباح
-            const { totalWin, winningCellsSet } = calculateWinnings(currentGrid, currentBet);
-            const isBigWin = totalWin >= currentBet * 10;
+            let { totalWin, winningCellsSet } = calculateWinnings(currentGrid, currentBet);
+            
+            // نظام المخزن: إضافة 95% من الخسارة إلى المخزن إذا لم يربح
+            const netResult = totalWin - currentBet;
             
             if (totalWin > 0) {
+                // فوز: إضافة المكاسب إلى الرصيد
                 balance += totalWin;
                 balanceSpan.textContent = balance;
                 lastWinSpan.textContent = totalWin;
-                applyWinEffects(winningCellsSet, isBigWin);
+                applyWinEffects(winningCellsSet, totalWin >= currentBet * 10);
                 
-                if (isBigWin) {
+                if (totalWin >= currentBet * 10) {
                     playBigWinSound();
                     showCelebration(totalWin);
-                    messageBox.innerHTML = `🎉🎉 فوز أسطوري! ${totalWin} نقطة (${totalWin/currentBet}x) 🎉🎉`;
+                    messageBox.innerHTML = `🎉🎉 فوز أسطوري! ${totalWin} نقطة (${Math.round(totalWin/currentBet)}x) 🎉🎉`;
                 } else {
-                    messageBox.innerHTML = `✨ فوز! ${totalWin} نقطة (${totalWin/currentBet}x الرهان) ✨`;
+                    messageBox.innerHTML = `✨ فوز! ${totalWin} نقطة (${Math.round(totalWin/currentBet)}x) ✨`;
                 }
             } else {
+                // خسارة: إضافة 95% من قيمة الرهان إلى المخزن
+                const lossAmount = currentBet;
+                const addToReservoir = Math.floor(lossAmount * 0.95);
+                reservoir += addToReservoir;
+                reservoirSpan.textContent = reservoir;
                 lastWinSpan.textContent = "0";
-                messageBox.innerHTML = "😔 لا تطابق... حظاً أفضل المرة القادمة! 😔";
+                messageBox.innerHTML = `😔 خسارة ${lossAmount} | تم إضافة ${addToReservoir} إلى المخزن (95%) 😔`;
             }
             
             isSpinning = false;
             spinBtn.disabled = false;
             resetBtn.disabled = false;
-            if (balance <= 0) messageBox.innerHTML = "💀 نفد الرصيد! اضغط إعادة ضبط 💀";
+            
+            if (balance <= 0 && reservoir <= 0) {
+                messageBox.innerHTML = "💀 نفد الرصيد والمخزن! اضغط إعادة ضبط 💀";
+            }
         }
 
         function resetGame() {
             if (isSpinning) return;
-            balance = 10000;
-            currentBet = 5000;
+            balance = 5000;
+            reservoir = 0;
+            currentBet = 500;
             balanceSpan.textContent = balance;
+            reservoirSpan.textContent = reservoir;
             lastWinSpan.textContent = "0";
             currentGrid = generateRandomGrid();
             updateUI();
             clearAllGlows();
-            messageBox.innerHTML = "🔄 تم إعادة الضبط! رصيد 10000 نقطة 🎰";
+            messageBox.innerHTML = "🔄 تم إعادة الضبط! رصيد 5000 نقطة، مخزن 0 🎵";
             document.querySelectorAll('.bet-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if (parseInt(btn.dataset.bet) === currentBet) btn.classList.add('active');
@@ -687,7 +677,7 @@
                     currentBet = parseInt(btn.dataset.bet);
                     btns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    messageBox.innerHTML = `💰 الرهان الحالي: ${currentBet} نقطة 💰`;
+                    messageBox.innerHTML = `🎵 الرهان الحالي: ${currentBet} نقطة 🎵`;
                 });
             });
         }
