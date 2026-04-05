@@ -282,7 +282,7 @@
 
 <script>
     (function(){
-        // الرموز الموسيقية
+        // ==================== الرموز الموسيقية ====================
         const SYMBOLS = [
             { id: "🎻", name: "كمان" },
             { id: "🎸", name: "جيتار" },
@@ -296,35 +296,34 @@
         let currentBet = 500;
         let balance = 5000;
         
-        // ===== نظام المخازن الداخلي (اللاعب لا يراه) =====
-        // المخازن الأربعة [المخزن1, المخزن2, المخزن3, المخزن4]
-        let reservoirs = [0, 0, 0, 0];
+        // ==================== نظام المخازن الأربعة (داخلي بالكامل، اللاعب لا يراه) ====================
+        let reservoirs = [0, 0, 0, 0];  // مخزن1, مخزن2, مخزن3, مخزن4
         
-        // المضاعفات المسموحة لكل مخزن
-        const MULTIPLIER_RANGES = [
-            { min: 3, max: 10, reservoirIndex: 0, payoutPercent: 1.0 },
-            { min: 11, max: 200, reservoirIndex: 1, payoutPercent: 1.0 },
-            { min: 201, max: 1000, reservoirIndex: 2, payoutPercent: 1.0 },
-            { min: 1001, max: 2000, reservoirIndex: 3, payoutPercent: 0.9 }
+        // إعدادات المضاعفات والمخازن المرتبطة
+        const MULTIPLIER_CONFIG = [
+            { min: 3, max: 10, reservoirIndex: 0, payoutPercent: 1.0 },      // المخزن 1: 3x-10x
+            { min: 11, max: 200, reservoirIndex: 1, payoutPercent: 1.0 },     // المخزن 2: 11x-200x
+            { min: 201, max: 1000, reservoirIndex: 2, payoutPercent: 1.0 },   // المخزن 3: 201x-1000x
+            { min: 1001, max: 2000, reservoirIndex: 3, payoutPercent: 0.9 }   // المخزن 4: 1001x-2000x (يدفع 90%)
         ];
         
         let currentGrid = [];
         let isSpinning = false;
         let audioCtx = null;
 
-        // خطوط الدفع
+        // خطوط الدفع العشرة
         const PAYLINES = [
             [0,0,0,0,0], [1,1,1,1,1], [2,2,2,2,2],
             [0,1,2,1,0], [2,1,0,1,2], [0,0,1,2,2],
             [2,2,1,0,0], [1,0,1,2,1], [1,2,1,0,1], [0,1,1,1,0]
         ];
 
-        // ===== وظائف نظام المخازن الداخلية (صامتة تماماً) =====
+        // ==================== وظائف المخازن الداخلية (صامتة تماماً) ====================
         
-        // إضافة خسارة إلى المخازن (توزيع بنسب محددة) - تعمل بصمت
+        // توزيع الخسارة على المخازن بنسب محددة (25%, 25%, 25%, 5%)
         function distributeLossToReservoirs(lossAmount) {
             const percentages = [0.25, 0.25, 0.25, 0.05];
-            for(let i=0; i<4; i++) {
+            for(let i = 0; i < 4; i++) {
                 let addAmount = Math.floor(lossAmount * percentages[i]);
                 if(addAmount > 0) {
                     reservoirs[i] += addAmount;
@@ -332,9 +331,9 @@
             }
         }
 
-        // التحقق من إمكانية دفع مضاعف معين من المخزن المناسب (داخلي)
+        // التحقق مما إذا كان يمكن دفع مضاعف معين من المخزن المناسب
         function canPayMultiplier(multiplier) {
-            const config = MULTIPLIER_RANGES.find(c => multiplier >= c.min && multiplier <= c.max);
+            const config = MULTIPLIER_CONFIG.find(c => multiplier >= c.min && multiplier <= c.max);
             if (!config) return false;
             
             const { reservoirIndex, payoutPercent } = config;
@@ -345,23 +344,19 @@
             return maxPayable >= requiredAmount;
         }
 
-        // الحصول على قائمة المضاعفات الممكن دفعها حالياً (داخلي)
+        // الحصول على قائمة المضاعفات المتاحة للدفع حالياً
         function getAvailableMultipliers() {
             const available = [];
-            // المضاعفات الأساسية
+            // المضاعفات الأساسية التي يمكن تحقيقها من خطوط الدفع
             [3, 4, 15].forEach(mult => {
-                if (canPayMultiplier(mult)) available.push(mult);
-            });
-            // المضاعفات الكبيرة (نادرة)
-            [50, 100, 200, 500, 1000, 1500].forEach(mult => {
                 if (canPayMultiplier(mult)) available.push(mult);
             });
             return available;
         }
 
-        // تنفيذ الدفع من المخزن المناسب (داخلي)
+        // تنفيذ الدفع من المخزن المناسب (تعيد المبلغ المدفوع فعلاً)
         function executePayout(multiplier, winAmount) {
-            const config = MULTIPLIER_RANGES.find(c => multiplier >= c.min && multiplier <= c.max);
+            const config = MULTIPLIER_CONFIG.find(c => multiplier >= c.min && multiplier <= c.max);
             if (!config) return 0;
             
             const { reservoirIndex, payoutPercent } = config;
@@ -376,7 +371,9 @@
             return 0;
         }
 
-        // توليد شبكة عشوائية عادية (لحالات عدم وجود فوز أو للعرض)
+        // ==================== وظائف الشبكة والرموز ====================
+        
+        // توليد شبكة عشوائية بالكامل
         function generateRandomGrid() {
             const grid = [];
             for (let r = 0; r < ROWS; r++) {
@@ -389,12 +386,12 @@
             return grid;
         }
 
-        // توليد شبكة تحقق مضاعفاً معيناً (لضمان الدفع)
+        // توليد شبكة تحقق مضاعفاً معيناً (لضمان وجود فوز قابل للدفع)
         function generateGridForMultiplier(targetMultiplier) {
-            // إنشاء شبكة عشوائية أولاً
+            // إنشاء شبكة عشوائية كقاعدة
             const grid = generateRandomGrid();
             
-            // تحديد طول التطابق المطلوب
+            // تحديد طول التطابق المطلوب حسب المضاعف
             let requiredMatchCount = 0;
             if (targetMultiplier === 3) requiredMatchCount = 3;
             else if (targetMultiplier === 4) requiredMatchCount = 4;
@@ -405,20 +402,20 @@
             const randomLineIndex = Math.floor(Math.random() * PAYLINES.length);
             const selectedLine = PAYLINES[randomLineIndex];
             
-            // اختيار رمز عشوائي ليكون الفائز
+            // اختيار رمز عشوائي ليكون الرمز الفائز
             const winningSymbolIndex = Math.floor(Math.random() * SYMBOLS.length);
             const winningSymbol = SYMBOLS[winningSymbolIndex];
             
             // تطبيق الرموز الفائزة على خط الدفع
             for (let col = 0; col < requiredMatchCount && col < COLS; col++) {
                 const row = selectedLine[col];
-                grid[row][col] = { ...wininningSymbol };
+                grid[row][col] = { ...winningSymbol };
             }
             
             return grid;
         }
 
-        // حساب المضاعف من الشبكة (للتأكيد)
+        // حساب المضاعف الفعلي من الشبكة
         function calculateMultiplierFromGrid(grid) {
             let maxMultiplier = 0;
             
@@ -438,11 +435,10 @@
                 
                 if (multiplier > maxMultiplier) maxMultiplier = multiplier;
             }
-            
             return maxMultiplier;
         }
 
-        // الحصول على الخلايا الفائزة للإضاءة
+        // الحصول على الخلايا الفائزة (للتأثيرات البصرية)
         function getWinningCells(grid) {
             const winningCellsSet = new Set();
             
@@ -469,7 +465,7 @@
             return winningCellsSet;
         }
 
-        // ===== دوال الصوت =====
+        // ==================== دوال الصوت ====================
         function initAudio() {
             if (audioCtx) return;
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -523,7 +519,7 @@
             }
         }
 
-        // ===== وظائف واجهة اللعبة =====
+        // ==================== بناء واجهة اللعبة ====================
         function buildUI() {
             reelsContainer.innerHTML = '';
             for (let c = 0; c < COLS; c++) {
@@ -585,7 +581,7 @@
             setTimeout(() => overlay.remove(), 2500);
         }
 
-        // ===== الدوران الرئيسي - يعمل دائماً، المخازن في الخلفية بصمت =====
+        // ==================== الدوران الرئيسي ====================
         async function spinReels() {
             if (isSpinning) return;
             
@@ -606,23 +602,33 @@
             balanceSpan.textContent = balance;
             messageBox.innerHTML = "🎶 جاري الدوران... 🎶";
             
-            // النظام الداخلي: تحديد ما إذا كان سيكون هناك فوز أم لا
+            // ===== النظام الداخلي الذكي =====
+            // 1. التحقق من المضاعفات المتاحة للدفع
             const availableMultipliers = getAvailableMultipliers();
+            
             let finalGrid;
             let willWin = false;
             let selectedMultiplier = 0;
             
-            if (availableMultipliers.length > 0 && Math.random() < 0.3) { // 30% فرصة فوز
-                // هناك فوز ممكن
+            // 2. تحديد النتيجة (فوز أم خسارة) بشكل ذكي
+            // نسبة الفوز 25% إذا كان هناك مضاعفات متاحة
+            if (availableMultipliers.length > 0 && Math.random() < 0.25) {
                 willWin = true;
+                // اختيار مضاعف عشوائي من المتاح (الأصغر غالباً لاستمرارية اللعب)
                 selectedMultiplier = availableMultipliers[Math.floor(Math.random() * availableMultipliers.length)];
                 finalGrid = generateGridForMultiplier(selectedMultiplier);
             } else {
-                // لا فوز هذه المرة
+                // خسارة: شبكة عشوائية بدون فوز مضمون
                 finalGrid = generateRandomGrid();
+                // نتأكد من عدم وجود فوز كبير بالصدفة (نعدل قليلاً لمنع الفوز غير المخطط)
+                let testMultiplier = calculateMultiplierFromGrid(finalGrid);
+                if (testMultiplier > 0) {
+                    // إذا صادف وجود فوز، نعيد توليد الشبكة لتكون خاسرة
+                    finalGrid = generateRandomGrid();
+                }
             }
             
-            // بدء الدوران الوهمي
+            // بدء الدوران الوهمي على البكرات
             const reelElements = [];
             for (let c = 0; c < COLS; c++) {
                 const reelDiv = reelsContainer.children[c];
@@ -641,7 +647,7 @@
                 }
             }
             
-            // إيقاف الأعمدة تدريجياً
+            // إيقاف الأعمدة تدريجياً مع تأثير صوتي
             for (let col = 0; col < COLS; col++) {
                 await new Promise(resolve => {
                     setTimeout(() => {
@@ -665,7 +671,7 @@
             // تطبيق الشبكة النهائية
             currentGrid = finalGrid.map(row => [...row]);
             
-            // حساب النتيجة
+            // حساب النتيجة الفعلية
             const actualMultiplier = calculateMultiplierFromGrid(currentGrid);
             const winAmount = currentBet * actualMultiplier;
             
@@ -676,7 +682,7 @@
                 finalWinAmount = executePayout(actualMultiplier, winAmount);
                 
                 if (finalWinAmount > 0) {
-                    // دفع ناجح
+                    // فوز ناجح
                     balance += finalWinAmount;
                     balanceSpan.textContent = balance;
                     lastWinSpan.textContent = finalWinAmount;
@@ -693,7 +699,7 @@
                         messageBox.innerHTML = `✨ فوز! ${finalWinAmount} نقطة (${actualMultiplier}x) ✨`;
                     }
                 } else {
-                    // فوز ولكن المخزن فارغ - نتعامل معه كخسارة (يتم توزيع الخسارة)
+                    // فوز ولكن المخزن فارغ (يحدث نادراً) - نتعامل معه كخسارة
                     distributeLossToReservoirs(currentBet);
                     lastWinSpan.textContent = "0";
                     clearAllGlows();
@@ -716,6 +722,7 @@
             }
         }
 
+        // ==================== إعادة الضبط ====================
         function resetGame() {
             if (isSpinning) return;
             balance = 5000;
@@ -733,6 +740,7 @@
             });
         }
 
+        // ==================== اختيار الرهان ====================
         function initBetSelector() {
             const btns = document.querySelectorAll('.bet-btn');
             btns.forEach(btn => {
@@ -746,6 +754,7 @@
             });
         }
 
+        // ==================== تهيئة اللعبة ====================
         function init() {
             buildUI();
             currentGrid = generateRandomGrid();
@@ -754,10 +763,19 @@
             spinBtn.addEventListener('click', spinReels);
             resetBtn.addEventListener('click', resetGame);
             
+            // تفعيل الصوت عند أول نقرة
             document.body.addEventListener('click', () => {
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             }, { once: true });
         }
+
+        // DOM elements
+        const reelsContainer = document.getElementById('reelsContainer');
+        const balanceSpan = document.getElementById('balance');
+        const lastWinSpan = document.getElementById('lastWin');
+        const spinBtn = document.getElementById('spinBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const messageBox = document.getElementById('messageBox');
 
         init();
     })();
