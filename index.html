@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Royal Slots | سلوتس رويال</title>
+    <title>Royal Vault | الخزائن الملكية</title>
     <style>
         * {
             margin: 0;
@@ -15,42 +15,42 @@
 
         body {
             min-height: 100vh;
-            background: linear-gradient(145deg, #0b0e1a 0%, #0a0c18 100%);
+            background: radial-gradient(ellipse at 30% 40%, #0f111a, #05070c);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
-            padding: 16px;
-        }
-
-        /* الحاوية الرئيسية المتجاوبة */
-        .game-wrapper {
-            width: 100%;
-            max-width: 1100px;
-            margin: 0 auto;
-            background: rgba(15, 18, 30, 0.65);
-            backdrop-filter: blur(12px);
-            border-radius: 56px;
+            font-family: 'Segoe UI', 'Inter', 'Poppins', system-ui, sans-serif;
             padding: 20px;
-            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(210, 180, 140, 0.25);
         }
 
-        /* صندوق الماكينة */
-        .slot-machine {
-            background: linear-gradient(135deg, #12162b, #0b0e20);
-            border-radius: 40px;
+        /* الحاوية الرئيسية - متناسقة بالكامل */
+        .game-container {
+            width: 100%;
+            max-width: 1050px;
+            margin: 0 auto;
+            background: rgba(12, 14, 22, 0.65);
+            backdrop-filter: blur(18px);
+            border-radius: 56px;
             padding: 24px;
-            box-shadow: inset 0 2px 6px rgba(0,0,0,0.6), 0 12px 28px rgba(0,0,0,0.4);
+            box-shadow: 0 30px 45px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(200, 170, 110, 0.3);
+        }
+
+        /* ماكينة السلوتس */
+        .slot-machine {
+            background: linear-gradient(135deg, #13172b, #0c0f1f);
+            border-radius: 44px;
+            padding: 24px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 15px 25px rgba(0, 0, 0, 0.3);
         }
 
         /* حاوية البكرات */
         .reels-area {
-            background: #04060e;
-            border-radius: 32px;
+            background: #04060c;
+            border-radius: 36px;
             padding: 20px;
-            border: 1px solid rgba(210, 180, 140, 0.35);
-            box-shadow: inset 0 0 25px rgba(0,0,0,0.5);
+            border: 1px solid rgba(200, 170, 110, 0.35);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
         .reels-grid {
@@ -59,74 +59,70 @@
             gap: 14px;
         }
 
-        /* العمود */
         .reel-col {
             display: flex;
             flex-direction: column;
             gap: 14px;
         }
 
-        /* حاوية الرمز - تصميم مثالي ونظيف */
-        .symbol-box {
-            background: radial-gradient(circle at 30% 25%, #1e2542, #11162b);
-            border-radius: 20px;
+        /* تصميم الرموز - أنيق وثابت */
+        .symbol-card {
+            background: radial-gradient(circle at 30% 25%, #202643, #11162b);
+            border-radius: 22px;
             aspect-ratio: 1 / 1;
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 0 #080b14, inset 0 1px 1px rgba(255,255,255,0.1);
+            box-shadow: 0 8px 0 #080b14, inset 0 1px 1px rgba(255, 255, 255, 0.08);
             transition: all 0.12s ease;
-            border: 1px solid rgba(210, 180, 140, 0.2);
+            border: 1px solid rgba(200, 170, 110, 0.2);
         }
 
         .symbol-emoji {
-            font-size: 2.5rem;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
-            transition: transform 0.1s;
+            font-size: 2.6rem;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
         }
 
-        /* أحجام مختلفة للشاشات الصغيرة */
         @media (min-width: 650px) {
-            .symbol-emoji { font-size: 3.2rem; }
+            .symbol-emoji { font-size: 3.3rem; }
         }
         @media (min-width: 900px) {
-            .symbol-emoji { font-size: 3.8rem; }
+            .symbol-emoji { font-size: 3.9rem; }
         }
 
-        /* تأثيرات الإضاءة عند الفوز */
-        .symbol-box.win-glow {
-            animation: winFlash 0.4s ease-out 3;
+        /* تأثيرات الفوز */
+        .symbol-card.win-flash {
+            animation: winGlow 0.4s ease-out 3;
             box-shadow: 0 0 0 3px #ffbb66, 0 0 20px 8px #ffaa44;
             background: radial-gradient(circle at 30% 25%, #ffcc77, #ffaa44);
         }
-        .symbol-box.big-win-glow {
-            animation: bigFlash 0.55s ease-out 5;
-            box-shadow: 0 0 0 5px #ff8844, 0 0 30px 12px #ff6633;
+        .symbol-card.big-flash {
+            animation: bigGlow 0.55s ease-out 5;
+            box-shadow: 0 0 0 5px #ff8844, 0 0 30px 15px #ff6633;
             background: radial-gradient(circle at 30% 25%, #ffaa55, #ff7733);
         }
 
-        @keyframes winFlash {
-            0%, 100% { transform: scale(1); background: radial-gradient(circle at 30% 25%, #ffcc77, #ffaa44); }
-            50% { transform: scale(1.04); background: radial-gradient(circle at 30% 25%, #ffdd99, #ffbb66); }
+        @keyframes winGlow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
         }
-        @keyframes bigFlash {
+        @keyframes bigGlow {
             0%, 100% { transform: scale(1); filter: brightness(1); }
             25%, 75% { transform: scale(1.07); filter: brightness(1.35); }
             50% { transform: scale(1.02); filter: brightness(1.15); }
         }
 
         /* حركة الدوران الواقعية */
-        @keyframes reelSpin3d {
+        @keyframes spin3d {
             0% { transform: translateY(0px) rotateX(0deg); }
-            20% { transform: translateY(-12px) rotateX(12deg); }
-            40% { transform: translateY(8px) rotateX(-8deg); }
-            60% { transform: translateY(-5px) rotateX(5deg); }
-            80% { transform: translateY(3px) rotateX(-3deg); }
+            25% { transform: translateY(-12px) rotateX(12deg); }
+            50% { transform: translateY(8px) rotateX(-8deg); }
+            75% { transform: translateY(-4px) rotateX(4deg); }
             100% { transform: translateY(0px) rotateX(0deg); }
         }
         .spinning-effect {
-            animation: reelSpin3d 0.1s infinite linear;
+            animation: spin3d 0.1s infinite linear;
         }
 
         /* لوحة المعلومات الأنيقة */
@@ -134,37 +130,37 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            background: rgba(0, 0, 0, 0.45);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(12px);
             margin-top: 24px;
             margin-bottom: 20px;
             padding: 12px 28px;
             border-radius: 60px;
-            border: 1px solid rgba(210, 180, 140, 0.3);
+            border: 1px solid rgba(200, 170, 110, 0.3);
             flex-wrap: wrap;
-            gap: 18px;
+            gap: 16px;
         }
         .stat-card {
             display: flex;
             align-items: baseline;
             gap: 10px;
             font-weight: 600;
-            letter-spacing: 0.5px;
         }
         .stat-label {
-            color: #9aa2cf;
-            font-size: 0.9rem;
+            color: #aab2df;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
         }
         .stat-value {
             font-family: 'Orbitron', monospace;
             font-size: 1.7rem;
             font-weight: bold;
             color: #f3cd81;
-            text-shadow: 0 0 6px #ffaa33;
+            text-shadow: 0 0 5px #ffaa33;
         }
 
         /* أزرار الرهان */
-        .bets-container {
+        .bets-row {
             display: flex;
             justify-content: center;
             gap: 14px;
@@ -172,37 +168,36 @@
             flex-wrap: wrap;
         }
         .bet-chip {
-            background: linear-gradient(145deg, #1f2542, #141933);
+            background: linear-gradient(145deg, #20264a, #131836);
             border: none;
-            padding: 8px 24px;
+            padding: 8px 26px;
             border-radius: 40px;
             font-weight: bold;
             font-size: 1rem;
-            color: #d4bc8a;
+            color: #e2c68a;
             cursor: pointer;
             transition: 0.2s;
             font-family: monospace;
-            letter-spacing: 0.5px;
             box-shadow: 0 3px 5px rgba(0,0,0,0.3);
         }
         .bet-chip.active {
             background: linear-gradient(145deg, #e7b551, #d4942c);
             color: #191919;
-            box-shadow: 0 0 14px #ffbb55;
+            box-shadow: 0 0 15px #ffbb55;
             transform: scale(1.02);
         }
 
         /* أزرار التحكم */
-        .action-row {
+        .actions-row {
             display: flex;
             justify-content: center;
-            gap: 22px;
+            gap: 24px;
         }
         .btn-spin, .btn-reset {
-            background: linear-gradient(145deg, #342a4a, #221e38);
+            background: linear-gradient(145deg, #352d4f, #221e3a);
             border: none;
-            padding: 12px 36px;
-            border-radius: 48px;
+            padding: 12px 38px;
+            border-radius: 52px;
             font-size: 1.2rem;
             font-weight: bold;
             color: #f0daaa;
@@ -216,15 +211,15 @@
             box-shadow: 0 2px 0 #130e22;
         }
 
-        /* نافذة الفوز المتطورة */
-        .win-overlay-modern {
+        /* نافذة الفوز الفاخرة */
+        .win-dialog {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(16px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -234,12 +229,12 @@
         }
         @keyframes fadeWin {
             from { opacity: 0; backdrop-filter: blur(0px); }
-            to { opacity: 1; backdrop-filter: blur(12px); }
+            to { opacity: 1; backdrop-filter: blur(16px); }
         }
-        .win-card {
+        .win-dialog-content {
             background: linear-gradient(135deg, #1f1a32, #110e20);
             padding: 32px 56px;
-            border-radius: 60px;
+            border-radius: 64px;
             text-align: center;
             border: 2px solid;
             box-shadow: 0 0 70px rgba(255,200,0,0.4);
@@ -249,7 +244,7 @@
             from { transform: scale(0.7); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
-        .win-category {
+        .win-title {
             font-size: 3rem;
             font-weight: 800;
             letter-spacing: 6px;
@@ -265,49 +260,44 @@
             color: transparent;
         }
         @media (max-width: 550px) {
-            .win-category { font-size: 1.8rem; }
+            .win-title { font-size: 1.8rem; }
             .win-money { font-size: 2.2rem; }
-            .win-card { padding: 20px 30px; }
+            .win-dialog-content { padding: 20px 30px; }
         }
-
-        /* ألوان الفوز */
-        .pig-style { border-color: #ff88aa; color: #ff88aa; }
-        .mega-style { border-color: #ffaa55; color: #ffaa55; }
-        .super-style { border-color: #cc77ff; color: #cc77ff; }
-        .epic-style { border-color: #ff5555; color: #ff5555; }
-        .max-style { border-color: #ffdd66; color: #ffdd66; animation: borderGlow 0.4s infinite alternate; }
-        @keyframes borderGlow {
-            from { box-shadow: 0 0 20px gold; text-shadow: 0 0 8px gold; }
+        .pig-title { border-color: #ff88aa; color: #ff88aa; }
+        .mega-title { border-color: #ffaa55; color: #ffaa55; }
+        .super-title { border-color: #cc77ff; color: #cc77ff; }
+        .epic-title { border-color: #ff5555; color: #ff5555; }
+        .max-title { border-color: #ffdd66; color: #ffdd66; animation: borderPulse 0.4s infinite alternate; }
+        @keyframes borderPulse {
+            from { box-shadow: 0 0 15px gold; text-shadow: 0 0 6px gold; }
             to { box-shadow: 0 0 45px #ffaa33; text-shadow: 0 0 20px #ffaa33; }
         }
 
-        /* تأثيرات إضافية */
-        @keyframes shakeScreen {
-            0% { transform: translate(0,0); }
-            20% { transform: translate(-4px, 3px); }
-            40% { transform: translate(4px, -2px); }
-            60% { transform: translate(-2px, 2px); }
-            80% { transform: translate(2px, -1px); }
-            100% { transform: translate(0,0); }
+        /* اهتزاز خفيف للفوز الكبير */
+        @keyframes gentleShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
-        .shake-effect {
-            animation: shakeScreen 0.25s ease-in-out;
+        .shake-win {
+            animation: gentleShake 0.25s ease-in-out;
         }
     </style>
 </head>
 <body>
-<div class="game-wrapper">
+<div class="game-container">
     <div class="slot-machine">
         <div class="reels-area">
             <div class="reels-grid" id="reelsGrid"></div>
         </div>
 
         <div class="stats-panel">
-            <div class="stat-card"><span class="stat-label">💰 الرصيد</span> <span class="stat-value" id="balanceValue">5000</span></div>
-            <div class="stat-card"><span class="stat-label">🏆 آخر ربح</span> <span class="stat-value" id="lastWinValue">0</span></div>
+            <div class="stat-card"><span class="stat-label">💰 الرصيد</span> <span class="stat-value" id="balanceDisplay">5000</span></div>
+            <div class="stat-card"><span class="stat-label">🏆 آخر ربح</span> <span class="stat-value" id="lastWinDisplay">0</span></div>
         </div>
 
-        <div class="bets-container" id="betsList">
+        <div class="bets-row" id="betsContainer">
             <button data-bet="100" class="bet-chip">100</button>
             <button data-bet="250" class="bet-chip">250</button>
             <button data-bet="500" class="bet-chip active">500</button>
@@ -315,7 +305,7 @@
             <button data-bet="2500" class="bet-chip">2500</button>
         </div>
 
-        <div class="action-row">
+        <div class="actions-row">
             <button class="btn-spin" id="spinAction">🎰 SPIN</button>
             <button class="btn-reset" id="resetAction">⟳ RESET</button>
         </div>
@@ -333,7 +323,7 @@
         let currentBet = 500;
         let balance = 5000;
         
-        // المخازن السرية (لا يراها اللاعب)
+        // المخازن الأربعة (داخلية بالكامل - اللاعب لا يعرفها)
         const RESERVOIRS = [
             { minM: 3, maxM: 10, bal: 0, payoutPct: 1.0 },
             { minM: 11, maxM: 200, bal: 0, payoutPct: 1.0 },
@@ -342,10 +332,10 @@
         ];
 
         let currentMatrix = [];
-        let isSpinningNow = false;
-        let audioContext = null;
+        let isSpinning = false;
+        let audioCtx = null;
 
-        // خطوط الدفع (10 خطوط)
+        // خطوط الدفع العشرة
         const PAYLINES = [
             [0,0,0,0,0], [1,1,1,1,1], [2,2,2,2,2],
             [0,1,2,1,0], [2,1,0,1,2], [0,0,1,2,2],
@@ -354,18 +344,18 @@
 
         // عناصر DOM
         const gridContainer = document.getElementById('reelsGrid');
-        const balanceSpan = document.getElementById('balanceValue');
-        const lastWinSpan = document.getElementById('lastWinValue');
+        const balanceSpan = document.getElementById('balanceDisplay');
+        const lastWinSpan = document.getElementById('lastWinDisplay');
         const spinButton = document.getElementById('spinAction');
         const resetButton = document.getElementById('resetAction');
 
-        // ------------------- النظام الصوتي الخفيف -------------------
-        function initAudio() { if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
-        function playSpinSound() { if (!audioContext) initAudio(); if (audioContext.state === 'suspended') audioContext.resume(); const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.frequency.value = 860; gain.gain.value = 0.08; osc.type = 'sine'; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.2); osc.stop(audioContext.currentTime + 0.2); }
-        function playStopTick() { if (!audioContext) initAudio(); if (audioContext.state === 'suspended') audioContext.resume(); const now = audioContext.currentTime; const gain = audioContext.createGain(); gain.connect(audioContext.destination); gain.gain.value = 0.12; const osc = audioContext.createOscillator(); osc.connect(gain); osc.frequency.value = 1150; osc.type = 'triangle'; osc.start(now); osc.stop(now + 0.07); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09); }
-        function playVictory(mult) { if (!audioContext) initAudio(); if (audioContext.state === 'suspended') audioContext.resume(); for (let i=0;i<4;i++){ const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); osc.connect(gain); gain.connect(audioContext.destination); osc.frequency.value = 520 + (mult * 1.5) + i*70; gain.gain.value = 0.11; osc.type = 'square'; osc.start(audioContext.currentTime + i*0.09); gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + i*0.09 + 0.22); osc.stop(audioContext.currentTime + i*0.09 + 0.22); } }
+        // ------------------- أصوات خفيفة -------------------
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function playSpinSound() { if (!audioCtx) initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = 870; gain.gain.value = 0.07; osc.type = 'sine'; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2); osc.stop(audioCtx.currentTime + 0.2); }
+        function playStopTick() { if (!audioCtx) initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume(); const now = audioCtx.currentTime; const gain = audioCtx.createGain(); gain.connect(audioCtx.destination); gain.gain.value = 0.12; const osc = audioCtx.createOscillator(); osc.connect(gain); osc.frequency.value = 1180; osc.type = 'triangle'; osc.start(now); osc.stop(now + 0.07); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09); }
+        function playWinMelody(mult) { if (!audioCtx) initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume(); for (let i=0; i<4; i++){ const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = 540 + (mult * 1.2) + i*70; gain.gain.value = 0.1; osc.type = 'square'; osc.start(audioCtx.currentTime + i*0.09); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + i*0.09 + 0.22); osc.stop(audioCtx.currentTime + i*0.09 + 0.22); } }
 
-        // ------------------- منطق المخازن الحديدي -------------------
+        // ------------------- منطق المخازن (صارم جداً) -------------------
         function addLossToReservoirs(loss) {
             const parts = [0.25, 0.25, 0.25, 0.05];
             for (let i=0; i<RESERVOIRS.length; i++) {
@@ -374,7 +364,7 @@
             }
         }
 
-        function getMaxMultiplier(res) {
+        function getMaxMultFromRes(res) {
             if (res.bal <= 0) return 0;
             let maxAmount = Math.floor(res.bal * res.payoutPct);
             let maxMult = Math.floor(maxAmount / currentBet);
@@ -383,13 +373,13 @@
             return maxMult;
         }
 
-        function collectAvailableMultipliers() {
+        function getAllPossibleMultipliers() {
             let list = [];
             for (let res of RESERVOIRS) {
-                let maxPossible = getMaxMultiplier(res);
+                let maxPossible = getMaxMultFromRes(res);
                 if (maxPossible >= res.minM) {
-                    let top = Math.min(maxPossible, res.maxM);
-                    for (let m = res.minM; m <= top; m++) {
+                    let upper = Math.min(maxPossible, res.maxM);
+                    for (let m = res.minM; m <= upper; m++) {
                         if (!list.includes(m)) list.push(m);
                     }
                 }
@@ -398,8 +388,8 @@
             return list;
         }
 
-        function pickAndPayMultiplier() {
-            let allMults = collectAvailableMultipliers();
+        function pickAndDeductMultiplier() {
+            let allMults = getAllPossibleMultipliers();
             if (allMults.length === 0) return 0;
             let chosen = allMults[Math.floor(Math.random() * allMults.length)];
             let targetRes = RESERVOIRS.find(r => chosen >= r.minM && chosen <= r.maxM);
@@ -413,32 +403,32 @@
             return 0;
         }
 
-        // ------------------- دوال الشبكة -------------------
+        // ------------------- وظائف الشبكة -------------------
         function getRandomSymbol() { return { ...ICONS[Math.floor(Math.random() * ICONS.length)] }; }
-        function generateRandomMatrix() { let m = []; for (let i=0; i<ROWS; i++) { m[i] = []; for (let j=0; j<COLS; j++) m[i][j] = getRandomSymbol(); } return m; }
+        function generateEmptyMatrix() { let m = []; for (let i=0; i<ROWS; i++) { m[i] = []; for (let j=0; j<COLS; j++) m[i][j] = getRandomSymbol(); } return m; }
         
-        function buildMatrixForMultiplier(mult) {
-            let matrix = generateRandomMatrix();
-            let requiredMatches = (mult === 3) ? 3 : (mult === 4) ? 4 : 5;
+        function buildMatrixForMult(mult) {
+            let matrix = generateEmptyMatrix();
+            let neededMatch = (mult === 3) ? 3 : (mult === 4) ? 4 : 5;
             let lineIdx = Math.floor(Math.random() * PAYLINES.length);
             let line = PAYLINES[lineIdx];
-            let winnerSymbol = ICONS[Math.floor(Math.random() * ICONS.length)];
-            for (let i=0; i<requiredMatches && i<COLS; i++) {
+            let winnerSym = ICONS[Math.floor(Math.random() * ICONS.length)];
+            for (let i=0; i<neededMatch && i<COLS; i++) {
                 let row = line[i];
-                matrix[row][i] = { ...winnerSymbol };
+                matrix[row][i] = { ...winnerSym };
             }
-            for (let i=requiredMatches; i<COLS; i++) {
+            for (let i=neededMatch; i<COLS; i++) {
                 let row = line[i];
                 let diff;
-                do { diff = getRandomSymbol(); } while (diff.id === winnerSymbol.id);
+                do { diff = getRandomSymbol(); } while (diff.id === winnerSym.id);
                 matrix[row][i] = diff;
             }
-            for (let i=0; i<requiredMatches && i<COLS; i++) {
-                let currentRow = line[i];
+            for (let i=0; i<neededMatch && i<COLS; i++) {
+                let curRow = line[i];
                 for (let r=0; r<ROWS; r++) {
-                    if (r !== currentRow) {
+                    if (r !== curRow) {
                         let diff;
-                        do { diff = getRandomSymbol(); } while (diff.id === winnerSymbol.id);
+                        do { diff = getRandomSymbol(); } while (diff.id === winnerSym.id);
                         matrix[r][i] = diff;
                     }
                 }
@@ -446,18 +436,18 @@
             return matrix;
         }
 
-        function getActualMultiplier(matrix) {
+        function getMultiplierFromMatrix(matrix) {
             let best = 0;
             for (let line of PAYLINES) {
-                let firstSym = matrix[line[0]][0];
-                let count = 1;
+                let first = matrix[line[0]][0];
+                let cnt = 1;
                 for (let c=1; c<COLS; c++) {
-                    if (matrix[line[c]][c].id === firstSym.id) count++;
+                    if (matrix[line[c]][c].id === first.id) cnt++;
                     else break;
                 }
-                if (count === 3) best = Math.max(best, 3);
-                else if (count === 4) best = Math.max(best, 4);
-                else if (count >= 5) best = Math.max(best, 15);
+                if (cnt === 3) best = Math.max(best, 3);
+                else if (cnt === 4) best = Math.max(best, 4);
+                else if (cnt >= 5) best = Math.max(best, 15);
             }
             return best;
         }
@@ -479,44 +469,44 @@
         }
 
         // ------------------- واجهة الفوز الرائعة -------------------
-        function presentWin(amount, multiplier) {
-            let category = '', styleClass = '';
-            if (multiplier >= 1001) { category = 'MAX WIN'; styleClass = 'max-style'; document.body.classList.add('shake-effect'); setTimeout(()=>document.body.classList.remove('shake-effect'),350); }
-            else if (multiplier >= 201) { category = 'EPIC WIN'; styleClass = 'epic-style'; document.body.classList.add('shake-effect'); setTimeout(()=>document.body.classList.remove('shake-effect'),300); }
-            else if (multiplier >= 51) { category = 'SUPER WIN'; styleClass = 'super-style'; }
-            else if (multiplier >= 11) { category = 'MEGA WIN'; styleClass = 'mega-style'; }
-            else { category = 'PIG WIN'; styleClass = 'pig-style'; }
+        function displayWin(amount, multiplier) {
+            let winType = '', style = '';
+            if (multiplier >= 1001) { winType = 'MAX WIN'; style = 'max-title'; document.body.classList.add('shake-win'); setTimeout(()=>document.body.classList.remove('shake-win'),300); }
+            else if (multiplier >= 201) { winType = 'EPIC WIN'; style = 'epic-title'; document.body.classList.add('shake-win'); setTimeout(()=>document.body.classList.remove('shake-win'),250); }
+            else if (multiplier >= 51) { winType = 'SUPER WIN'; style = 'super-title'; }
+            else if (multiplier >= 11) { winType = 'MEGA WIN'; style = 'mega-title'; }
+            else { winType = 'PIG WIN'; style = 'pig-title'; }
 
             const overlay = document.createElement('div');
-            overlay.className = 'win-overlay-modern';
+            overlay.className = 'win-dialog';
             overlay.innerHTML = `
-                <div class="win-card ${styleClass}">
-                    <div class="win-category ${styleClass}">${category}</div>
+                <div class="win-dialog-content ${style}">
+                    <div class="win-title ${style}">${winType}</div>
                     <div class="win-money">+<span class="counter-num">0</span></div>
                 </div>
             `;
             document.body.appendChild(overlay);
             const counterSpan = overlay.querySelector('.counter-num');
             let currentVal = 0;
-            const duration = Math.min(3500, 800 + amount / 130);
-            const steps = Math.min(70, Math.floor(duration / 28));
+            const duration = Math.min(3800, 900 + amount / 120);
+            const steps = Math.min(70, Math.floor(duration / 30));
             const increment = amount / steps;
-            let stepIndex = 0;
+            let stepIdx = 0;
             const timer = setInterval(() => {
-                stepIndex++;
-                currentVal = Math.min(amount, Math.floor(increment * stepIndex));
+                stepIdx++;
+                currentVal = Math.min(amount, Math.floor(increment * stepIdx));
                 counterSpan.innerText = currentVal.toLocaleString();
-                if (stepIndex >= steps) {
+                if (stepIdx >= steps) {
                     counterSpan.innerText = amount.toLocaleString();
                     clearInterval(timer);
                 }
-            }, 28);
+            }, 30);
             overlay.onclick = () => { clearInterval(timer); counterSpan.innerText = amount.toLocaleString(); setTimeout(() => overlay.remove(), 30); };
-            setTimeout(() => { if (overlay) overlay.remove(); }, 5600);
-            playVictory(multiplier);
+            setTimeout(() => { if (overlay) overlay.remove(); }, 5500);
+            playWinMelody(multiplier);
         }
 
-        // ------------------- بناء الواجهة البصرية -------------------
+        // ------------------- بناء الواجهة -------------------
         function buildGridUI() {
             gridContainer.innerHTML = '';
             for (let c = 0; c < COLS; c++) {
@@ -524,7 +514,7 @@
                 colDiv.className = 'reel-col';
                 for (let r = 0; r < ROWS; r++) {
                     const card = document.createElement('div');
-                    card.className = 'symbol-box';
+                    card.className = 'symbol-card';
                     const emojiSpan = document.createElement('div');
                     emojiSpan.className = 'symbol-emoji';
                     emojiSpan.textContent = '💎';
@@ -535,7 +525,7 @@
             }
         }
 
-        function refreshUI() {
+        function updateMatrixUI() {
             for (let c = 0; c < COLS; c++) {
                 const col = gridContainer.children[c];
                 for (let r = 0; r < ROWS; r++) {
@@ -546,31 +536,31 @@
             }
         }
 
-        function clearAllGlowEffects() {
+        function clearAllGlow() {
             for (let c = 0; c < COLS; c++) {
                 for (let r = 0; r < ROWS; r++) {
                     const card = gridContainer.children[c].children[r];
-                    card.classList.remove('win-glow', 'big-win-glow');
+                    card.classList.remove('win-flash', 'big-flash');
                 }
             }
         }
 
-        function applyWinGlow(positions, isBig) {
-            clearAllGlowEffects();
+        function applyGlow(positions, isBig) {
+            clearAllGlow();
             for (let pos of positions) {
                 let [row, col] = pos.split(',').map(Number);
                 const card = gridContainer.children[col].children[row];
-                if (isBig) card.classList.add('big-win-glow');
-                else card.classList.add('win-glow');
+                if (isBig) card.classList.add('big-flash');
+                else card.classList.add('win-flash');
             }
         }
 
-        // ------------------- الدوران الرئيسي (صارم جدا) -------------------
-        async function executeSpin() {
-            if (isSpinningNow) return;
+        // ------------------- الدوران الرئيسي -------------------
+        async function performSpin() {
+            if (isSpinning) return;
             if (balance < currentBet) return;
             
-            isSpinningNow = true;
+            isSpinning = true;
             spinButton.disabled = true;
             resetButton.disabled = true;
             playSpinSound();
@@ -578,34 +568,33 @@
             balance -= currentBet;
             balanceSpan.innerText = balance;
 
-            const selectedMult = pickAndPayMultiplier();
+            const chosenMult = pickAndDeductMultiplier();
             let resultMatrix = null;
             let winAmount = 0;
             let finalMult = 0;
 
-            if (selectedMult > 0) {
-                resultMatrix = buildMatrixForMultiplier(selectedMult);
-                winAmount = currentBet * selectedMult;
-                finalMult = selectedMult;
-                // تأكيد أمني
-                let checkMult = getActualMultiplier(resultMatrix);
-                if (checkMult !== selectedMult && checkMult !== 15) {
-                    resultMatrix = buildMatrixForMultiplier(selectedMult);
+            if (chosenMult > 0) {
+                resultMatrix = buildMatrixForMult(chosenMult);
+                winAmount = currentBet * chosenMult;
+                finalMult = chosenMult;
+                let verify = getMultiplierFromMatrix(resultMatrix);
+                if (verify !== chosenMult && verify !== 15) {
+                    resultMatrix = buildMatrixForMult(chosenMult);
                 }
             } else {
-                resultMatrix = generateRandomMatrix();
-                let check = getActualMultiplier(resultMatrix);
-                let attempts = 0;
-                while (check > 0 && attempts < 12) {
-                    resultMatrix = generateRandomMatrix();
-                    check = getActualMultiplier(resultMatrix);
-                    attempts++;
+                resultMatrix = generateEmptyMatrix();
+                let check = getMultiplierFromMatrix(resultMatrix);
+                let tries = 0;
+                while (check > 0 && tries < 12) {
+                    resultMatrix = generateEmptyMatrix();
+                    check = getMultiplierFromMatrix(resultMatrix);
+                    tries++;
                 }
                 winAmount = 0;
                 finalMult = 0;
             }
 
-            // دوران البكرات مع تأثيرات
+            // تأثير الدوران
             const spinIntervals = [];
             for (let c = 0; c < COLS; c++) {
                 for (let r = 0; r < ROWS; r++) {
@@ -622,7 +611,7 @@
                 }
             }
 
-            // إيقاف تدريجي للأعمدة
+            // إيقاف تدريجي
             for (let col = 0; col < COLS; col++) {
                 await new Promise(resolve => {
                     setTimeout(() => {
@@ -634,54 +623,54 @@
                             emojiSpan.textContent = resultMatrix[r][col].id;
                         }
                         resolve();
-                    }, 130 + col * 140);
+                    }, 130 + col * 135);
                 });
             }
             spinIntervals.forEach(interval => clearInterval(interval));
             currentMatrix = resultMatrix.map(row => [...row]);
-            const finalMultiplier = getActualMultiplier(currentMatrix);
-            const totalWinAmount = currentBet * finalMultiplier;
+            const actualMult = getMultiplierFromMatrix(currentMatrix);
+            const actualWin = currentBet * actualMult;
 
-            if (finalMultiplier > 0 && totalWinAmount > 0) {
-                balance += totalWinAmount;
+            if (actualMult > 0 && actualWin > 0) {
+                balance += actualWin;
                 balanceSpan.innerText = balance;
-                lastWinSpan.innerText = totalWinAmount;
-                const winCells = getWinningPositions(currentMatrix);
-                const isBigWin = finalMultiplier >= 10;
-                applyWinGlow(winCells, isBigWin);
-                presentWin(totalWinAmount, finalMultiplier);
+                lastWinSpan.innerText = actualWin;
+                const winPositions = getWinningPositions(currentMatrix);
+                const isBig = actualMult >= 10;
+                applyGlow(winPositions, isBig);
+                displayWin(actualWin, actualMult);
             } else {
                 addLossToReservoirs(currentBet);
                 lastWinSpan.innerText = '0';
-                clearAllGlowEffects();
+                clearAllGlow();
             }
 
-            isSpinningNow = false;
+            isSpinning = false;
             spinButton.disabled = false;
             resetButton.disabled = false;
             if (balance <= 0) fullReset();
         }
 
         function fullReset() {
-            if (isSpinningNow) return;
+            if (isSpinning) return;
             balance = 5000;
             for (let r of RESERVOIRS) r.bal = 0;
             currentBet = 500;
             balanceSpan.innerText = balance;
             lastWinSpan.innerText = '0';
-            currentMatrix = generateRandomMatrix();
-            refreshUI();
-            clearAllGlowEffects();
+            currentMatrix = generateEmptyMatrix();
+            updateMatrixUI();
+            clearAllGlow();
             document.querySelectorAll('.bet-chip').forEach(btn => {
                 btn.classList.remove('active');
                 if (parseInt(btn.dataset.bet) === currentBet) btn.classList.add('active');
             });
         }
 
-        function initBetButtons() {
+        function initBets() {
             document.querySelectorAll('.bet-chip').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    if (isSpinningNow) return;
+                    if (isSpinning) return;
                     currentBet = parseInt(btn.dataset.bet);
                     document.querySelectorAll('.bet-chip').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
@@ -689,18 +678,18 @@
             });
         }
 
-        function init() {
+        function initGame() {
             buildGridUI();
-            currentMatrix = generateRandomMatrix();
-            refreshUI();
-            initBetButtons();
-            spinButton.onclick = executeSpin;
+            currentMatrix = generateEmptyMatrix();
+            updateMatrixUI();
+            initBets();
+            spinButton.onclick = performSpin;
             resetButton.onclick = fullReset;
             document.body.addEventListener('click', () => {
-                if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             }, { once: true });
         }
-        init();
+        initGame();
     })();
 </script>
 </body>
