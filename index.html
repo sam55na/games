@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>سلوتس الموسيقى - Slots Game</title>
+    <title>سلوتس الملوك - Kings Slots</title>
     <style>
         * {
             user-select: none;
@@ -20,6 +20,26 @@
             align-items: center;
             font-family: 'Segoe UI', 'Poppins', 'Orbitron', monospace;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* تأثير خلفية متحركة */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(255,100,150,0.08) 0%, transparent 70%);
+            pointer-events: none;
+            animation: bgPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
         }
 
         .game-container {
@@ -29,6 +49,8 @@
             padding: 1.5rem;
             box-shadow: 0 25px 45px rgba(0,0,0,0.6);
             border: 1px solid rgba(255, 100, 150, 0.6);
+            position: relative;
+            z-index: 10;
         }
 
         .slots-machine {
@@ -197,6 +219,7 @@
             color: #ff88cc;
             cursor: pointer;
             box-shadow: 0 6px 0 #2a1a3a;
+            transition: 0.05s linear;
         }
 
         .spin-btn:active, .reset-btn:active {
@@ -214,41 +237,110 @@
             color: #ff88cc;
         }
 
-        .celebration-overlay {
+        /* ========== مؤثرات الفوز المتقدمة ========== */
+        .win-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, rgba(255,100,150,0.4), rgba(0,0,0,0.85));
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            animation: fadeOut 2.5s ease-out forwards;
             pointer-events: none;
+            animation: overlayFadeIn 0.3s ease-out;
         }
 
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            70% { opacity: 1; }
-            100% { opacity: 0; visibility: hidden; }
+        @keyframes overlayFadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        .celebration-text {
-            font-size: 2rem;
+        .win-card {
+            background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(30,20,50,0.95));
+            backdrop-filter: blur(20px);
+            border-radius: 3rem;
+            padding: 2rem 4rem;
+            text-align: center;
+            border: 3px solid;
+            animation: winCardPulse 0.5s ease-out infinite;
+            box-shadow: 0 0 50px rgba(255,215,0,0.5);
+        }
+
+        @keyframes winCardPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px gold; }
+            50% { transform: scale(1.05); box-shadow: 0 0 60px #ffaa00; }
+        }
+
+        .win-title {
+            font-size: 3rem;
             font-weight: bold;
-            color: #ff88cc;
-            text-shadow: 0 0 20px #ff3399;
-            animation: bounceText 0.5s ease-out infinite;
-            background: rgba(0,0,0,0.6);
-            padding: 20px 40px;
-            border-radius: 2rem;
+            letter-spacing: 5px;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px currentColor;
         }
 
-        @keyframes bounceText {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
+        .win-amount {
+            font-size: 3.5rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            text-shadow: 0 0 15px gold;
+        }
+
+        .win-counter {
+            font-size: 1.5rem;
+            margin-top: 1rem;
+            opacity: 0.8;
+        }
+
+        /* ألوان مختلفة لكل نوع فوز */
+        .pig-win { border-color: #ff88aa; color: #ff88aa; background: linear-gradient(135deg, rgba(40,20,30,0.95), rgba(20,10,25,0.95)); }
+        .mega-win { border-color: #ff6600; color: #ffaa44; }
+        .super-win { border-color: #ff44cc; color: #ff66ff; }
+        .epic-win { border-color: #ff0000; color: #ff4444; }
+        .max-win { border-color: #ffd700; color: #ffd700; animation: maxWinGlow 0.3s infinite; }
+
+        @keyframes maxWinGlow {
+            0%, 100% { text-shadow: 0 0 20px gold; }
+            50% { text-shadow: 0 0 50px #ffaa00, 0 0 20px red; }
+        }
+
+        /* سقوط العملات */
+        .coin-shower {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            overflow: hidden;
+        }
+
+        .coin {
+            position: absolute;
+            font-size: 2rem;
+            animation: coinFall linear forwards;
+            opacity: 0.9;
+        }
+
+        @keyframes coinFall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* اهتزاز الشاشة */
+        @keyframes screenShake {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-5px, 5px); }
+            50% { transform: translate(5px, -5px); }
+            75% { transform: translate(-3px, 3px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .shake-screen {
+            animation: screenShake 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -276,7 +368,7 @@
             <button class="spin-btn" id="spinBtn">🎵 دَوِّر</button>
             <button class="reset-btn" id="resetBtn">🔄 إعادة ضبط</button>
         </div>
-        <div class="message-area" id="messageBox">🎶 رموز موسيقية | تطابق 3,4,5 لتربح 🎶</div>
+        <div class="message-area" id="messageBox">🎶 رموز موسيقية | تطابق 3=×3 | 4=×4 | 5=×15 🎶</div>
     </div>
 </div>
 
@@ -308,15 +400,109 @@
         let isSpinning = false;
         let audioCtx = null;
 
-        // خطوط الدفع
         const PAYLINES = [
             [0,0,0,0,0], [1,1,1,1,1], [2,2,2,2,2],
             [0,1,2,1,0], [2,1,0,1,2], [0,0,1,2,2],
             [2,2,1,0,0], [1,0,1,2,1], [1,2,1,0,1], [0,1,1,1,0]
         ];
 
+        // ========== دوال الفوز والمؤثرات ==========
+        function getWinType(multiplier) {
+            if (multiplier >= 1001) return { name: "MAX WIN", class: "max-win", minShake: true, coins: 50 };
+            if (multiplier >= 201) return { name: "EPIC WIN", class: "epic-win", minShake: true, coins: 40 };
+            if (multiplier >= 51) return { name: "SUPER WIN", class: "super-win", minShake: true, coins: 30 };
+            if (multiplier >= 11) return { name: "MEGA WIN", class: "mega-win", minShake: true, coins: 20 };
+            if (multiplier >= 3) return { name: "PIG WIN", class: "pig-win", minShake: false, coins: 10 };
+            return null;
+        }
+
+        function showWinOverlay(winAmount, multiplier) {
+            const winType = getWinType(multiplier);
+            if (!winType) return;
+            
+            // إضافة اهتزاز للشاشة
+            if (winType.minShake) {
+                document.body.classList.add('shake-screen');
+                setTimeout(() => document.body.classList.remove('shake-screen'), 500);
+            }
+            
+            // إنشاء overlay
+            const overlay = document.createElement('div');
+            overlay.className = `win-overlay`;
+            
+            const card = document.createElement('div');
+            card.className = `win-card ${winType.class}`;
+            
+            const title = document.createElement('div');
+            title.className = 'win-title';
+            title.textContent = winType.name;
+            
+            const amountDiv = document.createElement('div');
+            amountDiv.className = 'win-amount';
+            amountDiv.textContent = '0';
+            
+            const counterDiv = document.createElement('div');
+            counterDiv.className = 'win-counter';
+            counterDiv.textContent = 'جاري العد...';
+            
+            card.appendChild(title);
+            card.appendChild(amountDiv);
+            card.appendChild(counterDiv);
+            overlay.appendChild(card);
+            document.body.appendChild(overlay);
+            
+            // تأثير سقوط العملات
+            startCoinShower(winType.coins);
+            
+            // عداد تصاعدي للمبلغ
+            let currentCount = 0;
+            const duration = Math.min(5000, 1000 + (winAmount / 100) * 50);
+            const stepTime = 30;
+            const steps = Math.min(100, Math.floor(duration / stepTime));
+            const increment = winAmount / steps;
+            let step = 0;
+            
+            const timer = setInterval(() => {
+                step++;
+                currentCount = Math.min(winAmount, Math.floor(increment * step));
+                amountDiv.textContent = currentCount.toLocaleString();
+                counterDiv.textContent = `+${currentCount.toLocaleString()} 🎵`;
+                
+                if (step >= steps) {
+                    amountDiv.textContent = winAmount.toLocaleString();
+                    counterDiv.textContent = `✨ +${winAmount.toLocaleString()} ✨`;
+                    clearInterval(timer);
+                    setTimeout(() => overlay.remove(), 2000);
+                }
+            }, stepTime);
+        }
+
+        function startCoinShower(coinCount) {
+            const showerDiv = document.createElement('div');
+            showerDiv.className = 'coin-shower';
+            document.body.appendChild(showerDiv);
+            
+            const coins = ['🪙', '💰', '💎', '🏆', '⭐', '🎵', '🎶'];
+            
+            for (let i = 0; i < coinCount; i++) {
+                setTimeout(() => {
+                    const coin = document.createElement('div');
+                    coin.className = 'coin';
+                    coin.textContent = coins[Math.floor(Math.random() * coins.length)];
+                    coin.style.left = Math.random() * 100 + '%';
+                    coin.style.fontSize = (1 + Math.random() * 2) + 'rem';
+                    coin.style.animationDuration = (1 + Math.random() * 2) + 's';
+                    coin.style.animationDelay = Math.random() * 0.5 + 's';
+                    showerDiv.appendChild(coin);
+                    
+                    setTimeout(() => coin.remove(), 3000);
+                }, i * 50);
+            }
+            
+            setTimeout(() => showerDiv.remove(), 4000);
+        }
+
         // ==================== وظائف المخازن ====================
-        
         function distributeLossToReservoirs(lossAmount) {
             const percentages = [0.25, 0.25, 0.25, 0.05];
             for(let i = 0; i < RESERVOIRS.length; i++) {
@@ -327,7 +513,6 @@
             }
         }
 
-        // حساب أقصى مضاعف يمكن دفعه من كل مخزن
         function getMaxPayableMultiplier(reservoir) {
             if (reservoir.balance <= 0) return 0;
             const maxAmount = Math.floor(reservoir.balance * reservoir.payoutPercent);
@@ -337,59 +522,40 @@
             return maxMult;
         }
 
-        // الحصول على قائمة المضاعفات المتاحة (مضاعف واحد لكل نطاق متاح)
-        function getAvailableMultipliers() {
+        function getAllAvailableMultipliers() {
             const available = [];
             for (const reservoir of RESERVOIRS) {
                 const maxMult = getMaxPayableMultiplier(reservoir);
                 if (maxMult >= reservoir.minMult) {
-                    // نختار مضاعفًا عشوائيًا من النطاق المتاح
-                    const minPossible = reservoir.minMult;
                     const maxPossible = Math.min(maxMult, reservoir.maxMult);
-                    if (minPossible <= maxPossible) {
-                        available.push({
-                            multiplier: minPossible, // سنختار لاحقًا
-                            min: minPossible,
-                            max: maxPossible,
-                            reservoir: reservoir
-                        });
+                    for (let m = reservoir.minMult; m <= maxPossible; m++) {
+                        if (!available.includes(m)) available.push(m);
                     }
                 }
             }
+            available.sort((a, b) => a - b);
             return available;
         }
 
-        // اختيار مضاعف عشوائي من المتاح وخصمه من المخزن
         function selectAndPayRandomMultiplier() {
-            const available = [];
-            for (const reservoir of RESERVOIRS) {
-                const maxMult = getMaxPayableMultiplier(reservoir);
-                if (maxMult >= reservoir.minMult) {
-                    const maxPossible = Math.min(maxMult, reservoir.maxMult);
-                    // جميع المضاعفات من minMult إلى maxPossible متاحة
-                    for (let m = reservoir.minMult; m <= maxPossible; m++) {
-                        available.push({ multiplier: m, reservoir: reservoir });
-                    }
-                }
-            }
-            
+            const available = getAllAvailableMultipliers();
             if (available.length === 0) return 0;
             
-            // اختيار مضاعف عشوائي
-            const selected = available[Math.floor(Math.random() * available.length)];
-            const winAmount = currentBet * selected.multiplier;
-            const maxPayable = Math.floor(selected.reservoir.balance * selected.reservoir.payoutPercent);
-            const actualPayout = Math.min(winAmount, maxPayable);
+            const selectedMult = available[Math.floor(Math.random() * available.length)];
+            const reservoir = RESERVOIRS.find(r => selectedMult >= r.minMult && selectedMult <= r.maxMult);
+            if (!reservoir) return 0;
             
-            if (actualPayout >= winAmount) {
-                selected.reservoir.balance -= actualPayout;
-                return selected.multiplier;
+            const winAmount = currentBet * selectedMult;
+            const maxPayable = Math.floor(reservoir.balance * reservoir.payoutPercent);
+            
+            if (maxPayable >= winAmount) {
+                reservoir.balance -= winAmount;
+                return selectedMult;
             }
             return 0;
         }
 
         // ==================== وظائف الشبكة ====================
-        
         function generateRandomGrid() {
             const grid = [];
             for (let r = 0; r < ROWS; r++) {
@@ -402,33 +568,25 @@
             return grid;
         }
 
-        // توليد شبكة تحقق مضاعفاً محدداً (تطابق واحد فقط)
         function generateGridForMultiplier(targetMultiplier) {
-            // إنشاء شبكة عشوائية
             const grid = generateRandomGrid();
             
-            // تحديد عدد الرموز المتطابقة المطلوبة
-            let matchCount = 3;
-            if (targetMultiplier === 4) matchCount = 4;
-            else if (targetMultiplier >= 5) matchCount = 5;
+            let requiredMatchCount = 3;
+            if (targetMultiplier === 4) requiredMatchCount = 4;
+            else if (targetMultiplier >= 5) requiredMatchCount = 5;
             
-            // اختيار خط دفع عشوائي
             const lineIndex = Math.floor(Math.random() * PAYLINES.length);
             const selectedLine = PAYLINES[lineIndex];
             
-            // اختيار رمز عشوائي ليكون الفائز
             const winnerIndex = Math.floor(Math.random() * SYMBOLS.length);
             const winnerSymbol = SYMBOLS[winnerIndex];
             
-            // تطبيق الرموز الفائزة على أول matchCount خانات في الخط
-            for (let i = 0; i < matchCount && i < COLS; i++) {
+            for (let i = 0; i < requiredMatchCount && i < COLS; i++) {
                 const row = selectedLine[i];
                 grid[row][i] = { ...winnerSymbol };
             }
             
-            // التأكد من عدم وجود تطابقات أخرى في نفس الخط
-            // نضع رموز مختلفة في باقي الخانات لمنع تطابقات إضافية
-            for (let i = matchCount; i < COLS; i++) {
+            for (let i = requiredMatchCount; i < COLS; i++) {
                 const row = selectedLine[i];
                 let differentSymbol;
                 do {
@@ -437,25 +595,32 @@
                 grid[row][i] = { ...differentSymbol };
             }
             
+            for (let i = 0; i < requiredMatchCount && i < COLS; i++) {
+                const currentRow = selectedLine[i];
+                for (let r = 0; r < ROWS; r++) {
+                    if (r !== currentRow) {
+                        let differentSymbol;
+                        do {
+                            differentSymbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+                        } while (differentSymbol.id === winnerSymbol.id);
+                        grid[r][i] = { ...differentSymbol };
+                    }
+                }
+            }
+            
             return grid;
         }
 
-        // حساب المضاعف الفعلي من الشبكة
         function calculateMultiplierFromGrid(grid) {
             let maxMultiplier = 0;
-            
             for (let line of PAYLINES) {
                 const symbolsOnLine = line.map((row, col) => grid[row][col]);
                 const firstSymbol = symbolsOnLine[0];
                 let matchCount = 1;
                 for (let i = 1; i < symbolsOnLine.length; i++) {
-                    if (symbolsOnLine[i].id === firstSymbol.id) {
-                        matchCount++;
-                    } else {
-                        break;
-                    }
+                    if (symbolsOnLine[i].id === firstSymbol.id) matchCount++;
+                    else break;
                 }
-                
                 if (matchCount === 3) maxMultiplier = Math.max(maxMultiplier, 3);
                 else if (matchCount === 4) maxMultiplier = Math.max(maxMultiplier, 4);
                 else if (matchCount >= 5) maxMultiplier = Math.max(maxMultiplier, 15);
@@ -519,23 +684,6 @@
             gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.1);
         }
 
-        function playBigWinSound() {
-            if (!audioCtx) initAudio();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            for (let i = 0; i < 5; i++) {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = 600 + i * 120;
-                gain.gain.value = 0.12;
-                osc.type = 'square';
-                osc.start(audioCtx.currentTime + i * 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + i * 0.1 + 0.25);
-                osc.stop(audioCtx.currentTime + i * 0.1 + 0.25);
-            }
-        }
-
         // ==================== واجهة اللعبة ====================
         function buildUI() {
             reelsContainer.innerHTML = '';
@@ -577,25 +725,15 @@
             }
         }
 
-        function applyWinEffects(winningCellsSet, isBigWin) {
+        function applyWinEffects(winningCellsSet, multiplier) {
             clearAllGlows();
+            const isBigWin = multiplier >= 10;
             for (let cellKey of winningCellsSet) {
                 const [row, col] = cellKey.split(',').map(Number);
                 const container = reelsContainer.children[col].children[row];
                 if (isBigWin) container.classList.add('big-win-glow');
                 else container.classList.add('win-glow');
             }
-        }
-
-        function showCelebration(winAmount) {
-            const overlay = document.createElement('div');
-            overlay.className = 'celebration-overlay';
-            const text = document.createElement('div');
-            text.className = 'celebration-text';
-            text.innerHTML = `🎉 فوز موسيقي! 🎉<br>+${winAmount} 🎵`;
-            overlay.appendChild(text);
-            document.body.appendChild(overlay);
-            setTimeout(() => overlay.remove(), 2500);
         }
 
         // ==================== الدوران الرئيسي ====================
@@ -614,34 +752,36 @@
             clearAllGlows();
             playSpinSound();
             
-            // خصم الرهان
             balance -= currentBet;
             balanceSpan.textContent = balance;
             messageBox.innerHTML = "🎶 جاري الدوران... 🎶";
             
-            // ===== النظام الأساسي: اختيار مضاعف عشوائي يمكن دفعه =====
             const selectedMultiplier = selectAndPayRandomMultiplier();
             
             let finalGrid;
             let winAmount = 0;
-            let actualMultiplier = 0;
             
             if (selectedMultiplier > 0) {
-                // يوجد مضاعف متاح - نضمن فوزًا بهذا المضاعف
                 finalGrid = generateGridForMultiplier(selectedMultiplier);
                 winAmount = currentBet * selectedMultiplier;
-                actualMultiplier = selectedMultiplier;
+                
+                let actualMult = calculateMultiplierFromGrid(finalGrid);
+                let attempts = 0;
+                while ((actualMult !== selectedMultiplier && actualMult !== 15) && attempts < 5) {
+                    finalGrid = generateGridForMultiplier(selectedMultiplier);
+                    actualMult = calculateMultiplierFromGrid(finalGrid);
+                    attempts++;
+                }
             } else {
-                // لا يوجد أي مضاعف متاح - خسارة مؤكدة
                 finalGrid = generateRandomGrid();
-                // نضمن عدم وجود فوز صدفة
                 let testMult = calculateMultiplierFromGrid(finalGrid);
-                while (testMult > 0) {
+                let attempts = 0;
+                while (testMult > 0 && attempts < 10) {
                     finalGrid = generateRandomGrid();
                     testMult = calculateMultiplierFromGrid(finalGrid);
+                    attempts++;
                 }
                 winAmount = 0;
-                actualMultiplier = 0;
             }
             
             // بدء الدوران
@@ -663,7 +803,6 @@
                 }
             }
             
-            // إيقاف الأعمدة تدريجياً
             for (let col = 0; col < COLS; col++) {
                 await new Promise(resolve => {
                     setTimeout(() => {
@@ -685,26 +824,25 @@
             }
             
             currentGrid = finalGrid.map(row => [...row]);
+            const actualMultiplier = calculateMultiplierFromGrid(currentGrid);
             
-            if (winAmount > 0 && actualMultiplier > 0) {
-                // فوز ناجح
+            if (winAmount > 0 && selectedMultiplier > 0) {
                 balance += winAmount;
                 balanceSpan.textContent = balance;
                 lastWinSpan.textContent = winAmount;
                 
                 const winningCells = getWinningCells(currentGrid);
-                const isBigWin = actualMultiplier >= 10;
-                applyWinEffects(winningCells, isBigWin);
+                applyWinEffects(winningCells, selectedMultiplier);
                 
-                if (isBigWin) {
-                    playBigWinSound();
-                    showCelebration(winAmount);
-                    messageBox.innerHTML = `🎉🎉 فوز كبير! ${winAmount} نقطة (${actualMultiplier}x) 🎉🎉`;
+                // عرض مؤثرات الفوز حسب المضاعف
+                showWinOverlay(winAmount, selectedMultiplier);
+                
+                if (selectedMultiplier >= 10) {
+                    messageBox.innerHTML = `🎉🎉 فوز كبير! ${winAmount} نقطة (×${selectedMultiplier}) 🎉🎉`;
                 } else {
-                    messageBox.innerHTML = `✨ فوز! ${winAmount} نقطة (${actualMultiplier}x) ✨`;
+                    messageBox.innerHTML = `✨ فوز! ${winAmount} نقطة (×${selectedMultiplier}) ✨`;
                 }
             } else {
-                // خسارة: توزيع الخسارة على المخازن
                 distributeLossToReservoirs(currentBet);
                 lastWinSpan.textContent = "0";
                 clearAllGlows();
