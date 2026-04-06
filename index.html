@@ -2,434 +2,241 @@
 <html lang="ar" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>KINGS SLOTS | سلوتس الملوك - اليسار لليمين</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>KINGS SLOTS | نظام 1500 خزنة - متعدد الفيشات</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body {
             min-height: 100vh;
             background: radial-gradient(circle at 20% 30%, #0a0c1a, #020108);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', 'Poppins', 'Orbitron', monospace;
-            padding: 20px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            padding: 16px;
         }
-
-        /* حاوية اللعبة الرئيسية - حجم أكبر مع تركيز على البكرات */
-        .slot-crown {
-            max-width: 1300px;
+        .game-container {
+            max-width: 1400px;
             width: 100%;
             background: linear-gradient(145deg, #1e1a30, #0e0a1c);
-            border-radius: 3.5rem;
-            padding: 1.2rem;
-            box-shadow: 0 30px 50px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.1);
-            border: 1px solid rgba(255, 200, 100, 0.5);
-        }
-
-        /* الرصيد في أعلى اليمين */
-        .top-bar {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 1rem;
-        }
-
-        .balance-nsp {
-            background: linear-gradient(135deg, #0f0e1a, #05030c);
-            border-radius: 4rem;
-            padding: 0.5rem 1.8rem;
-            display: inline-flex;
-            align-items: baseline;
-            gap: 12px;
-            border: 1px solid #ffcc66;
-            box-shadow: 0 0 12px rgba(255,200,100,0.4);
-        }
-
-        .balance-nsp span:first-child {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #ffdd99;
-            letter-spacing: 1px;
-        }
-
-        .balance-nsp .balance-amount {
-            font-family: 'Orbitron', monospace;
-            font-size: 2rem;
-            font-weight: bold;
-            color: #ffd966;
-            text-shadow: 0 0 6px #ffaa33;
-        }
-
-        /* منطقة البكرات الموسعة */
-        .reels-gold {
-            background: #03010c;
             border-radius: 2rem;
-            padding: 1.8rem;
-            border: 2px solid rgba(255, 180, 80, 0.6);
-            margin-bottom: 1.2rem;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.7), 0 10px 25px black;
+            padding: 1.2rem;
+            border: 1px solid rgba(255,200,100,0.4);
         }
-
-        .reels-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 18px;
+        .top-bar { display: flex; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px; }
+        .balance-card, .commission-card {
+            background: #0f0e1a; border-radius: 2rem; padding: 0.5rem 1.5rem;
+            border: 1px solid #ffcc66;
         }
-
-        .reel-col {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-
+        .balance-amount, .commission-amount { font-family: monospace; font-size: 1.6rem; font-weight: bold; color: #ffd966; }
+        
+        .reels-area { background: #03010c; border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 1rem; }
+        .reels-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        .reel-col { display: flex; flex-direction: column; gap: 12px; }
         .slot-cell {
             background: linear-gradient(145deg, #251f3b, #18122e);
-            border-radius: 1.5rem;
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4.2rem;
-            box-shadow: 0 8px 0 #0c0820;
-            transition: all 0.1s;
-            border: 1px solid rgba(255,200,100,0.3);
+            border-radius: 1rem; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; box-shadow: 0 5px 0 #0c0820; border: 1px solid rgba(255,200,100,0.3);
         }
-
-        @media (max-width: 780px) {
-            .slot-cell { font-size: 2.5rem; }
-            .reels-grid { gap: 10px; }
-            .reel-col { gap: 10px; }
-        }
-
-        @media (max-width: 550px) {
-            .slot-cell { font-size: 1.9rem; }
-            .reels-grid { gap: 6px; }
-            .reel-col { gap: 6px; }
-        }
-
-        /* تأثير الفوز والتألق */
-        .slot-cell.winner {
-            animation: winGlow 0.35s ease-out 3;
-            box-shadow: 0 0 0 4px #ffcc44, 0 0 28px 8px #ffaa33;
-            background: radial-gradient(circle, #ffcc66, #dd8844);
-        }
-
-        @keyframes winGlow {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.07); filter: brightness(1.3); }
-        }
-
-        /* دوران البكرات */
-        .slot-cell.spinning {
-            animation: reelShake 0.08s infinite linear;
-        }
-
-        @keyframes reelShake {
-            0% { transform: translateY(0px); }
-            25% { transform: translateY(-10px); }
-            75% { transform: translateY(6px); }
-            100% { transform: translateY(0px); }
-        }
-
-        /* فيش الرهانات (scroll أفقي) */
-        .bets-scroll-area {
-            margin: 1rem 0 1.2rem;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin;
-        }
-
-        .bets-strip {
-            display: flex;
-            gap: 12px;
-            padding: 6px 2px;
-            min-width: max-content;
-        }
-
+        .slot-cell.winner { animation: winFlash 0.3s ease-out 3; box-shadow: 0 0 0 3px #ffcc44; }
+        @keyframes winFlash { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08);background:#ffcc66} }
+        .slot-cell.spinning { animation: spinShake 0.08s infinite linear; }
+        @keyframes spinShake { 0%{transform:translateY(0)} 25%{transform:translateY(-8px)} 75%{transform:translateY(5px)} 100%{transform:translateY(0)} }
+        
+        .bets-scroll { overflow-x: auto; margin: 0.8rem 0; scrollbar-width: thin; }
+        .bets-strip { display: flex; gap: 10px; min-width: max-content; padding: 5px; }
         .bet-chip {
-            background: linear-gradient(135deg, #2e2548, #1e1638);
-            border: 1px solid rgba(255,200,100,0.5);
-            padding: 10px 24px;
-            border-radius: 3rem;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #ffddbb;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            font-family: monospace;
+            background: #2e2548; border: 1px solid #ffcc66aa; padding: 8px 20px; border-radius: 2rem;
+            font-weight: bold; color: #ffddbb; cursor: pointer; white-space: nowrap;
         }
-
-        .bet-chip.active {
-            background: linear-gradient(135deg, #ffbb44, #ff9922);
-            color: #1c0f2a;
-            box-shadow: 0 0 18px #ffaa33;
-            border-color: gold;
-            transform: scale(1.02);
+        .bet-chip.active { background: linear-gradient(135deg, #ffbb44, #ff9922); color: #1c0f2a; box-shadow: 0 0 12px gold; }
+        
+        .chests-panel { background: rgba(0,0,0,0.6); border-radius: 1.5rem; padding: 0.8rem; margin: 1rem 0; }
+        .chests-title { color: #ffcc99; text-align: center; font-size: 0.8rem; margin-bottom: 8px; }
+        .chests-stats { display: flex; gap: 15px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .stat-badge { background: #1a1430; border-radius: 2rem; padding: 4px 12px; font-size: 0.75rem; color: #ffaa66; }
+        .chests-grid {
+            display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+            max-height: 200px; overflow-y: auto; padding: 5px;
         }
-
-        /* لوحة المخازن (Reservoirs) */
-        .reservoirs-panel {
-            background: rgba(0, 0, 0, 0.55);
-            border-radius: 2rem;
-            padding: 0.8rem 1rem;
-            margin: 1rem 0;
-            backdrop-filter: blur(4px);
-            border: 1px solid #ffcc6644;
+        .chest-card {
+            background: #0a0618; border-radius: 0.6rem; padding: 4px 8px; min-width: 65px;
+            text-align: center; border-left: 2px solid #ffaa55; cursor: pointer;
+            transition: 0.1s;
         }
-
-        .reservoirs-title {
-            font-size: 0.75rem;
-            color: #ffcc99;
-            text-align: center;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-        }
-
-        .reservoirs-grid {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .reservoir-card {
-            background: #0e0b1c;
-            border-radius: 1.5rem;
-            padding: 6px 12px;
-            flex: 1;
-            text-align: center;
-            border-left: 3px solid #ffaa55;
-        }
-
-        .reservoir-range {
-            font-size: 0.7rem;
-            color: #ffaa88;
-        }
-
-        .reservoir-bal {
-            font-family: monospace;
-            font-weight: bold;
-            font-size: 1rem;
-            color: #ffdd99;
-        }
-
-        /* أزرار التحكم */
-        .action-bar {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            margin: 1rem 0;
-        }
-
-        .spin-king, .reset-king {
-            border: none;
-            padding: 12px 35px;
-            border-radius: 3rem;
-            font-size: 1.3rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.06s linear;
-            min-width: 150px;
-        }
-
-        .spin-king {
-            background: linear-gradient(135deg, #dd4422, #aa3311);
-            color: white;
-            box-shadow: 0 6px 0 #631e08;
-        }
-
-        .reset-king {
-            background: linear-gradient(135deg, #2c3e66, #1b2a44);
-            color: #ffe6cc;
-            box-shadow: 0 6px 0 #0f1422;
-        }
-
-        .spin-king:active, .reset-king:active {
-            transform: translateY(3px);
-            box-shadow: 0 3px 0 #3e1204;
-        }
-
-        .message-area {
-            background: #02010ae0;
-            border-radius: 2rem;
-            padding: 0.7rem;
-            text-align: center;
-            color: #ffdd99;
-            font-size: 0.9rem;
-            margin-top: 8px;
-        }
-
-        /* تأثير سقوط العملة الواحدة 🪙 */
-        .coin-fall {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 2000;
-        }
-
-        .single-coin {
-            position: absolute;
-            font-size: 2.5rem;
-            animation: coinDrop 1.4s cubic-bezier(0.2, 1, 0.3, 1) forwards;
-            filter: drop-shadow(0 0 6px gold);
-        }
-
-        @keyframes coinDrop {
-            0% { transform: translateY(-15vh) rotate(0deg); opacity: 1; }
-            70% { opacity: 1; }
-            100% { transform: translateY(110vh) rotate(540deg); opacity: 0; }
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            transform: none;
-            cursor: default;
-        }
-
-        /* تخصيص سكرول الرهانات */
-        .bets-scroll-area::-webkit-scrollbar {
-            height: 5px;
-        }
-        .bets-scroll-area::-webkit-scrollbar-track {
-            background: #1a142f;
-            border-radius: 10px;
-        }
-        .bets-scroll-area::-webkit-scrollbar-thumb {
-            background: #ffaa55;
-            border-radius: 10px;
-        }
+        .chest-card.ready { background: linear-gradient(135deg, #2a5a2a, #1a3a1a); border-left-color: #88ff88; animation: pulseReady 0.8s infinite; }
+        @keyframes pulseReady { 0%,100%{opacity:1} 50%{opacity:0.7} }
+        .chest-mult { font-weight: bold; color: #ffaa66; font-size: 0.7rem; }
+        .chest-bal { font-family: monospace; font-size: 0.7rem; color: #ffdd99; }
+        .chest-bar-bg { background: #221c38; border-radius: 10px; height: 4px; margin-top: 3px; overflow: hidden; }
+        .chest-bar-fill { background: #ffaa44; width: 0%; height: 100%; border-radius: 10px; transition: width 0.2s; }
+        
+        .action-buttons { display: flex; justify-content: center; gap: 20px; margin: 0.8rem 0; }
+        .spin-btn, .reset-btn { border: none; padding: 10px 30px; border-radius: 2rem; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+        .spin-btn { background: linear-gradient(135deg, #dd4422, #aa3311); color: white; box-shadow: 0 5px 0 #631e08; }
+        .reset-btn { background: #2c3e66; color: #ffe6cc; box-shadow: 0 5px 0 #0f1422; }
+        .message-area { background: #02010ae0; border-radius: 1.5rem; padding: 0.6rem; text-align: center; color: #ffdd99; font-size: 0.85rem; margin-top: 8px; }
+        button:disabled { opacity: 0.6; cursor: default; }
+        .coin-fall { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; }
+        .single-coin { position: absolute; font-size: 2rem; animation: coinDrop 1.2s forwards; }
+        @keyframes coinDrop { 0%{transform:translateY(-15vh) rotate(0deg)} 100%{transform:translateY(110vh) rotate(540deg);opacity:0} }
+        
+        @media (max-width: 700px) { .slot-cell { font-size: 1.8rem; } .chest-card { min-width: 55px; } .chest-mult { font-size: 0.6rem; } }
     </style>
 </head>
 <body>
-
-<div class="slot-crown">
-    <!-- الرصيد أعلى اليمين NSP -->
+<div class="game-container">
     <div class="top-bar">
-        <div class="balance-nsp">
-            <span>💰 NSP (الرصيد)</span>
-            <span class="balance-amount" id="mainBalance">100000</span>
-        </div>
+        <div class="balance-card"><span>💰 رصيد اللاعب</span><br><span class="balance-amount" id="balance">100000</span></div>
+        <div class="commission-card"><span>🏛️ عمولة الكازينو (5%)</span><br><span class="commission-amount" id="commissionPool">0</span></div>
     </div>
-
-    <!-- البكرات الموسعة -->
-    <div class="reels-gold">
+    
+    <div class="reels-area">
         <div class="reels-grid" id="reelsContainer"></div>
     </div>
-
-    <!-- فيش الرهانات مع سكرول أفقي يعرض 4 فيش ثم السحب -->
-    <div class="bets-scroll-area">
+    
+    <div class="bets-scroll">
         <div class="bets-strip" id="betsStrip"></div>
     </div>
-
-    <!-- عرض المخازن الأربعة (Reservoirs) -->
-    <div class="reservoirs-panel">
-        <div class="reservoirs-title">🗄️ المخازن الملكية (Reservoirs) 🗄️</div>
-        <div class="reservoirs-grid" id="reservoirsGrid"></div>
+    
+    <div class="chests-panel">
+        <div class="chests-title">🗝️ 1500 خزنة | كل فيشة لها 150 صندوق (×3 إلى ×150) | الخسائر تملأ صناديق نفس الفيشة فقط 🗝️</div>
+        <div class="chests-stats" id="chestsStats"></div>
+        <div class="chests-grid" id="chestsGrid"></div>
     </div>
-
-    <div class="action-bar">
-        <button class="spin-king" id="spinBtn">🎰 دَوِّر</button>
-        <button class="reset-king" id="resetBtn">🔄 إعادة ضبط</button>
+    
+    <div class="action-buttons">
+        <button class="spin-btn" id="spinBtn">🎰 دَوِّر</button>
+        <button class="reset-btn" id="resetBtn">🔄 إعادة ضبط كامل</button>
     </div>
-    <div class="message-area" id="messageBox">🎶 سلوتس الملوك | يسار → يمين | 3×3 | 4×5 | 5×15 🎶</div>
+    <div class="message-area" id="messageBox">🎲 نظام 1500 خزنة: كل فيشة لها صناديقها المستقلة | 5% عمولة | الفوز عند امتلاء أي صندوق 🎲</div>
 </div>
 
 <script>
     (function(){
-        // ======================= الرموز =======================
+        // الرموز وخطوط الدفع
         const SYMBOLS = ['👑', '🎵', '🎸', '🎺', '💎', '🍒', '⚜️', '🏆'];
-        
-        // إعدادات اللعبة
-        const ROWS = 3;
-        const COLS = 5;
+        const ROWS = 3, COLS = 5;
         let currentBet = 500;
-        let balance = 100000;     // الرصيد الافتراضي 100000
+        let balance = 100000;
+        let commissionPool = 0;      // العمولة الكلية (5% من كل الخسائر)
         let isSpinning = false;
         let currentGrid = [];
         
-        // ========== المخازن الأربعة (Reservoirs) ==========
-        let reservoirs = [
-            { minMult: 3, maxMult: 10, balance: 0, payoutPercent: 1.0 },
-            { minMult: 11, maxMult: 200, balance: 0, payoutPercent: 1.0 },
-            { minMult: 201, maxMult: 1000, balance: 0, payoutPercent: 1.0 },
-            { minMult: 1001, maxMult: 5000, balance: 0, payoutPercent: 0.95 }
+        // قيم الرهانات (الفيشات)
+        const BET_VALUES = [100, 250, 500, 1000, 2500, 5000, 10000, 20000, 50000, 100000];
+        
+        // ========== هيكل الصناديق: لكل فيشة 150 صندوق ==========
+        // chestsMap: key = قيمة الرهان (number), value = array من 150 صندوق
+        let chestsMap = new Map(); // { betValue: [{ multiplier, currentBalance, requiredAmount, isReady }] }
+        
+        // نطاقات التوزيع (لـ 150 صندوق)
+        const MULTIPLIER_RANGES = [
+            { min: 3, max: 10, weight: 0.50 },   // 50% من 95%
+            { min: 11, max: 50, weight: 0.30 },  // 30%
+            { min: 51, max: 100, weight: 0.15 }, // 15%
+            { min: 101, max: 150, weight: 0.05 } // 5%
         ];
         
-        // خطوط دفع من اليسار إلى اليمين (اتجاه اللعبة)
-        const PAYLINES = [
-            [0,0,0,0,0], [1,1,1,1,1], [2,2,2,2,2],
-            [0,1,2,1,0], [2,1,0,1,2],
-            [0,0,1,2,2], [2,2,1,0,0],
-            [1,0,1,2,1], [1,2,1,0,1],
-            [0,1,1,1,0]
-        ];
-        
-        // ========== دوال المخازن ==========
-        function distributeLossToReservoirs(lossAmount) {
-            const percentages = [0.32, 0.30, 0.25, 0.08];
-            for(let i=0; i<reservoirs.length; i++) {
-                let add = Math.floor(lossAmount * percentages[i]);
-                if(add > 0) reservoirs[i].balance += add;
+        // تهيئة الصناديق لكل فيشة
+        function initAllChests() {
+            for(let bet of BET_VALUES) {
+                const chests = [];
+                for(let mult = 3; mult <= 150; mult++) {
+                    chests.push({
+                        multiplier: mult,
+                        currentBalance: 0,
+                        requiredAmount: bet * mult,
+                        isReady: false
+                    });
+                }
+                chestsMap.set(bet, chests);
             }
         }
         
-        function getMaxPayableMult(reservoir) {
-            if(reservoir.balance <= 0) return 0;
-            let maxAmount = Math.floor(reservoir.balance * reservoir.payoutPercent);
-            let maxMult = Math.floor(maxAmount / currentBet);
-            if(maxMult > reservoir.maxMult) maxMult = reservoir.maxMult;
-            if(maxMult < reservoir.minMult) return 0;
-            return maxMult;
-        }
+        // تحديث المبالغ المطلوبة للصناديق الخاصة بفيشة معينة (عند تغيير الرهان لا نحتاج، لأنها ثابتة لكل فيشة)
+        // لكن نستخدمها لإعادة الحساب بعد إعادة الضبط
         
-        function getAllAvailableMultipliers() {
-            let available = [];
-            for(let res of reservoirs) {
-                let maxM = getMaxPayableMult(res);
-                if(maxM >= res.minMult) {
-                    let step = Math.max(1, Math.floor((maxM - res.minMult)/6));
-                    for(let m = res.minMult; m <= maxM; m += step) {
-                        if(!available.includes(m)) available.push(m);
-                    }
-                    if(!available.includes(maxM)) available.push(maxM);
+        // توزيع خسارة على صناديق الفيشة الحالية فقط
+        function distributeLossToCurrentBetChests(lossAmount) {
+            const chests = chestsMap.get(currentBet);
+            if(!chests) return;
+            
+            // 1. خصم العمولة 5%
+            const commission = lossAmount * 0.05;
+            commissionPool += commission;
+            
+            // 2. المتبقي 95% يوزع على الـ 150 صندوق الخاصة بهذه الفيشة
+            const remainingForChests = lossAmount * 0.95;
+            
+            // 3. توزيع حسب الأوزان
+            let distributionMap = new Map(); // multiplier -> المبلغ المضاف
+            
+            for(let range of MULTIPLIER_RANGES) {
+                const rangeChests = chests.filter(c => c.multiplier >= range.min && c.multiplier <= range.max);
+                if(rangeChests.length === 0) continue;
+                const amountForRange = remainingForChests * range.weight;
+                const perChest = amountForRange / rangeChests.length;
+                for(let chest of rangeChests) {
+                    distributionMap.set(chest.multiplier, (distributionMap.get(chest.multiplier) || 0) + perChest);
                 }
             }
-            available.sort((a,b)=>a-b);
-            if(available.length === 0) available = [3,4,15];
-            return available;
+            
+            // 4. إضافة الأرصدة وتحديث الجاهزية
+            for(let chest of chests) {
+                const addAmount = distributionMap.get(chest.multiplier) || 0;
+                if(addAmount > 0) {
+                    chest.currentBalance += addAmount;
+                    if(!chest.isReady && chest.currentBalance >= chest.requiredAmount) {
+                        chest.isReady = true;
+                    }
+                }
+            }
+            
+            updateChestsUI();
+            updateCommissionUI();
         }
         
-        function selectAndPayRandomMultiplier() {
-            const avail = getAllAvailableMultipliers();
-            if(avail.length === 0) return 0;
-            const chosen = avail[Math.floor(Math.random() * avail.length)];
-            const reservoir = reservoirs.find(r => chosen >= r.minMult && chosen <= r.maxMult);
-            if(!reservoir) return 0;
-            const winAmount = currentBet * chosen;
-            const maxPay = Math.floor(reservoir.balance * reservoir.payoutPercent);
-            if(maxPay >= winAmount && reservoir.balance >= winAmount) {
-                reservoir.balance -= winAmount;
-                return chosen;
-            } else if (reservoir.balance >= winAmount * 0.8) {
-                reservoir.balance = Math.max(0, reservoir.balance - winAmount);
-                return chosen;
+        // الحصول على الصناديق الجاهزة للفيشة الحالية
+        function getReadyChestsForCurrentBet() {
+            const chests = chestsMap.get(currentBet);
+            if(!chests) return [];
+            return chests.filter(c => c.isReady === true);
+        }
+        
+        // دفع المكسب من صندوق معين (في الفيشة الحالية)
+        function payFromChest(multiplier) {
+            const chests = chestsMap.get(currentBet);
+            if(!chests) return 0;
+            const chest = chests.find(c => c.multiplier === multiplier);
+            if(!chest || !chest.isReady) return 0;
+            const winAmount = chest.requiredAmount;
+            if(chest.currentBalance >= winAmount) {
+                chest.currentBalance -= winAmount;
+                chest.isReady = (chest.currentBalance >= chest.requiredAmount);
+                return winAmount;
             }
             return 0;
         }
         
-        // ========== دوال الشبكة والفوز (اتجاه يسار → يمين) ==========
+        // دفع جميع الصناديق الجاهزة دفعة واحدة (تطابقات متعددة)
+        function payAllReadyChestsForCurrentBet() {
+            let totalWin = 0;
+            const readyList = [...getReadyChestsForCurrentBet()];
+            for(let chest of readyList) {
+                const win = payFromChest(chest.multiplier);
+                if(win > 0) totalWin += win;
+            }
+            return totalWin;
+        }
+        
+        // ========== دوال الشبكة والفوز ==========
+        const PAYLINES = [
+            [0,0,0,0,0], [1,1,1,1,1], [2,2,2,2,2],
+            [0,1,2,1,0], [2,1,0,1,2], [0,0,1,2,2],
+            [2,2,1,0,0], [1,0,1,2,1], [1,2,1,0,1], [0,1,1,1,0]
+        ];
+        
         function generateRandomGrid() {
             let grid = [];
             for(let r=0; r<ROWS; r++) {
@@ -441,8 +248,7 @@
             return grid;
         }
         
-        // توليد شبكة لمضاعف معين لضمان فوز متطابق
-        function generateGridForMultiplier(targetMult) {
+        function generateWinningGridForMultiplier(targetMult) {
             let grid = generateRandomGrid();
             let needed = 3;
             if(targetMult === 4) needed = 4;
@@ -456,7 +262,6 @@
                 let row = selectedLine[i];
                 grid[row][i] = winnerSymbol;
             }
-            // اجعل الرموز الأخرى مختلفة لكسر فوز إضافي
             for(let i=0; i<needed && i<COLS; i++) {
                 let currentRow = selectedLine[i];
                 for(let r=0; r<ROWS; r++) {
@@ -468,22 +273,11 @@
                     }
                 }
             }
-            // الأعمدة المتبقية عشوائية
-            for(let i=needed; i<COLS; i++) {
-                let rowPos = selectedLine[i];
-                for(let r=0; r<ROWS; r++) {
-                    if(r !== rowPos) {
-                        let randDiff = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-                        grid[r][i] = randDiff;
-                    }
-                }
-            }
             return grid;
         }
         
-        function calculateWinFromGrid(grid, bet) {
-            let totalWin = 0;
-            let winningPositions = new Set();
+        function getMultiplierFromGrid(grid) {
+            let bestMult = 0;
             for(let line of PAYLINES) {
                 const symLine = line.map((row, col) => grid[row][col]);
                 const first = symLine[0];
@@ -492,37 +286,43 @@
                     if(symLine[i] === first) match++;
                     else break;
                 }
-                let multiplier = 0;
-                if(match === 3) multiplier = 3;
-                else if(match === 4) multiplier = 5;
-                else if(match >= 5) multiplier = 15;
-                if(multiplier > 0) {
-                    totalWin += bet * multiplier;
-                    for(let i=0; i<match; i++) {
-                        winningPositions.add(`${line[i]},${i}`);
-                    }
-                }
+                if(match === 3) bestMult = Math.max(bestMult, 3);
+                else if(match === 4) bestMult = Math.max(bestMult, 5);
+                else if(match >= 5) bestMult = Math.max(bestMult, 15);
             }
-            return { totalWin, winningPositions };
+            return bestMult;
         }
         
-        // ========== بناء الواجهة ==========
-        function buildUI() {
+        function getWinningPositions(grid) {
+            let positions = new Set();
+            for(let line of PAYLINES) {
+                const symLine = line.map((row, col) => grid[row][col]);
+                const first = symLine[0];
+                let match = 1;
+                for(let i=1; i<symLine.length; i++) {
+                    if(symLine[i] === first) match++;
+                    else break;
+                }
+                if(match >= 3) {
+                    for(let i=0; i<match; i++) positions.add(`${line[i]},${i}`);
+                }
+            }
+            return positions;
+        }
+        
+        // ========== واجهة المستخدم ==========
+        function buildReelsUI() {
             const container = document.getElementById('reelsContainer');
             container.innerHTML = '';
             for(let c=0; c<COLS; c++) {
-                const reelDiv = document.createElement('div');
-                reelDiv.className = 'reel-col';
-                reelDiv.dataset.col = c;
+                const reel = document.createElement('div'); reel.className = 'reel-col'; reel.dataset.col = c;
                 for(let r=0; r<ROWS; r++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'slot-cell';
-                    cell.dataset.row = r;
-                    cell.dataset.col = c;
+                    const cell = document.createElement('div'); cell.className = 'slot-cell';
+                    cell.dataset.row = r; cell.dataset.col = c;
                     cell.textContent = '👑';
-                    reelDiv.appendChild(cell);
+                    reel.appendChild(cell);
                 }
-                container.appendChild(reelDiv);
+                container.appendChild(reel);
             }
         }
         
@@ -531,74 +331,78 @@
                 const reel = document.querySelector(`.reel-col[data-col="${c}"]`);
                 if(!reel) continue;
                 for(let r=0; r<ROWS; r++) {
-                    const cell = reel.children[r];
-                    if(grid[r] && grid[r][c]) cell.textContent = grid[r][c];
+                    if(grid[r] && grid[r][c]) reel.children[r].textContent = grid[r][c];
                 }
             }
         }
         
-        function clearWinGlow() {
-            document.querySelectorAll('.slot-cell').forEach(cell => cell.classList.remove('winner'));
-        }
+        function clearWinGlow() { document.querySelectorAll('.slot-cell').forEach(cell => cell.classList.remove('winner')); }
         
-        function highlightWins(positionsSet) {
+        function highlightWins(positions) {
             clearWinGlow();
-            for(let pos of positionsSet) {
+            for(let pos of positions) {
                 let [row, col] = pos.split(',').map(Number);
                 const reel = document.querySelector(`.reel-col[data-col="${col}"]`);
                 if(reel && reel.children[row]) reel.children[row].classList.add('winner');
             }
         }
         
-        // سقوط العملة الواحدة 🪙 (معدل)
-        function dropSingleCoin() {
-            const showerDiv = document.createElement('div');
-            showerDiv.className = 'coin-fall';
-            document.body.appendChild(showerDiv);
-            const coin = document.createElement('div');
-            coin.className = 'single-coin';
-            coin.textContent = '🪙';
-            coin.style.left = (20 + Math.random() * 60) + '%';
-            coin.style.fontSize = (2.2 + Math.random() * 1.5) + 'rem';
-            coin.style.animationDuration = (1.1 + Math.random() * 0.8) + 's';
-            showerDiv.appendChild(coin);
-            setTimeout(() => coin.remove(), 1500);
-            setTimeout(() => showerDiv.remove(), 1800);
-        }
-        
-        // عرض رسالة فوز كبيرة خفيفة
-        function miniWinToast(amount, mult) {
-            const msgDiv = document.getElementById('messageBox');
-            msgDiv.innerHTML = `✨ فوز ملكي: ${amount.toLocaleString()} نقطة (×${mult}) ✨`;
-            setTimeout(() => {
-                if(!isSpinning) msgDiv.innerHTML = '🎰 سلوتس الملوك | يسار → يمين | 3×3 | 4×5 | 5×15 🎰';
-            }, 3000);
-        }
-        
-        // تحديث عرض المخازن
-        function updateReservoirsUI() {
-            const gridDiv = document.getElementById('reservoirsGrid');
-            gridDiv.innerHTML = '';
-            reservoirs.forEach((res, idx) => {
+        function updateChestsUI() {
+            const container = document.getElementById('chestsGrid');
+            const statsContainer = document.getElementById('chestsStats');
+            const chests = chestsMap.get(currentBet);
+            if(!chests) return;
+            
+            // إحصائيات
+            const totalReady = chests.filter(c => c.isReady).length;
+            const totalBalance = chests.reduce((sum, c) => sum + c.currentBalance, 0);
+            statsContainer.innerHTML = `
+                <span class="stat-badge">📦 الفيشة: ${currentBet.toLocaleString()}</span>
+                <span class="stat-badge">✅ صناديق جاهزة: ${totalReady}</span>
+                <span class="stat-badge">💰 رصيد الصناديق: ${Math.floor(totalBalance).toLocaleString()}</span>
+            `;
+            
+            // عرض أول 30 صندوقًا فقط (لكن مع سكرول كامل)
+            container.innerHTML = '';
+            const displayChests = chests.slice(0, 60); // عرض 60 صندوق لتقليل الزحام
+            for(let chest of displayChests) {
+                const percent = (chest.currentBalance / chest.requiredAmount) * 100;
+                const readyClass = chest.isReady ? 'ready' : '';
                 const card = document.createElement('div');
-                card.className = 'reservoir-card';
-                card.innerHTML = `<div class="reservoir-range">خزنة ${idx+1} (${res.minMult}→${res.maxMult})</div>
-                                  <div class="reservoir-bal">💰 ${res.balance.toLocaleString()}</div>`;
-                gridDiv.appendChild(card);
-            });
+                card.className = `chest-card ${readyClass}`;
+                card.innerHTML = `
+                    <div class="chest-mult">×${chest.multiplier}</div>
+                    <div class="chest-bal">${Math.floor(chest.currentBalance).toLocaleString()}</div>
+                    <div class="chest-bar-bg"><div class="chest-bar-fill" style="width: ${Math.min(100, percent)}%"></div></div>
+                `;
+                container.appendChild(card);
+            }
+            if(chests.length > 60) {
+                const more = document.createElement('div'); more.className = 'stat-badge'; more.style.background = '#2a2040';
+                more.textContent = `+${chests.length - 60} صندوق آخر`;
+                container.appendChild(more);
+            }
         }
         
-        // تحديث الرصيد في الأعلى
-        function updateBalanceUI() {
-            document.getElementById('mainBalance').textContent = balance.toLocaleString();
+        function updateBalanceUI() { document.getElementById('balance').textContent = balance.toLocaleString(); }
+        function updateCommissionUI() { document.getElementById('commissionPool').textContent = commissionPool.toLocaleString(); }
+        
+        function dropCoin() {
+            const shower = document.createElement('div'); shower.className = 'coin-fall';
+            document.body.appendChild(shower);
+            const coin = document.createElement('div'); coin.className = 'single-coin';
+            coin.textContent = '🪙'; coin.style.left = (30 + Math.random() * 40) + '%';
+            coin.style.fontSize = (2 + Math.random() * 1.2) + 'rem';
+            shower.appendChild(coin);
+            setTimeout(() => coin.remove(), 1200);
+            setTimeout(() => shower.remove(), 1500);
         }
         
-        // ========== بناء فيش الرهانات مع سكرول 4 فيش ثم السحب ==========
-        const betValues = [100, 250, 500, 1000, 2500, 5000, 10000, 25000];
+        // ========== بناء فيش الرهانات ==========
         function buildBetsStrip() {
             const strip = document.getElementById('betsStrip');
             strip.innerHTML = '';
-            betValues.forEach(bet => {
+            BET_VALUES.forEach(bet => {
                 const chip = document.createElement('div');
                 chip.className = 'bet-chip';
                 chip.textContent = bet.toLocaleString();
@@ -609,80 +413,70 @@
                     currentBet = bet;
                     document.querySelectorAll('.bet-chip').forEach(b => b.classList.remove('active'));
                     chip.classList.add('active');
-                    document.getElementById('messageBox').innerHTML = `💰 الرهان الحالي: ${currentBet.toLocaleString()} 💰`;
-                    setTimeout(() => {
-                        if(!isSpinning) document.getElementById('messageBox').innerHTML = '🎰 سلوتس الملوك | يسار → يمين | 3×3 | 4×5 | 5×15 🎰';
-                    }, 1800);
+                    updateChestsUI();
+                    document.getElementById('messageBox').innerHTML = `💰 الرهان: ${currentBet.toLocaleString()} | صناديق هذه الفيشة مستقلة 💰`;
                 });
                 strip.appendChild(chip);
             });
         }
         
         // ========== الدوران الرئيسي ==========
-        async function spinGame() {
+        async function spin() {
             if(isSpinning) return;
             if(balance < currentBet) {
-                document.getElementById('messageBox').innerHTML = '⚠️ رصيد غير كافٍ! استخدم إعادة الضبط ⚠️';
+                document.getElementById('messageBox').innerHTML = '⚠️ رصيد غير كافٍ! اضغط إعادة ضبط ⚠️';
                 return;
             }
+            
+            // التحقق من الصناديق الجاهزة للفيشة الحالية
+            const readyChests = getReadyChestsForCurrentBet();
+            let multiplePayouts = readyChests.length > 0;
+            
             isSpinning = true;
             const spinBtn = document.getElementById('spinBtn');
             const resetBtn = document.getElementById('resetBtn');
-            spinBtn.disabled = true;
-            resetBtn.disabled = true;
+            spinBtn.disabled = true; resetBtn.disabled = true;
             
-            // خصم الرهان
             balance -= currentBet;
             updateBalanceUI();
             clearWinGlow();
-            document.getElementById('messageBox').innerHTML = '🎲 تدور البكرات... انتظر المكاسب 🎲';
+            document.getElementById('messageBox').innerHTML = '🎲 دوران... 🎲';
             
-            // اختيار مضاعف من المخازن (إن وجد)
-            const selectedMult = selectAndPayRandomMultiplier();
             let finalGrid;
-            let winAmount = 0;
-            let finalMultiplier = 0;
+            let totalWin = 0;
+            let appliedMultipliers = [];
             
-            if(selectedMult > 0) {
-                finalGrid = generateGridForMultiplier(selectedMult);
-                // تأكيد أن الفوز حقيقي
-                let { totalWin } = calculateWinFromGrid(finalGrid, currentBet);
+            if(multiplePayouts && readyChests.length > 0) {
+                // اختيار عشوائي من الصناديق الجاهزة لتوليد الشبكة
+                const selectedChest = readyChests[Math.floor(Math.random() * readyChests.length)];
+                finalGrid = generateWinningGridForMultiplier(selectedChest.multiplier);
+                // دفع جميع الصناديق الجاهزة دفعة واحدة
+                totalWin = payAllReadyChestsForCurrentBet();
+                appliedMultipliers = readyChests.map(c => c.multiplier);
+            } else {
+                // لا صناديق جاهزة -> شبكة خاسرة
+                finalGrid = generateRandomGrid();
+                let testMult = getMultiplierFromGrid(finalGrid);
                 let attempts = 0;
-                while(totalWin === 0 && attempts < 4) {
-                    finalGrid = generateGridForMultiplier(selectedMult);
-                    let check = calculateWinFromGrid(finalGrid, currentBet);
-                    totalWin = check.totalWin;
+                while(testMult > 0 && attempts < 12) {
+                    finalGrid = generateRandomGrid();
+                    testMult = getMultiplierFromGrid(finalGrid);
                     attempts++;
                 }
-                winAmount = currentBet * selectedMult;
-                finalMultiplier = selectedMult;
-            } else {
-                finalGrid = generateRandomGrid();
-                let { totalWin } = calculateWinFromGrid(finalGrid, currentBet);
-                let tries = 0;
-                while(totalWin > 0 && tries < 8) {
-                    finalGrid = generateRandomGrid();
-                    let newCheck = calculateWinFromGrid(finalGrid, currentBet);
-                    totalWin = newCheck.totalWin;
-                    tries++;
-                }
-                winAmount = 0;
-                finalMultiplier = 0;
+                totalWin = 0;
             }
             
-            // تأثير دوران البكرات
+            // تأثير الدوران
             const allCells = document.querySelectorAll('.slot-cell');
             allCells.forEach(cell => cell.classList.add('spinning'));
             const spinInterval = setInterval(() => {
                 allCells.forEach(cell => {
                     if(cell.classList.contains('spinning')) {
-                        let randSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-                        cell.textContent = randSym;
+                        cell.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
                     }
                 });
             }, 40);
             
-            // توقف متدرج من اليسار إلى اليمين
             for(let col=0; col<COLS; col++) {
                 await new Promise(resolve => {
                     setTimeout(() => {
@@ -695,90 +489,68 @@
                             }
                         }
                         resolve();
-                    }, 140 + col * 130);
+                    }, 120 + col * 110);
                 });
             }
             clearInterval(spinInterval);
             
             currentGrid = finalGrid.map(row => [...row]);
-            const { totalWin, winningPositions } = calculateWinFromGrid(currentGrid, currentBet);
+            const winningPositions = getWinningPositions(currentGrid);
             
-            if(totalWin > 0 && finalMultiplier > 0) {
-                // الفوز المضمون من المخازن
+            if(totalWin > 0) {
                 balance += totalWin;
                 updateBalanceUI();
                 highlightWins(winningPositions);
-                dropSingleCoin();      // 🪙 واحدة فقط
-                miniWinToast(totalWin, finalMultiplier);
-                document.getElementById('lastWinSpan')?.remove();
-                // اضافة عنصر آخر ربح مؤقت (نضيفه في لوحة الرسالة)
-                const msgDiv = document.getElementById('messageBox');
-                msgDiv.innerHTML = `🏆 ربحت ${totalWin.toLocaleString()} نقطة (×${finalMultiplier}) 🏆`;
-                setTimeout(() => {
-                    if(!isSpinning) msgDiv.innerHTML = '🎰 سلوتس الملوك | يسار → يمين | 3×3 | 4×5 | 5×15 🎰';
-                }, 3500);
-            } 
-            else if(totalWin > 0 && finalMultiplier === 0) {
-                // حالة نادرة لكن احتياطي
-                balance += totalWin;
-                updateBalanceUI();
-                highlightWins(winningPositions);
-                dropSingleCoin();
-                document.getElementById('messageBox').innerHTML = `✨ فوز غير متوقع: ${totalWin.toLocaleString()} ✨`;
-            }
-            else {
-                // خسارة: توزيع الخسارة على المخازن
-                distributeLossToReservoirs(currentBet);
-                document.getElementById('messageBox').innerHTML = `😔 لا فوز هذه المرة... الخسارة وزعت على المخازن 😔`;
-                clearWinGlow();
+                dropCoin();
+                document.getElementById('messageBox').innerHTML = `🎉 فوز! +${totalWin.toLocaleString()} | الصناديق: ×${appliedMultipliers.join(', ×')} 🎉`;
+            } else {
+                // خسارة: توزيع على صناديق الفيشة الحالية فقط
+                distributeLossToCurrentBetChests(currentBet);
+                document.getElementById('messageBox').innerHTML = `😔 خسارة ${currentBet.toLocaleString()} | 5% عمولة، 95% لصناديق فيشة ${currentBet.toLocaleString()} 😔`;
             }
             
-            // تحديث عرض المخازن
-            updateReservoirsUI();
+            updateChestsUI();
+            updateCommissionUI();
+            updateBalanceUI();
             
-            // فحص الرصيد
-            if(balance <= 0) {
-                document.getElementById('messageBox').innerHTML = '💀 الرصيد صفر! اضغط إعادة ضبط 💀';
-            }
+            if(balance <= 0) document.getElementById('messageBox').innerHTML = '💀 الرصيد صفر! اضغط إعادة ضبط 💀';
             
             isSpinning = false;
-            spinBtn.disabled = false;
-            resetBtn.disabled = false;
+            spinBtn.disabled = false; resetBtn.disabled = false;
         }
         
-        // إعادة الضبط الكاملة
-        function resetFullGame() {
+        // إعادة الضبط الكامل
+        function resetGame() {
             if(isSpinning) return;
             balance = 100000;
-            currentBet = 500;
-            // إعادة ضبط المخازن
-            reservoirs.forEach(r => r.balance = 0);
+            commissionPool = 0;
+            initAllChests();  // إعادة تهيئة كل الصناديق (1500 صندوق)
             currentGrid = generateRandomGrid();
             updateGridUI(currentGrid);
             clearWinGlow();
             updateBalanceUI();
-            updateReservoirsUI();
-            // تحديث الزر النشط في الرهانات
+            updateCommissionUI();
+            updateChestsUI();
+            document.getElementById('messageBox').innerHTML = '🔄 تمت إعادة الضبط | 1500 صندوق فارغة، رصيد 100,000 🔄';
+            // تحديث الرهان النشط
             document.querySelectorAll('.bet-chip').forEach(chip => {
                 chip.classList.remove('active');
                 if(parseInt(chip.dataset.bet) === currentBet) chip.classList.add('active');
             });
-            document.getElementById('messageBox').innerHTML = '🔄 تمت إعادة الضبط | رصيد 100,000 نقطة 🎰';
-            setTimeout(() => {
-                if(!isSpinning) document.getElementById('messageBox').innerHTML = '🎰 سلوتس الملوك | يسار → يمين | 3×3 | 4×5 | 5×15 🎰';
-            }, 2500);
         }
         
-        // ========== تهيئة ==========
+        // ========== التهيئة ==========
         function init() {
-            buildUI();
+            buildReelsUI();
+            initAllChests();
             currentGrid = generateRandomGrid();
             updateGridUI(currentGrid);
             buildBetsStrip();
-            updateReservoirsUI();
+            updateChestsUI();
             updateBalanceUI();
-            document.getElementById('spinBtn').addEventListener('click', spinGame);
-            document.getElementById('resetBtn').addEventListener('click', resetFullGame);
+            updateCommissionUI();
+            document.getElementById('spinBtn').addEventListener('click', spin);
+            document.getElementById('resetBtn').addEventListener('click', resetGame);
         }
         
         init();
