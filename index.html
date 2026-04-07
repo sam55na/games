@@ -158,14 +158,6 @@
             font-family: monospace;
         }
         
-        .condition-pass {
-            color: #00ff88;
-        }
-        
-        .condition-fail {
-            color: #ff4444;
-        }
-        
         @media (max-width: 600px) {
             .info-row { font-size: 11px; }
             .spin-button { padding: 12px 30px; font-size: 20px; }
@@ -183,16 +175,13 @@
         
         // ================ تعريف الجوائز (6 خيارات) ================
         const SEGMENTS = [
-            { name: "50", value: 50, type: "amount", color: "#1a1a1a", textColor: "#FFD700" },
-            { name: "100", value: 100, type: "amount", color: "#2a2a2a", textColor: "#FFD700" },
-            { name: "500", value: 500, type: "amount", color: "#1a1a1a", textColor: "#FFD700" },
-            { name: "1000", value: 1000, type: "amount", color: "#2a2a2a", textColor: "#FFD700" },
+            { name: "50", value: 5000, type: "amount", color: "#1a1a1a", textColor: "#FFD700" },
+            { name: "100", value: 10000, type: "amount", color: "#2a2a2a", textColor: "#FFD700" },
+            { name: "500", value: 50000, type: "amount", color: "#1a1a1a", textColor: "#FFD700" },
+            { name: "1000", value: 100000, type: "amount", color: "#2a2a2a", textColor: "#FFD700" },
             { name: "5%", value: 5, type: "percent", color: "#1a1a1a", textColor: "#FFD700" },
             { name: "25%", value: 25, type: "percent", color: "#2a2a2a", textColor: "#FFD700" }
         ];
-        
-        // ترتيب القطاعات على العجلة (حسب ترتيب العرض)
-        // الفهرس: 0=50, 1=100, 2=500, 3=1000, 4=5%, 5=25%
         
         let canvas = null, ctx = null;
         let currentAngle = 0;
@@ -245,7 +234,7 @@
         
         // ================ التحقق من فترة التبريد (48 ساعة) ================
         function isCooldownActive() {
-            if (userParams.spin_count === 0) return false; // أول مرة لا تبريد
+            if (userParams.spin_count === 0) return false;
             const now = Date.now();
             const cooldownHours = 48;
             const cooldownMs = cooldownHours * 60 * 60 * 1000;
@@ -272,40 +261,33 @@
             
             console.log("تحديد الجائزة:", { recharge, withdraw, spinCount });
             
-            // الشرط 1: المستخدمين الجدد (أول استخدام) -> 25%
             if (spinCount === 0 && !userParams.has_claimed_25_percent) {
                 userParams.has_claimed_25_percent = true;
                 saveUserSpinData();
-                return { index: 5, prize: SEGMENTS[5], message: "🎉 تهانينا! ستحصل على 25% رصيد إضافي على أول عملية شحن!" };
+                return { index: 5, prize: SEGMENTS[5], message: "🎉 تهانينا! ستحصل على 25% رصيد إضافي!" };
             }
             
-            // الشرط 2: المرة الثانية (بعد عملية شحن ناجحة) -> 50
             if (spinCount === 1 && userParams.has_recharged) {
-                return { index: 0, prize: SEGMENTS[0], message: "🎉 ربحت 50 ل.س! تم إضافة 5,000 ل.س إلى رصيدك" };
+                return { index: 0, prize: SEGMENTS[0], message: "🎉 ربحت 50 ل.س!" };
             }
             
-            // الشرط 3: المرة الثالثة -> 5%
             if (spinCount === 2) {
-                return { index: 4, prize: SEGMENTS[4], message: "🎉 ستحصل على 5% إضافية على عملية الشحن القادمة!" };
+                return { index: 4, prize: SEGMENTS[4], message: "🎉 ستحصل على 5% إضافية!" };
             }
             
-            // الشرط 4: تجاوز الشحن 250,000 بدون سحب -> 100
             if (recharge > 250000 && withdraw === 0) {
-                return { index: 1, prize: SEGMENTS[1], message: "🎉 ربحت 100! تم إضافة 10,000 ل.س هدية إلى حسابك" };
+                return { index: 1, prize: SEGMENTS[1], message: "🎉 ربحت 100!" };
             }
             
-            // الشرط 5: الشحن > 700,000 والسحب < 200,000 -> 500
             if (recharge > 700000 && withdraw < 200000) {
-                return { index: 2, prize: SEGMENTS[2], message: "🎉 ربحت 500! تم إضافة 50,000 ل.س إلى رصيدك" };
+                return { index: 2, prize: SEGMENTS[2], message: "🎉 ربحت 500!" };
             }
             
-            // الشرط 6: الشحن > 1,800,000 والسحب < 400,000 -> 1000
             if (recharge > 1800000 && withdraw < 400000) {
-                return { index: 3, prize: SEGMENTS[3], message: "🎉 ربحت 1000! تم إضافة 100,000 ل.س إلى رصيدك" };
+                return { index: 3, prize: SEGMENTS[3], message: "🎉 ربحت 1000!" };
             }
             
-            // الشرط الافتراضي: 5% دائماً
-            return { index: 4, prize: SEGMENTS[4], message: "🎁 ستحصل على 5% إضافية على عملية الشحن القادمة!" };
+            return { index: 4, prize: SEGMENTS[4], message: "🎁 ستحصل على 5% إضافية!" };
         }
         
         // ================ رسم العجلة ================
@@ -393,55 +375,53 @@
                 if (spinBtn) spinBtn.disabled = false;
                 
                 const prize = SEGMENTS[selectedSegmentIndex];
-                let prizeValueText = "";
                 
-                if (prize.type === "amount") {
-                    let actualAmount = prize.value;
-                    if (prize.name === "50") actualAmount = 5000;
-                    if (prize.name === "100") actualAmount = 10000;
-                    if (prize.name === "500") actualAmount = 50000;
-                    if (prize.name === "1000") actualAmount = 100000;
-                    prizeValueText = `${actualAmount.toLocaleString()} ل.س`;
-                } else {
-                    prizeValueText = `${prize.value}% رصيد إضافي`;
-                }
+                // ✅ التعديل الأهم: تحديث البيانات قبل الإرسال
+                const newSpinCount = userParams.spin_count + 1;
+                const newLastSpinTime = Date.now();
                 
-                const resultDiv = document.getElementById('result');
-                if (resultDiv) {
-                    resultDiv.innerHTML = `🎉🎊 ${prize.name} 🎊🎉<br><small>${prizeValueText}</small>`;
-                }
-                
-                // تحديث عدد الدورات ووقت آخر دورة
-                userParams.spin_count++;
-                userParams.last_spin_time = Date.now();
-                saveUserSpinData();
-                
-                // إرسال النتيجة إلى البوت
-                const resultData = JSON.stringify({
+                const resultData = {
                     prize: prize.name,
                     prize_value: prize.value,
                     prize_type: prize.type,
-                    spin_count: userParams.spin_count,
+                    spin_count: newSpinCount,  // 👈 العدد الجديد
                     total_recharge: userParams.total_recharge,
                     total_withdraw: userParams.total_withdraw,
-                    timestamp: new Date().toISOString(),
-                    user_id: userParams.user_id
-                });
+                    last_spin_time: newLastSpinTime  // 👈 الوقت الجديد
+                };
                 
-                tg.sendData(resultData);
+                console.log("📤 إرسال البيانات:", resultData);
                 
-                setTimeout(() => {
-                    if (resultDiv) {
-                        resultDiv.innerHTML += `<br><small>✅ تم إرسال الجائزة إلى البوت</small>`;
+                // إرسال البيانات إلى البوت
+                tg.sendData(JSON.stringify(resultData));
+                
+                // تحديث البيانات محلياً
+                userParams.spin_count = newSpinCount;
+                userParams.last_spin_time = newLastSpinTime;
+                saveUserSpinData();
+                
+                // عرض النتيجة
+                const resultDiv = document.getElementById('result');
+                if (resultDiv) {
+                    let prizeText = "";
+                    if (prize.type === "amount") {
+                        prizeText = `${prize.value.toLocaleString()} ل.س`;
+                    } else {
+                        prizeText = `${prize.value}% رصيد إضافي`;
                     }
-                }, 500);
+                    resultDiv.innerHTML = `🎉🎊 ${prize.name} 🎊🎉<br><small>${prizeText}</small><br><small>✅ تم إرسال الجائزة إلى البوت</small>`;
+                }
+                
+                // إغلاق الويب آب بعد 2 ثانية (اختياري)
+                setTimeout(() => {
+                    tg.close();
+                }, 2000);
             }
         }
         
         function startSpin() {
             if (spinning) return;
             
-            // التحقق من فترة التبريد
             if (isCooldownActive() && userParams.spin_count > 0) {
                 showCooldownPage();
                 return;
@@ -491,7 +471,6 @@
             }, 1000);
         }
         
-        // ================ عرض صفحة الخطأ ================
         function showErrorPage() {
             const app = document.getElementById('app');
             app.innerHTML = `
@@ -505,7 +484,6 @@
         
         // ================ عرض واجهة العجلة ================
         function showWheelPage() {
-            // التحقق من التبريد قبل عرض العجلة
             if (isCooldownActive() && userParams.spin_count > 0) {
                 showCooldownPage();
                 return;
@@ -545,7 +523,6 @@
             
             loadUserSpinData();
             
-            // تهيئة القيم الافتراضية
             if (userParams.spin_count === undefined) userParams.spin_count = 0;
             if (userParams.last_spin_time === undefined) userParams.last_spin_time = 0;
             if (userParams.has_claimed_25_percent === undefined) userParams.has_claimed_25_percent = false;
