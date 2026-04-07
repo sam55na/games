@@ -1,207 +1,557 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عجلة الحظ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>عجلة الحظ - النظام المتقدم</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #000000;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: Arial, sans-serif;
-            padding: 20px;
+            font-family: 'Segoe UI', 'Arial Black', 'Cairo', sans-serif;
+            position: relative;
+            overflow-x: hidden;
         }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255,215,0,0.15) 0%, rgba(0,0,0,0.95) 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
         .container {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            max-width: 400px;
-            width: 100%;
             text-align: center;
-        }
-        .info {
-            background: #f0f0f0;
-            border-radius: 10px;
             padding: 15px;
-            margin: 15px 0;
-            text-align: left;
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
         }
-        button {
-            background: #28a745;
-            color: white;
+        
+        .wheel-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 50%;
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255,215,0,0.3), 0 0 40px rgba(255,215,0,0.2);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(255,215,0,0.6), 0 0 80px rgba(255,215,0,0.4);
+            }
+        }
+        
+        canvas {
+            max-width: 85vw;
+            max-height: 85vw;
+            width: auto;
+            height: auto;
+            border-radius: 50%;
+            display: block;
+            background: #1a1a1a;
+            border: 4px solid #FFD700;
+            box-shadow: 0 0 30px rgba(255,215,0,0.5);
+        }
+        
+        .user-info {
+            background: rgba(0,0,0,0.85);
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 6px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .info-label {
+            color: #888;
+            font-weight: normal;
+        }
+        
+        .info-value {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .spin-button {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 24px;
+            font-weight: bold;
             border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: 10px;
+            border-radius: 60px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000000;
             cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
+            box-shadow: 0 0 20px rgba(255,215,0,0.6);
+            transition: all 0.3s;
+            font-family: inherit;
         }
-        button:disabled {
-            background: #6c757d;
+        
+        .spin-button:active {
+            transform: scale(0.97);
+        }
+        
+        .spin-button:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
+        
         .result {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 10px;
-            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.85);
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFD700;
         }
-        .success {
-            background: #d4edda;
-            color: #155724;
+        
+        .error-message, .cooldown-message {
+            background: rgba(0,0,0,0.9);
+            border: 2px solid #ff4444;
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
         }
-        .error {
-            background: #f8d7da;
-            color: #721c24;
+        
+        .cooldown-message {
+            border-color: #FFD700;
+        }
+        
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        
+        .condition-pass {
+            color: #00ff88;
+        }
+        
+        .condition-fail {
+            color: #ff4444;
+        }
+        
+        @media (max-width: 600px) {
+            .info-row { font-size: 11px; }
+            .spin-button { padding: 12px 30px; font-size: 20px; }
+            .result { font-size: 14px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>🎡 عجلة الحظ</h2>
-        
-        <div class="info" id="info">
-            <p>🆔 جاري التحميل...</p>
-        </div>
-        
-        <button id="spinBtn" onclick="getPrize()">🎲 احصل على الجائزة</button>
-        
-        <div id="result" class="result"></div>
-    </div>
+    <div class="container" id="app"></div>
 
     <script>
-        // ================ التوكن (نفس توكن البوت) ================
-        const BOT_TOKEN = "8391427351:AAEd28dLdeT5_nmFrxwCqehjf6TjfCbI6T4";  // 👈 ضع توكن البوت هنا
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
         
-        // ================ قراءة البيانات من الرابط ================
-        const urlParams = new URLSearchParams(window.location.search);
-        const USER_ID = urlParams.get('user_id');
-        const TOTAL_RECHARGE = parseFloat(urlParams.get('total_recharge')) || 0;
-        const TOTAL_WITHDRAW = parseFloat(urlParams.get('total_withdraw')) || 0;
-        let SPIN_COUNT = parseInt(urlParams.get('spin_count')) || 0;
+        // ================ تعريف الجوائز (6 خيارات) ================
+        const SEGMENTS = [
+            { name: "50", value: 50, type: "amount", color: "#1a1a1a", textColor: "#FFD700" },
+            { name: "100", value: 100, type: "amount", color: "#2a2a2a", textColor: "#FFD700" },
+            { name: "500", value: 500, type: "amount", color: "#1a1a1a", textColor: "#FFD700" },
+            { name: "1000", value: 1000, type: "amount", color: "#2a2a2a", textColor: "#FFD700" },
+            { name: "5%", value: 5, type: "percent", color: "#1a1a1a", textColor: "#FFD700" },
+            { name: "25%", value: 25, type: "percent", color: "#2a2a2a", textColor: "#FFD700" }
+        ];
         
-        // عرض معلومات المستخدم
-        function showUserInfo() {
-            const infoDiv = document.getElementById('info');
-            infoDiv.innerHTML = `
-                <p>🆔 معرفك: <strong>${USER_ID}</strong></p>
-                <p>💰 إجمالي الشحن: <strong>${TOTAL_RECHARGE.toLocaleString()} ل.س</strong></p>
-                <p>💸 إجمالي السحب: <strong>${TOTAL_WITHDRAW.toLocaleString()} ل.س</strong></p>
-                <p>🎲 عدد المرات: <strong>${SPIN_COUNT}</strong></p>
-            `;
+        // ترتيب القطاعات على العجلة (حسب ترتيب العرض)
+        // الفهرس: 0=50, 1=100, 2=500, 3=1000, 4=5%, 5=25%
+        
+        let canvas = null, ctx = null;
+        let currentAngle = 0;
+        let spinning = false;
+        let spinStartTime = 0;
+        let spinDuration = 3000;
+        let targetAngle = 0;
+        let selectedSegmentIndex = null;
+        
+        // بيانات المستخدم من الرابط
+        let userParams = null;
+        
+        // مفتاح التخزين المحلي
+        const STORAGE_KEY = 'wheel_spin_data';
+        
+        // ================ قراءة المعاملات من الرابط ================
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                user_id: params.get('user_id'),
+                total_recharge: parseFloat(params.get('total_recharge')) || 0,
+                total_withdraw: parseFloat(params.get('total_withdraw')) || 0,
+                spin_count: parseInt(params.get('spin_count')) || 0,
+                last_spin_time: parseInt(params.get('last_spin_time')) || 0
+            };
         }
         
-        // تحديد الجائزة
-        function getPrizeValue() {
-            if (SPIN_COUNT === 0) {
-                return { name: "25%", value: 25, type: "percent" };
-            }
-            if (TOTAL_RECHARGE > 250000 && TOTAL_WITHDRAW === 0) {
-                return { name: "100", value: 10000, type: "amount" };
-            }
-            if (TOTAL_RECHARGE > 700000 && TOTAL_WITHDRAW < 200000) {
-                return { name: "500", value: 50000, type: "amount" };
-            }
-            if (TOTAL_RECHARGE > 1800000 && TOTAL_WITHDRAW < 400000) {
-                return { name: "1000", value: 100000, type: "amount" };
-            }
-            return { name: "5%", value: 5, type: "percent" };
+        // ================ حفظ حالة المستخدم محلياً ================
+        function saveUserSpinData() {
+            const data = {
+                user_id: userParams.user_id,
+                spin_count: userParams.spin_count,
+                last_spin_time: userParams.last_spin_time,
+                has_claimed_25_percent: userParams.has_claimed_25_percent || false,
+                has_recharged: userParams.has_recharged || false
+            };
+            localStorage.setItem(`${STORAGE_KEY}_${userParams.user_id}`, JSON.stringify(data));
         }
         
-        // إرسال رسالة إلى البوت
-        async function sendMessageToBot(chatId, text) {
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: text,
-                    parse_mode: 'HTML'
-                })
-            });
-            
-            return await response.json();
+        function loadUserSpinData() {
+            const saved = localStorage.getItem(`${STORAGE_KEY}_${userParams.user_id}`);
+            if (saved) {
+                const data = JSON.parse(saved);
+                userParams.spin_count = data.spin_count || 0;
+                userParams.last_spin_time = data.last_spin_time || 0;
+                userParams.has_claimed_25_percent = data.has_claimed_25_percent || false;
+                userParams.has_recharged = data.has_recharged || false;
+            }
         }
         
-        // الحصول على الجائزة وإرسالها
-        async function getPrize() {
-            const spinBtn = document.getElementById('spinBtn');
-            const resultDiv = document.getElementById('result');
+        // ================ التحقق من فترة التبريد (48 ساعة) ================
+        function isCooldownActive() {
+            if (userParams.spin_count === 0) return false; // أول مرة لا تبريد
+            const now = Date.now();
+            const cooldownHours = 48;
+            const cooldownMs = cooldownHours * 60 * 60 * 1000;
+            return (now - userParams.last_spin_time) < cooldownMs;
+        }
+        
+        function getRemainingCooldownTime() {
+            const now = Date.now();
+            const cooldownMs = 48 * 60 * 60 * 1000;
+            const elapsed = now - userParams.last_spin_time;
+            const remaining = cooldownMs - elapsed;
+            if (remaining <= 0) return 0;
+            const hours = Math.floor(remaining / (60 * 60 * 1000));
+            const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+            const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+            return { hours, minutes, seconds, remaining };
+        }
+        
+        // ================ منطق تحديد الجائزة حسب الشروط ================
+        function determinePrize() {
+            const recharge = userParams.total_recharge;
+            const withdraw = userParams.total_withdraw;
+            const spinCount = userParams.spin_count;
             
-            // تعطيل الزر
-            spinBtn.disabled = true;
-            spinBtn.innerText = '⏳ جاري المعالجة...';
+            console.log("تحديد الجائزة:", { recharge, withdraw, spinCount });
             
-            // تحديد الجائزة
-            const prize = getPrizeValue();
-            
-            // تحضير الرسالة للمستخدم
-            let userMessage = "";
-            let adminMessage = "";
-            
-            if (prize.type === "amount") {
-                userMessage = `🎉 تهانينا! لقد ربحت ${prize.name} ل.س\n💰 تم إضافة ${prize.value.toLocaleString()} ل.س إلى رصيدك!`;
-                adminMessage = `💰 جائزة مالية\nالمستخدم: ${USER_ID}\nالقيمة: ${prize.value} ل.س\nالنوع: ${prize.name}`;
-            } else {
-                userMessage = `🎉 تهانينا! لقد ربحت ${prize.name}\n🎁 سيتم تفعيل البونص عند عملية الشحن القادمة!`;
-                adminMessage = `🎁 بونص مئوي\nالمستخدم: ${USER_ID}\nالنسبة: ${prize.value}%\nالنوع: ${prize.name}`;
+            // الشرط 1: المستخدمين الجدد (أول استخدام) -> 25%
+            if (spinCount === 0 && !userParams.has_claimed_25_percent) {
+                userParams.has_claimed_25_percent = true;
+                saveUserSpinData();
+                return { index: 5, prize: SEGMENTS[5], message: "🎉 تهانينا! ستحصل على 25% رصيد إضافي على أول عملية شحن!" };
             }
             
-            try {
-                // إرسال رسالة للمستخدم
-                const userResult = await sendMessageToBot(USER_ID, userMessage);
+            // الشرط 2: المرة الثانية (بعد عملية شحن ناجحة) -> 50
+            if (spinCount === 1 && userParams.has_recharged) {
+                return { index: 0, prize: SEGMENTS[0], message: "🎉 ربحت 50 ل.س! تم إضافة 5,000 ل.س إلى رصيدك" };
+            }
+            
+            // الشرط 3: المرة الثالثة -> 5%
+            if (spinCount === 2) {
+                return { index: 4, prize: SEGMENTS[4], message: "🎉 ستحصل على 5% إضافية على عملية الشحن القادمة!" };
+            }
+            
+            // الشرط 4: تجاوز الشحن 250,000 بدون سحب -> 100
+            if (recharge > 250000 && withdraw === 0) {
+                return { index: 1, prize: SEGMENTS[1], message: "🎉 ربحت 100! تم إضافة 10,000 ل.س هدية إلى حسابك" };
+            }
+            
+            // الشرط 5: الشحن > 700,000 والسحب < 200,000 -> 500
+            if (recharge > 700000 && withdraw < 200000) {
+                return { index: 2, prize: SEGMENTS[2], message: "🎉 ربحت 500! تم إضافة 50,000 ل.س إلى رصيدك" };
+            }
+            
+            // الشرط 6: الشحن > 1,800,000 والسحب < 400,000 -> 1000
+            if (recharge > 1800000 && withdraw < 400000) {
+                return { index: 3, prize: SEGMENTS[3], message: "🎉 ربحت 1000! تم إضافة 100,000 ل.س إلى رصيدك" };
+            }
+            
+            // الشرط الافتراضي: 5% دائماً
+            return { index: 4, prize: SEGMENTS[4], message: "🎁 ستحصل على 5% إضافية على عملية الشحن القادمة!" };
+        }
+        
+        // ================ رسم العجلة ================
+        function drawWheel(angle = 0) {
+            if (!ctx || !canvas) return;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 250;
+            const angleStep = (Math.PI * 2) / SEGMENTS.length;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < SEGMENTS.length; i++) {
+                const start = i * angleStep + angle;
+                const end = start + angleStep;
                 
-                if (userResult.ok) {
-                    // عرض النجاح للمستخدم
-                    resultDiv.style.display = 'block';
-                    resultDiv.className = 'result success';
-                    resultDiv.innerHTML = `✅ تم إرسال الجائزة بنجاح!\n\n${userMessage}`;
-                    
-                    spinBtn.innerText = '✅ تم الإرسال';
-                    
-                    // إغلاق النافذة بعد 3 ثواني
-                    setTimeout(() => {
-                        if (window.Telegram && window.Telegram.WebApp) {
-                            window.Telegram.WebApp.close();
-                        }
-                    }, 3000);
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, start, end);
+                ctx.lineTo(centerX, centerY);
+                ctx.fillStyle = SEGMENTS[i].color;
+                ctx.fill();
+                
+                ctx.strokeStyle = "#FFD700";
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, start, end);
+                ctx.lineTo(centerX, centerY);
+                ctx.stroke();
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(start + angleStep / 2);
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.font = "bold 26px 'Segoe UI', 'Arial Black'";
+                ctx.fillStyle = SEGMENTS[i].textColor;
+                ctx.fillText(SEGMENTS[i].name, radius * 0.65, 5);
+                ctx.restore();
+            }
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 18, 0, Math.PI * 2);
+            ctx.fillStyle = "#FFD700";
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
+            ctx.fillStyle = "#000000";
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 45, centerY - 25);
+            ctx.lineTo(canvas.width - 20, centerY);
+            ctx.lineTo(canvas.width - 45, centerY + 25);
+            ctx.fillStyle = "#FFD700";
+            ctx.fill();
+            ctx.fillStyle = "#000000";
+            ctx.font = "bold 32px Arial";
+            ctx.fillText("▼", canvas.width - 42, centerY + 10);
+        }
+        
+        function calculateTargetAngle(prizeIndex, currentAngle) {
+            const angleStep = (Math.PI * 2) / SEGMENTS.length;
+            let targetSegmentCenter = (prizeIndex * angleStep) + (angleStep / 2);
+            let neededRotation = (Math.PI * 2 - targetSegmentCenter) % (Math.PI * 2);
+            let fullRotations = Math.PI * 2 * 5;
+            return currentAngle + neededRotation + fullRotations;
+        }
+        
+        function animateSpin(currentTime) {
+            if (!spinning) return;
+            
+            const elapsed = currentTime - spinStartTime;
+            let progress = Math.min(1, elapsed / spinDuration);
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            currentAngle = spinStartAngle + (targetAngle - spinStartAngle) * easeOut;
+            
+            drawWheel(currentAngle);
+            
+            if (progress < 1) {
+                requestAnimationFrame(animateSpin);
+            } else {
+                spinning = false;
+                const spinBtn = document.getElementById('spinBtn');
+                if (spinBtn) spinBtn.disabled = false;
+                
+                const prize = SEGMENTS[selectedSegmentIndex];
+                let prizeValueText = "";
+                
+                if (prize.type === "amount") {
+                    let actualAmount = prize.value;
+                    if (prize.name === "50") actualAmount = 5000;
+                    if (prize.name === "100") actualAmount = 10000;
+                    if (prize.name === "500") actualAmount = 50000;
+                    if (prize.name === "1000") actualAmount = 100000;
+                    prizeValueText = `${actualAmount.toLocaleString()} ل.س`;
                 } else {
-                    throw new Error("فشل إرسال الرسالة");
+                    prizeValueText = `${prize.value}% رصيد إضافي`;
                 }
                 
-            } catch (error) {
-                console.error("خطأ:", error);
-                resultDiv.style.display = 'block';
-                resultDiv.className = 'result error';
-                resultDiv.innerHTML = `❌ حدث خطأ: ${error.message}\nالرجاء المحاولة مرة أخرى`;
+                const resultDiv = document.getElementById('result');
+                if (resultDiv) {
+                    resultDiv.innerHTML = `🎉🎊 ${prize.name} 🎊🎉<br><small>${prizeValueText}</small>`;
+                }
                 
-                spinBtn.disabled = false;
-                spinBtn.innerText = '🔄 إعادة المحاولة';
+                // تحديث عدد الدورات ووقت آخر دورة
+                userParams.spin_count++;
+                userParams.last_spin_time = Date.now();
+                saveUserSpinData();
+                
+                // إرسال النتيجة إلى البوت
+                const resultData = JSON.stringify({
+                    prize: prize.name,
+                    prize_value: prize.value,
+                    prize_type: prize.type,
+                    spin_count: userParams.spin_count,
+                    total_recharge: userParams.total_recharge,
+                    total_withdraw: userParams.total_withdraw,
+                    timestamp: new Date().toISOString(),
+                    user_id: userParams.user_id
+                });
+                
+                tg.sendData(resultData);
+                
+                setTimeout(() => {
+                    if (resultDiv) {
+                        resultDiv.innerHTML += `<br><small>✅ تم إرسال الجائزة إلى البوت</small>`;
+                    }
+                }, 500);
             }
         }
         
-        // ================ تهيئة الصفحة ================
-        function init() {
-            if (!USER_ID || USER_ID === "null") {
-                document.getElementById('info').innerHTML = '<p>❌ خطأ: يرجى الدخول من خلال البوت</p>';
+        function startSpin() {
+            if (spinning) return;
+            
+            // التحقق من فترة التبريد
+            if (isCooldownActive() && userParams.spin_count > 0) {
+                showCooldownPage();
                 return;
             }
             
-            showUserInfo();
+            const result = determinePrize();
+            selectedSegmentIndex = result.index;
             
-            // إعلام Telegram بأن الصفحة جاهزة
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
+            spinning = true;
+            spinStartAngle = currentAngle;
+            targetAngle = calculateTargetAngle(selectedSegmentIndex, currentAngle);
+            spinStartTime = performance.now();
+            
+            const spinBtn = document.getElementById('spinBtn');
+            const resultDiv = document.getElementById('result');
+            if (spinBtn) spinBtn.disabled = true;
+            if (resultDiv) resultDiv.innerHTML = '🌀 جاري الدوران... 🌀';
+            
+            requestAnimationFrame(animateSpin);
+        }
+        
+        // ================ عرض صفحة التبريد ================
+        function showCooldownPage() {
+            const app = document.getElementById('app');
+            const remaining = getRemainingCooldownTime();
+            app.innerHTML = `
+                <div class="cooldown-message">
+                    <h2>⏰ عذراً!</h2>
+                    <p>يمكنك اللعب مرة واحدة كل 48 ساعة</p>
+                    <div class="timer" id="timer">${String(remaining.hours).padStart(2,'0')}:${String(remaining.minutes).padStart(2,'0')}:${String(remaining.seconds).padStart(2,'0')}</div>
+                    <p>يمكنك العودة بعد انتهاء الوقت المتبقي</p>
+                    <button onclick="location.reload()" class="spin-button" style="margin-top:20px">🔄 تحديث</button>
+                </div>
+            `;
+            
+            const timerInterval = setInterval(() => {
+                const newRemaining = getRemainingCooldownTime();
+                if (newRemaining.remaining <= 0) {
+                    clearInterval(timerInterval);
+                    location.reload();
+                } else {
+                    const timerEl = document.getElementById('timer');
+                    if (timerEl) {
+                        timerEl.textContent = `${String(newRemaining.hours).padStart(2,'0')}:${String(newRemaining.minutes).padStart(2,'0')}:${String(newRemaining.seconds).padStart(2,'0')}`;
+                    }
+                }
+            }, 1000);
+        }
+        
+        // ================ عرض صفحة الخطأ ================
+        function showErrorPage() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="error-message">
+                    <h2>⛔ خطأ في الوصول</h2>
+                    <p>يرجى الدخول من خلال الرابط المخصص للعبة.</p>
+                    <a href="javascript:void(0)" onclick="window.history.back()" class="spin-button" style="display:inline-block; margin-top:20px; text-decoration:none">↺ المحاولة مرة أخرى</a>
+                </div>
+            `;
+        }
+        
+        // ================ عرض واجهة العجلة ================
+        function showWheelPage() {
+            // التحقق من التبريد قبل عرض العجلة
+            if (isCooldownActive() && userParams.spin_count > 0) {
+                showCooldownPage();
+                return;
             }
+            
+            const prizeResult = determinePrize();
+            const expectedPrize = prizeResult.prize;
+            
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="user-info">
+                    <div class="info-row"><span class="info-label">🆔 معرف المستخدم:</span><span class="info-value">${userParams.user_id}</span></div>
+                    <div class="info-row"><span class="info-label">💰 إجمالي الشحن:</span><span class="info-value">${userParams.total_recharge.toLocaleString()} ل.س</span></div>
+                    <div class="info-row"><span class="info-label">💸 إجمالي السحب:</span><span class="info-value">${userParams.total_withdraw.toLocaleString()} ل.س</span></div>
+                    <div class="info-row"><span class="info-label">🎲 عدد المرات:</span><span class="info-value">${userParams.spin_count}</span></div>
+                    <div class="info-row"><span class="info-label">🎁 الجائزة المتوقعة:</span><span class="info-value">${expectedPrize.name}</span></div>
+                </div>
+                <div class="wheel-wrapper"><canvas id="wheelCanvas" width="500" height="500"></canvas></div>
+                <button class="spin-button" id="spinBtn">🔄 أدر العجلة</button>
+                <div class="result" id="result">✨ اضغط على الزر لبدء اللعب ✨</div>
+            `;
+            
+            canvas = document.getElementById('wheelCanvas');
+            ctx = canvas.getContext('2d');
+            drawWheel();
+            document.getElementById('spinBtn').addEventListener('click', startSpin);
+        }
+        
+        // ================ التشغيل الرئيسي ================
+        function init() {
+            userParams = getUrlParams();
+            
+            if (!userParams.user_id) {
+                showErrorPage();
+                return;
+            }
+            
+            loadUserSpinData();
+            
+            // تهيئة القيم الافتراضية
+            if (userParams.spin_count === undefined) userParams.spin_count = 0;
+            if (userParams.last_spin_time === undefined) userParams.last_spin_time = 0;
+            if (userParams.has_claimed_25_percent === undefined) userParams.has_claimed_25_percent = false;
+            if (userParams.has_recharged === undefined) userParams.has_recharged = false;
+            
+            showWheelPage();
         }
         
         init();
