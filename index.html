@@ -1,105 +1,62 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>عجلة الحظ</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             padding: 20px;
-            margin: 0;
         }
         .container {
             background: white;
             border-radius: 20px;
             padding: 25px;
-            text-align: center;
-            max-width: 450px;
+            max-width: 400px;
             width: 100%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-        h2 {
-            color: #1e3c72;
-            margin-bottom: 20px;
+            text-align: center;
         }
         .info {
-            background: #f8f9fa;
-            border-radius: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
             padding: 15px;
             margin: 15px 0;
-            text-align: right;
-            border: 1px solid #dee2e6;
-        }
-        .info p {
-            margin: 8px 0;
-            font-size: 14px;
-        }
-        .info strong {
-            color: #2a5298;
-        }
-        .prize-box {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 15px;
-            padding: 15px;
-            margin: 15px 0;
+            text-align: left;
         }
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #28a745;
             color: white;
             border: none;
             padding: 15px 30px;
-            font-size: 20px;
-            border-radius: 50px;
+            font-size: 18px;
+            border-radius: 10px;
             cursor: pointer;
-            margin-top: 15px;
             width: 100%;
-            font-weight: bold;
-            transition: transform 0.2s;
-        }
-        button:active {
-            transform: scale(0.97);
+            margin-top: 10px;
         }
         button:disabled {
-            opacity: 0.6;
+            background: #6c757d;
             cursor: not-allowed;
         }
         .result {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 10px;
             border-radius: 10px;
             display: none;
-            font-weight: bold;
         }
         .success {
             background: #d4edda;
             color: #155724;
-            border: 1px solid #c3e6cb;
         }
         .error {
             background: #f8d7da;
             color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .loading {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .spinner {
-            display: inline-block;
-            animation: spin 1s linear infinite;
-            font-size: 24px;
         }
     </style>
 </head>
@@ -107,245 +64,146 @@
     <div class="container">
         <h2>🎡 عجلة الحظ</h2>
         
-        <div class="info" id="userInfo">
-            <p>🆔 جاري تحميل البيانات...</p>
+        <div class="info" id="info">
+            <p>🆔 جاري التحميل...</p>
         </div>
         
-        <div class="prize-box" id="prizeInfo">
-            <p>🎁 الجائزة المتوقعة: <strong id="expectedPrize">-</strong></p>
-        </div>
-        
-        <button id="spinBtn" onclick="claimPrize()">🎲 احصل على الجائزة</button>
+        <button id="spinBtn" onclick="getPrize()">🎲 احصل على الجائزة</button>
         
         <div id="result" class="result"></div>
     </div>
 
     <script>
-        // ================ إعدادات البوت ================
-        // ⚠️ ضع توكن البوت هنا (نفس التوكن الذي تستخدمه في كولاب)
-        const BOT_TOKEN = "8391427351:AAEd28dLdeT5_nmFrxwCqehjf6TjfCbI6T4";  // 👈 ضع توكن البوت
+        // ================ التوكن (نفس توكن البوت) ================
+        const BOT_TOKEN = "8391427351:AAEd28dLdeT5_nmFrxwCqehjf6TjfCbI6T4";  // 👈 ضع توكن البوت هنا
         
         // ================ قراءة البيانات من الرابط ================
         const urlParams = new URLSearchParams(window.location.search);
-        const user_id = urlParams.get('user_id');
-        const total_recharge = parseFloat(urlParams.get('total_recharge')) || 0;
-        const total_withdraw = parseFloat(urlParams.get('total_withdraw')) || 0;
-        let spin_count = parseInt(urlParams.get('spin_count')) || 0;
+        const USER_ID = urlParams.get('user_id');
+        const TOTAL_RECHARGE = parseFloat(urlParams.get('total_recharge')) || 0;
+        const TOTAL_WITHDRAW = parseFloat(urlParams.get('total_withdraw')) || 0;
+        let SPIN_COUNT = parseInt(urlParams.get('spin_count')) || 0;
         
-        // ================ عرض معلومات المستخدم ================
-        function displayUserInfo() {
-            const userInfoDiv = document.getElementById('userInfo');
-            userInfoDiv.innerHTML = `
-                <p>🆔 معرف المستخدم: <strong>${user_id}</strong></p>
-                <p>💰 إجمالي الشحن: <strong>${total_recharge.toLocaleString()} ل.س</strong></p>
-                <p>💸 إجمالي السحب: <strong>${total_withdraw.toLocaleString()} ل.س</strong></p>
-                <p>🎲 عدد المرات: <strong>${spin_count}</strong></p>
+        // عرض معلومات المستخدم
+        function showUserInfo() {
+            const infoDiv = document.getElementById('info');
+            infoDiv.innerHTML = `
+                <p>🆔 معرفك: <strong>${USER_ID}</strong></p>
+                <p>💰 إجمالي الشحن: <strong>${TOTAL_RECHARGE.toLocaleString()} ل.س</strong></p>
+                <p>💸 إجمالي السحب: <strong>${TOTAL_WITHDRAW.toLocaleString()} ل.س</strong></p>
+                <p>🎲 عدد المرات: <strong>${SPIN_COUNT}</strong></p>
             `;
         }
         
-        // ================ تحديد الجائزة حسب الشروط ================
-        function determinePrize() {
-            console.log("تحديد الجائزة - الشروط:", { spin_count, total_recharge, total_withdraw });
-            
-            // الشرط 1: أول مرة (25%)
-            if (spin_count === 0) {
-                return { name: "25%", value: 25, type: "percent", message: "🎉 بونص 25% على أول شحن!" };
+        // تحديد الجائزة
+        function getPrizeValue() {
+            if (SPIN_COUNT === 0) {
+                return { name: "25%", value: 25, type: "percent" };
             }
-            
-            // الشرط 2: الشحن أكثر من 250,000
-            if (total_recharge > 250000 && total_withdraw === 0) {
-                return { name: "100", value: 10000, type: "amount", message: "🎉 ربحت 100 ل.س!" };
+            if (TOTAL_RECHARGE > 250000 && TOTAL_WITHDRAW === 0) {
+                return { name: "100", value: 10000, type: "amount" };
             }
-            
-            // الشرط 3: الشحن أكثر من 700,000
-            if (total_recharge > 700000 && total_withdraw < 200000) {
-                return { name: "500", value: 50000, type: "amount", message: "🎉 ربحت 500 ل.س!" };
+            if (TOTAL_RECHARGE > 700000 && TOTAL_WITHDRAW < 200000) {
+                return { name: "500", value: 50000, type: "amount" };
             }
-            
-            // الشرط 4: الشحن أكثر من 1,800,000
-            if (total_recharge > 1800000 && total_withdraw < 400000) {
-                return { name: "1000", value: 100000, type: "amount", message: "🎉 ربحت 1000 ل.س!" };
+            if (TOTAL_RECHARGE > 1800000 && TOTAL_WITHDRAW < 400000) {
+                return { name: "1000", value: 100000, type: "amount" };
             }
-            
-            // الشرط الافتراضي: 5%
-            return { name: "5%", value: 5, type: "percent", message: "🎁 بونص 5% على الشحن القادم!" };
+            return { name: "5%", value: 5, type: "percent" };
         }
         
-        // ================ إرسال البيانات إلى البوت ================
-        async function sendToBot(prize) {
-            const newSpinCount = spin_count + 1;
+        // إرسال رسالة إلى البوت
+        async function sendMessageToBot(chatId, text) {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
             
-            // تحضير البيانات
-            const data = {
-                prize: prize.name,
-                prize_value: prize.value,
-                prize_type: prize.type,
-                spin_count: newSpinCount,
-                total_recharge: total_recharge,
-                total_withdraw: total_withdraw,
-                user_id: parseInt(user_id),
-                timestamp: Date.now()
-            };
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: text,
+                    parse_mode: 'HTML'
+                })
+            });
             
-            console.log("📤 جاري إرسال البيانات:", data);
-            
-            // الطريقة 1: محاولة إرسال عبر Telegram WebApp
-            try {
-                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) {
-                    window.Telegram.WebApp.sendData(JSON.stringify(data));
-                    console.log("✅ تم الإرسال عبر Telegram.WebApp");
-                    return true;
-                }
-            } catch(e) {
-                console.log("⚠️ فشل الإرسال عبر Telegram.WebApp:", e);
-            }
-            
-            // الطريقة 2: إرسال مباشر إلى Bot API (بديل)
-            try {
-                const botUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-                
-                // تنسيق الرسالة
-                const message = `🎉 جائزة جديدة!\n\n` +
-                    `👤 المستخدم: ${user_id}\n` +
-                    `🎁 الجائزة: ${prize.name}\n` +
-                    `💰 القيمة: ${prize.type === 'amount' ? prize.value + ' ل.س' : prize.value + '%'}\n` +
-                    `🎲 عدد اللعب: ${newSpinCount}\n` +
-                    `📊 إجمالي الشحن: ${total_recharge} ل.س\n` +
-                    `💸 إجمالي السحب: ${total_withdraw} ل.س`;
-                
-                // إرسال إشعار للمالك
-                const response = await fetch(botUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        chat_id: user_id,  // إرسال للمستخدم نفسه
-                        text: `🎉 تهانينا! ربحت ${prize.name}\n${prize.type === 'amount' ? `💰 +${prize.value} ل.س` : `🎁 +${prize.value}% بونص`}`,
-                        parse_mode: 'HTML'
-                    })
-                });
-                
-                const result = await response.json();
-                if (result.ok) {
-                    console.log("✅ تم الإرسال عبر Bot API");
-                    return true;
-                } else {
-                    console.error("❌ فشل الإرسال عبر Bot API:", result);
-                    return false;
-                }
-            } catch(e) {
-                console.error("❌ خطأ في الإرسال:", e);
-                return false;
-            }
+            return await response.json();
         }
         
-        // ================ تحديث العداد محلياً ================
-        function updateLocalStorage() {
-            const storageKey = `wheel_${user_id}`;
-            localStorage.setItem(storageKey, JSON.stringify({
-                spin_count: spin_count + 1,
-                last_spin: Date.now()
-            }));
-        }
-        
-        // ================ الحصول على الجائزة ================
-        async function claimPrize() {
+        // الحصول على الجائزة وإرسالها
+        async function getPrize() {
             const spinBtn = document.getElementById('spinBtn');
             const resultDiv = document.getElementById('result');
-            const prizeInfoDiv = document.getElementById('prizeInfo');
             
             // تعطيل الزر
             spinBtn.disabled = true;
-            spinBtn.innerHTML = '<span class="spinner">⏳</span> جاري المعالجة...';
-            
-            // عرض حالة التحميل
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'result loading';
-            resultDiv.innerHTML = '🔄 جاري إرسال البيانات إلى البوت...';
+            spinBtn.innerText = '⏳ جاري المعالجة...';
             
             // تحديد الجائزة
-            const prize = determinePrize();
+            const prize = getPrizeValue();
             
-            // تحديث واجهة الجائزة
-            prizeInfoDiv.innerHTML = `
-                <p>🎁 لقد ربحت: <strong style="color: #28a745; font-size: 20px;">${prize.name}</strong></p>
-                <p style="font-size: 12px; margin-top: 5px;">${prize.message}</p>
-            `;
+            // تحضير الرسالة للمستخدم
+            let userMessage = "";
+            let adminMessage = "";
             
-            // إرسال البيانات إلى البوت
-            const sent = await sendToBot(prize);
+            if (prize.type === "amount") {
+                userMessage = `🎉 تهانينا! لقد ربحت ${prize.name} ل.س\n💰 تم إضافة ${prize.value.toLocaleString()} ل.س إلى رصيدك!`;
+                adminMessage = `💰 جائزة مالية\nالمستخدم: ${USER_ID}\nالقيمة: ${prize.value} ل.س\nالنوع: ${prize.name}`;
+            } else {
+                userMessage = `🎉 تهانينا! لقد ربحت ${prize.name}\n🎁 سيتم تفعيل البونص عند عملية الشحن القادمة!`;
+                adminMessage = `🎁 بونص مئوي\nالمستخدم: ${USER_ID}\nالنسبة: ${prize.value}%\nالنوع: ${prize.name}`;
+            }
             
-            if (sent) {
-                // زيادة عدد اللعب
-                spin_count++;
-                updateLocalStorage();
-                displayUserInfo();
+            try {
+                // إرسال رسالة للمستخدم
+                const userResult = await sendMessageToBot(USER_ID, userMessage);
                 
-                // عرض رسالة النجاح
-                resultDiv.className = 'result success';
-                if (prize.type === 'amount') {
-                    resultDiv.innerHTML = `
-                        ✅ تم الإرسال بنجاح!<br>
-                        🎉 تهانينا! ربحت ${prize.name} ل.س<br>
-                        💰 تم إضافة ${prize.value.toLocaleString()} ل.س إلى رصيدك<br><br>
-                        <small>يمكنك إغلاق النافذة الآن</small>
-                    `;
+                if (userResult.ok) {
+                    // عرض النجاح للمستخدم
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ تم إرسال الجائزة بنجاح!\n\n${userMessage}`;
+                    
+                    spinBtn.innerText = '✅ تم الإرسال';
+                    
+                    // إغلاق النافذة بعد 3 ثواني
+                    setTimeout(() => {
+                        if (window.Telegram && window.Telegram.WebApp) {
+                            window.Telegram.WebApp.close();
+                        }
+                    }, 3000);
                 } else {
-                    resultDiv.innerHTML = `
-                        ✅ تم الإرسال بنجاح!<br>
-                        🎉 تهانينا! ربحت ${prize.name}<br>
-                        🎁 سيتم تفعيل البونص عند الشحن القادم<br><br>
-                        <small>يمكنك إغلاق النافذة الآن</small>
-                    `;
+                    throw new Error("فشل إرسال الرسالة");
                 }
                 
-                spinBtn.innerHTML = '✅ تم الإرسال';
-                
-                // إغلاق النافذة بعد 3 ثواني
-                setTimeout(() => {
-                    if (window.Telegram && window.Telegram.WebApp) {
-                        window.Telegram.WebApp.close();
-                    }
-                }, 3000);
-                
-            } else {
-                // عرض رسالة الخطأ
+            } catch (error) {
+                console.error("خطأ:", error);
+                resultDiv.style.display = 'block';
                 resultDiv.className = 'result error';
-                resultDiv.innerHTML = `
-                    ❌ فشل الإرسال!<br>
-                    يرجى المحاولة مرة أخرى<br>
-                    <small>إذا استمرت المشكلة، تواصل مع الدعم الفني</small>
-                `;
+                resultDiv.innerHTML = `❌ حدث خطأ: ${error.message}\nالرجاء المحاولة مرة أخرى`;
+                
                 spinBtn.disabled = false;
-                spinBtn.innerHTML = '🔄 إعادة المحاولة';
+                spinBtn.innerText = '🔄 إعادة المحاولة';
             }
         }
         
         // ================ تهيئة الصفحة ================
         function init() {
-            if (!user_id) {
-                document.getElementById('userInfo').innerHTML = '<p>❌ خطأ: لم يتم العثور على معرف المستخدم</p>';
+            if (!USER_ID || USER_ID === "null") {
+                document.getElementById('info').innerHTML = '<p>❌ خطأ: يرجى الدخول من خلال البوت</p>';
                 return;
             }
             
-            displayUserInfo();
+            showUserInfo();
             
-            const prize = determinePrize();
-            document.getElementById('expectedPrize').innerText = prize.name;
-            
-            // إعلام Telegram بأن التطبيق جاهز
+            // إعلام Telegram بأن الصفحة جاهزة
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.ready();
                 window.Telegram.WebApp.expand();
-                console.log("✅ Telegram WebApp initialized");
-                console.log("📱 User data:", window.Telegram.WebApp.initDataUnsafe);
             }
-            
-            console.log("✅ الصفحة جاهزة - user_id:", user_id);
         }
         
-        // بدء التشغيل
         init();
     </script>
 </body>
