@@ -1,18 +1,321 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>اختبار العجلة - وضع التصحيح</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: monospace;
+            padding: 20px;
+        }
+        
+        .container {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+            border: 2px solid #FFD700;
+        }
+        
+        h1 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        
+        button:active {
+            transform: scale(0.97);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .console {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #0f0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .console-title {
+            color: #FFD700;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .log-line {
+            margin: 5px 0;
+            padding: 3px;
+            border-bottom: 1px solid #333;
+            word-break: break-all;
+        }
+        
+        .log-error {
+            color: #ff4444;
+        }
+        
+        .log-success {
+            color: #00ff88;
+        }
+        
+        .log-info {
+            color: #FFD700;
+        }
+        
+        .status-box {
+            background: #222;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .status-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .clear-btn {
+            background: #333;
+            color: #fff;
+            font-size: 14px;
+            padding: 8px 15px;
+            margin-top: 10px;
+        }
+        
+        hr {
+            border-color: #333;
+            margin: 15px 0;
+        }
+    </style>
 </head>
 <body>
-    <button onclick="send()">إرسال للبوت</button>
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
+    <div class="container">
+        <h1>🧪 اختبار نقل البيانات</h1>
         
-        function send() {
-            tg.sendData(JSON.stringify({prize: "1000 نقطة", test: true}));
-            tg.close();
+        <div class="status-box">
+            <div>📡 حالة الاتصال:</div>
+            <div class="status-value" id="tgStatus">⏳ جاري التهيئة...</div>
+        </div>
+        
+        <button id="sendBtn">📤 إرسال بيانات للبوت</button>
+        <button id="closeBtn" style="background:#333; color:#fff;">❌ إغلاق</button>
+        <button id="clearBtn" class="clear-btn">🗑 مسح السجل</button>
+        
+        <div class="console">
+            <div class="console-title">📋 سجل الأحداث (Console)</div>
+            <div id="logContainer"></div>
+        </div>
+        
+        <hr>
+        <div style="font-size: 11px; color: #666; text-align: center;">
+            💡 ملاحظة: إذا ظهرت أخطاء، سيتم عرضها هنا
+        </div>
+    </div>
+
+    <script>
+        // ================ نظام التسجيل المرئي ================
+        const logContainer = document.getElementById('logContainer');
+        
+        function addLog(message, type = 'info') {
+            const logLine = document.createElement('div');
+            logLine.className = `log-line log-${type}`;
+            const time = new Date().toLocaleTimeString();
+            logLine.innerHTML = `[${time}] ${message}`;
+            logContainer.appendChild(logLine);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // أيضاً نسجل في console الحقيقي
+            if (type === 'error') console.error(message);
+            else if (type === 'success') console.log('✅', message);
+            else console.log('📝', message);
         }
+        
+        function clearLogs() {
+            logContainer.innerHTML = '';
+            addLog('تم مسح السجل', 'info');
+        }
+        
+        // ================ تهيئة Telegram WebApp ================
+        addLog('🔧 بدء تهيئة Telegram WebApp...', 'info');
+        
+        let tg = null;
+        let tgReady = false;
+        
+        try {
+            tg = window.Telegram.WebApp;
+            addLog('✅ تم العثور على Telegram.WebApp', 'success');
+        } catch (e) {
+            addLog(`❌ خطأ: لم يتم العثور على Telegram.WebApp - ${e.message}`, 'error');
+            document.getElementById('tgStatus').innerHTML = '❌ غير متاح';
+            document.getElementById('tgStatus').style.color = '#ff4444';
+        }
+        
+        if (tg) {
+            try {
+                tg.ready();
+                addLog('✅ tg.ready() تم بنجاح', 'success');
+                
+                tg.expand();
+                addLog('✅ tg.expand() تم بنجاح', 'success');
+                
+                const user = tg.initDataUnsafe?.user;
+                if (user) {
+                    addLog(`👤 معلومات المستخدم: ${user.first_name} (ID: ${user.id})`, 'success');
+                } else {
+                    addLog('⚠️ لا توجد معلومات مستخدم (قد يكون خارج تليجرام)', 'info');
+                }
+                
+                document.getElementById('tgStatus').innerHTML = '✅ متصل وجاهز';
+                document.getElementById('tgStatus').style.color = '#00ff88';
+                tgReady = true;
+                
+            } catch (e) {
+                addLog(`❌ خطأ في تهيئة WebApp: ${e.message}`, 'error');
+                document.getElementById('tgStatus').innerHTML = '❌ خطأ في التهيئة';
+                document.getElementById('tgStatus').style.color = '#ff4444';
+            }
+        }
+        
+        // ================ إرسال البيانات ================
+        async function sendData() {
+            addLog('📤 بدء عملية الإرسال...', 'info');
+            
+            if (!tg) {
+                addLog('❌ فشل: Telegram.WebApp غير متاح', 'error');
+                alert('Telegram.WebApp غير متاح. تأكد من فتح الصفحة من داخل تليجرام!');
+                return;
+            }
+            
+            if (!tgReady) {
+                addLog('❌ فشل: WebApp لم يتم تهيئته بشكل كامل', 'error');
+                return;
+            }
+            
+            // بيانات الاختبار
+            const testData = {
+                prize: "جائزة اختبارية",
+                prize_value: 1000,
+                prize_type: "amount",
+                spin_count: 1,
+                total_recharge: 500,
+                total_withdraw: 200,
+                user_id: tg.initDataUnsafe?.user?.id || "unknown",
+                timestamp: new Date().toISOString(),
+                test: true
+            };
+            
+            addLog(`📦 البيانات المرسلة: ${JSON.stringify(testData, null, 2)}`, 'info');
+            
+            try {
+                // محاولة الإرسال
+                addLog('📡 استدعاء tg.sendData()...', 'info');
+                tg.sendData(JSON.stringify(testData));
+                addLog('✅ tg.sendData() تم التنفيذ بنجاح!', 'success');
+                
+                // تغيير نص الزر
+                const sendBtn = document.getElementById('sendBtn');
+                sendBtn.textContent = '✅ تم الإرسال!';
+                sendBtn.style.background = '#00aa44';
+                
+                // إغلاق بعد 1.5 ثانية
+                addLog('⏳ سيتم إغلاق النافذة بعد 1.5 ثانية...', 'info');
+                setTimeout(() => {
+                    addLog('🔒 استدعاء tg.close()...', 'info');
+                    try {
+                        tg.close();
+                        addLog('✅ tg.close() تم بنجاح', 'success');
+                    } catch(e) {
+                        addLog(`⚠️ خطأ في الإغلاق: ${e.message}`, 'error');
+                    }
+                }, 1500);
+                
+            } catch (e) {
+                addLog(`❌ فشل الإرسال: ${e.message}`, 'error');
+                addLog(`📋 تفاصيل الخطأ: ${e.stack || 'لا توجد تفاصيل'}`, 'error');
+                alert(`خطأ في الإرسال: ${e.message}\n\nراجع السجل للتفاصيل`);
+            }
+        }
+        
+        // ================ التحقق من البيئة ================
+        function checkEnvironment() {
+            addLog('🔍 فحص البيئة...', 'info');
+            
+            // فحص البروتوكول
+            const protocol = window.location.protocol;
+            addLog(`🌐 البروتوكول: ${protocol}`, protocol === 'https:' ? 'success' : 'error');
+            if (protocol !== 'https:') {
+                addLog('⚠️ تحذير: تليجرام يتطلب HTTPS!', 'error');
+            }
+            
+            // فحص URL
+            addLog(`🔗 الرابط الحالي: ${window.location.href}`, 'info');
+            
+            // فحص المعاملات
+            const params = new URLSearchParams(window.location.search);
+            const hasParams = params.toString().length > 0;
+            addLog(`📋 معاملات الرابط: ${hasParams ? params.toString() : 'لا توجد'}`, 'info');
+        }
+        
+        // ================ ربط الأزرار ================
+        document.getElementById('sendBtn').onclick = sendData;
+        document.getElementById('closeBtn').onclick = () => {
+            addLog('🔒 إغلاق يدوي...', 'info');
+            try { tg.close(); } catch(e) { addLog(`خطأ: ${e.message}`, 'error'); }
+        };
+        document.getElementById('clearBtn').onclick = clearLogs;
+        
+        // ================ التشغيل التلقائي ================
+        addLog('🚀 بدء تشغيل صفحة الاختبار...', 'info');
+        checkEnvironment();
+        
+        // إرسال إشارة أن الصفحة جاهزة (اختياري)
+        setTimeout(() => {
+            addLog('✅ الصفحة جاهزة للاختبار', 'success');
+        }, 500);
+        
+        // عرض جميع الأخطاء غير المعالجة
+        window.onerror = function(msg, url, line, col, error) {
+            addLog(`🔥 خطأ غير متوقع: ${msg} في السطر ${line}`, 'error');
+            return false;
+        };
     </script>
 </body>
 </html>
