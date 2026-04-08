@@ -1,105 +1,18 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار العجلة</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            text-align: center;
-            background: rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-        }
-        button {
-            background: #FFD700;
-            color: #000;
-            border: none;
-            padding: 15px 40px;
-            font-size: 24px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            margin: 10px;
-            transition: transform 0.2s;
-        }
-        button:active {
-            transform: scale(0.95);
-        }
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(0,0,0,0.7);
-            border-radius: 15px;
-            color: #FFD700;
-            font-size: 18px;
-        }
-        .prize-box {
-            font-size: 48px;
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 15px;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎡 اختبار عجلة الحظ</h1>
-        <div class="prize-box" id="prize">❓</div>
-        <button id="spinBtn">🔄 جرب حظك</button>
-        <button id="sendBtn" style="background:#4CAF50; display:none;">✅ إرسال للبوت</button>
-        <div class="result" id="result">اضغط على الزر للبدء</div>
-    </div>
-
+    <button onclick="send()">إرسال للبوت</button>
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
-        tg.expand();
         
-        // جوائز بسيطة للاختبار
-        const prizes = ["🏆 1000 نقطة", "🎁 قسيمة خصم", "🍀 50 نقطة", "⭐ 10 نقاط", "😔 لا جائزة", "🎉 جائزة كبرى"];
-        
-        let currentPrize = null;
-        
-        document.getElementById('spinBtn').addEventListener('click', function() {
-            // اختيار عشوائي
-            const randomIndex = Math.floor(Math.random() * prizes.length);
-            currentPrize = prizes[randomIndex];
-            
-            document.getElementById('prize').innerHTML = currentPrize;
-            document.getElementById('result').innerHTML = `🎉 حصلت على: ${currentPrize} 🎉`;
-            document.getElementById('sendBtn').style.display = 'inline-block';
-        });
-        
-        document.getElementById('sendBtn').addEventListener('click', function() {
-            // 🔥 إرسال البيانات إلى البوت
-            const data = {
-                prize: currentPrize,
-                user_id: tg.initDataUnsafe?.user?.id || '123456',
-                timestamp: new Date().toISOString()
-            };
-            
-            console.log("📤 إرسال:", data);
-            tg.sendData(JSON.stringify(data));
-            
-            document.getElementById('result').innerHTML = `✅ تم إرسال "${currentPrize}" إلى البوت!`;
-            
-            // إغلاق بعد ثانية
-            setTimeout(() => tg.close(), 1000);
-        });
+        function send() {
+            tg.sendData(JSON.stringify({prize: "1000 نقطة", test: true}));
+            tg.close();
+        }
     </script>
 </body>
 </html>
