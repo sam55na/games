@@ -1,321 +1,503 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>اختبار العجلة - وضع التصحيح</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>🎡 عجلة الحظ</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        
+
         body {
-            background: #000;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: monospace;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
         }
-        
+
         .container {
-            background: #1a1a1a;
-            border-radius: 15px;
-            padding: 20px;
-            max-width: 500px;
-            width: 100%;
-            border: 2px solid #FFD700;
-        }
-        
-        h1 {
-            color: #FFD700;
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 20px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
+
+        h1 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 50%;
+            box-shadow: 0 0 0 10px rgba(255, 215, 0, 0.3), 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        canvas:active {
+            transform: scale(0.98);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 50px solid #ff4444;
+            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3));
+            z-index: 10;
+        }
+
+        .pointer::after {
+            content: "▼";
+            position: absolute;
+            top: -55px;
+            left: -12px;
+            font-size: 30px;
+            color: #ff4444;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
         button {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #000;
+            background: linear-gradient(135deg, #ffd700, #ffb347);
             border: none;
-            padding: 15px 30px;
-            font-size: 20px;
+            padding: 15px 40px;
+            font-size: 1.3rem;
             font-weight: bold;
+            color: #1a1a2e;
             border-radius: 50px;
             cursor: pointer;
-            width: 100%;
-            margin: 10px 0;
-            transition: transform 0.2s;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-        
-        button:active {
-            transform: scale(0.97);
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
-        
+
         button:disabled {
             opacity: 0.5;
+            transform: none;
             cursor: not-allowed;
         }
-        
-        .console {
-            background: #0a0a0a;
-            border: 1px solid #333;
-            border-radius: 10px;
+
+        .info {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
             padding: 15px;
             margin-top: 20px;
-            font-family: monospace;
-            font-size: 12px;
-            color: #0f0;
-            max-height: 300px;
-            overflow-y: auto;
+            color: white;
         }
-        
-        .console-title {
-            color: #FFD700;
-            margin-bottom: 10px;
-            font-weight: bold;
+
+        .info p {
+            margin: 8px 0;
+            font-size: 0.9rem;
         }
-        
-        .log-line {
-            margin: 5px 0;
-            padding: 3px;
-            border-bottom: 1px solid #333;
-            word-break: break-all;
-        }
-        
-        .log-error {
-            color: #ff4444;
-        }
-        
-        .log-success {
-            color: #00ff88;
-        }
-        
-        .log-info {
-            color: #FFD700;
-        }
-        
-        .status-box {
-            background: #222;
-            border-radius: 10px;
-            padding: 15px;
+
+        .prize-display {
+            background: #ffd700;
+            color: #1a1a2e;
+            padding: 10px;
+            border-radius: 15px;
             margin-top: 15px;
-            text-align: center;
-        }
-        
-        .status-value {
-            font-size: 18px;
             font-weight: bold;
+            font-size: 1.2rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
         }
-        
-        .clear-btn {
-            background: #333;
-            color: #fff;
-            font-size: 14px;
-            padding: 8px 15px;
-            margin-top: 10px;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        hr {
-            border-color: #333;
-            margin: 15px 0;
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .wheel-container {
+                width: 250px;
+                height: 250px;
+            }
+            button {
+                padding: 12px 30px;
+                font-size: 1.1rem;
+            }
+            h1 {
+                font-size: 1.4rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🧪 اختبار نقل البيانات</h1>
-        
-        <div class="status-box">
-            <div>📡 حالة الاتصال:</div>
-            <div class="status-value" id="tgStatus">⏳ جاري التهيئة...</div>
-        </div>
-        
-        <button id="sendBtn">📤 إرسال بيانات للبوت</button>
-        <button id="closeBtn" style="background:#333; color:#fff;">❌ إغلاق</button>
-        <button id="clearBtn" class="clear-btn">🗑 مسح السجل</button>
-        
-        <div class="console">
-            <div class="console-title">📋 سجل الأحداث (Console)</div>
-            <div id="logContainer"></div>
-        </div>
-        
-        <hr>
-        <div style="font-size: 11px; color: #666; text-align: center;">
-            💡 ملاحظة: إذا ظهرت أخطاء، سيتم عرضها هنا
-        </div>
+<div class="container">
+    <h1>🎡 عجلة الحظ 🎡</h1>
+    <div class="wheel-container">
+        <canvas id="wheelCanvas" width="500" height="500"></canvas>
+        <div class="pointer"></div>
     </div>
+    <button id="spinBtn">🔄 اسحب العجلة 🔄</button>
+    <div class="info">
+        <p>🎁 <strong>الجوائز:</strong> 50 | 100 | 500 | 1000 | 5% | 25%</p>
+        <p id="spinCount">📊 عدد المرات: 0</p>
+        <p id="depositInfo">💰 إجمالي الشحن: 0 ل.س</p>
+        <p id="withdrawInfo">💸 إجمالي السحب: 0 ل.س</p>
+        <p id="status">✅ جاري التحميل...</p>
+    </div>
+    <div id="prizeDisplay" class="prize-display"></div>
+</div>
 
-    <script>
-        // ================ نظام التسجيل المرئي ================
-        const logContainer = document.getElementById('logContainer');
-        
-        function addLog(message, type = 'info') {
-            const logLine = document.createElement('div');
-            logLine.className = `log-line log-${type}`;
-            const time = new Date().toLocaleTimeString();
-            logLine.innerHTML = `[${time}] ${message}`;
-            logContainer.appendChild(logLine);
-            logContainer.scrollTop = logContainer.scrollHeight;
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+    // ========== رابط Google Apps Script الخاص بك ==========
+    // قم بوضع رابط السكريبت الذي نشرته في Google Apps Script
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzL2Lk6KY-kGnGolw8ucDypuMq3xr2pRkr0kwkYCx0k5tAm2RNtCLI6-_a2JiPJnGnb/exec";
+    
+    // إعدادات العجلة
+    const SEGMENTS = [
+        { name: "50", value: 50, type: "fixed", color: "#ff6b6b" },
+        { name: "100", value: 100, type: "fixed", color: "#4ecdc4" },
+        { name: "500", value: 500, type: "fixed", color: "#45b7d1" },
+        { name: "1000", value: 1000, type: "fixed", color: "#96ceb4" },
+        { name: "5%", value: 5, type: "percentage", color: "#ffeaa7" },
+        { name: "25%", value: 25, type: "percentage", color: "#dfe6e9" }
+    ];
+
+    const SEGMENT_ANGLE = 360 / SEGMENTS.length;
+    let currentAngle = 0;
+    let isSpinning = false;
+    let userData = null;
+    let currentSegment = null;
+    let animationFrame = null;
+
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // رسم العجلة
+    function drawWheel(highlightIndex = -1) {
+        const size = canvas.width;
+        const centerX = size / 2;
+        const centerY = size / 2;
+        const radius = size / 2;
+
+        for (let i = 0; i < SEGMENTS.length; i++) {
+            const startAngle = (i * SEGMENT_ANGLE + currentAngle) * Math.PI / 180;
+            const endAngle = ((i + 1) * SEGMENT_ANGLE + currentAngle) * Math.PI / 180;
             
-            // أيضاً نسجل في console الحقيقي
-            if (type === 'error') console.error(message);
-            else if (type === 'success') console.log('✅', message);
-            else console.log('📝', message);
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctx.closePath();
+            
+            ctx.fillStyle = SEGMENTS[i].color;
+            if (highlightIndex === i) {
+                ctx.fillStyle = "#ffd700";
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = "#ffd700";
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            ctx.fill();
+            
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctx.lineTo(centerX, centerY);
+            ctx.stroke();
+            
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(startAngle + (SEGMENT_ANGLE / 2) * Math.PI / 180);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font = `bold ${Math.floor(radius / 6)}px "Segoe UI"`;
+            ctx.fillStyle = "#1a1a2e";
+            ctx.shadowBlur = 0;
+            ctx.fillText(SEGMENTS[i].name, radius * 0.65, 0);
+            ctx.restore();
         }
         
-        function clearLogs() {
-            logContainer.innerHTML = '';
-            addLog('تم مسح السجل', 'info');
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius * 0.12, 0, 2 * Math.PI);
+        ctx.fillStyle = "#ffd700";
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+    }
+
+    // تحديد القطعة بناءً على الزاوية
+    function getCurrentSegment() {
+        const pointerAngle = 90;
+        let adjustedAngle = (currentAngle + pointerAngle) % 360;
+        let index = Math.floor(adjustedAngle / SEGMENT_ANGLE);
+        index = (SEGMENTS.length - index) % SEGMENTS.length;
+        return { index, segment: SEGMENTS[index] };
+    }
+
+    // دوران العجلة
+    async function spinWheel() {
+        if (isSpinning) {
+            showStatus("⏳ العجلة تدور حالياً... يرجى الانتظار", "warning");
+            return;
         }
         
-        // ================ تهيئة Telegram WebApp ================
-        addLog('🔧 بدء تهيئة Telegram WebApp...', 'info');
+        if (!userData) {
+            showStatus("❌ لم يتم تحميل بيانات المستخدم. يرجى إعادة المحاولة.", "error");
+            return;
+        }
         
-        let tg = null;
-        let tgReady = false;
+        if (!userData.can_spin) {
+            const remaining = userData.remaining_time || 0;
+            const hours = Math.floor(remaining / 3600000);
+            const minutes = Math.floor((remaining % 3600000) / 60000);
+            showStatus(`⏳ يمكنك اللعب مرة أخرى بعد ${hours} ساعة و ${minutes} دقيقة`, "warning");
+            return;
+        }
+        
+        isSpinning = true;
+        const spinBtn = document.getElementById('spinBtn');
+        spinBtn.disabled = true;
+        showStatus("🎡 جاري الدوران...", "info");
+        
+        // الحصول على الجائزة المستهدفة
+        const targetPrize = userData.prize.name;
+        const targetSegment = SEGMENTS.find(s => s.name === targetPrize);
+        
+        if (!targetSegment) {
+            showStatus("❌ خطأ في تحديد الجائزة. يرجى إعادة المحاولة.", "error");
+            spinBtn.disabled = false;
+            isSpinning = false;
+            return;
+        }
+        
+        const targetIndex = SEGMENTS.findIndex(s => s.name === targetPrize);
+        const fullRotations = 360 * (5 + Math.random() * 5);
+        const targetAngle = (targetIndex * SEGMENT_ANGLE);
+        
+        let newAngle = currentAngle + fullRotations;
+        newAngle = newAngle - (newAngle % SEGMENT_ANGLE) + targetAngle;
+        
+        const startAngle = currentAngle;
+        const duration = 3000;
+        const startTime = performance.now();
+        
+        function animateSpin(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(1, elapsed / duration);
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            currentAngle = startAngle + (newAngle - startAngle) * easeProgress;
+            drawWheel();
+            
+            if (progress < 1) {
+                animationFrame = requestAnimationFrame(animateSpin);
+            } else {
+                currentAngle = newAngle % 360;
+                drawWheel();
+                finishSpin(targetSegment);
+            }
+        }
+        
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        animationFrame = requestAnimationFrame(animateSpin);
+    }
+    
+    async function finishSpin(segment) {
+        isSpinning = false;
+        const spinBtn = document.getElementById('spinBtn');
+        spinBtn.disabled = false;
+        
+        // إرسال النتيجة إلى Google Apps Script
+        try {
+            const response = await fetch(GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    telegramId: userData.user_id,
+                    prize: segment.name,
+                    prize_type: segment.type,
+                    prize_value: segment.value,
+                    totalDeposits: userData.total_deposit || 0,
+                    totalWithdrawals: userData.total_withdraw || 0
+                })
+            });
+            
+            const result = await response.json();
+            console.log("✅ تم حفظ النتيجة:", result);
+            
+        } catch (e) {
+            console.log("❌ خطأ في إرسال النتيجة:", e);
+        }
+        
+        // عرض النتيجة للمستخدم
+        const prizeDisplay = document.getElementById('prizeDisplay');
+        if (segment.type === "fixed") {
+            prizeDisplay.innerHTML = `🎉 <strong>مبروك!</strong> لقد ربحت ${segment.value} ل.س 🎉<br>سيتم إضافتها إلى رصيدك فوراً!`;
+        } else {
+            prizeDisplay.innerHTML = `🎉 <strong>مبروك!</strong> لقد ربحت ${segment.name} بونص إضافي 🎉<br>سيتم تطبيقه على أول عملية شحن لك!`;
+        }
+        prizeDisplay.style.display = "block";
+        
+        showStatus(`🎁 لقد ربحت ${segment.name}!`, "success");
+        
+        // تحديث البيانات محلياً
+        if (userData) {
+            userData.spin_count++;
+            userData.can_spin = false;
+            updateInfoDisplay();
+        }
+        
+        // إغلاق WebApp بعد 3 ثوانٍ
+        setTimeout(() => {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.close();
+            }
+        }, 3000);
+    }
+    
+    function showStatus(msg, type) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerHTML = msg;
+        const colors = {
+            error: "#ff6b6b",
+            warning: "#ffd700",
+            success: "#4ecdc4",
+            info: "#4ecdc4"
+        };
+        statusDiv.style.color = colors[type] || "#ffffff";
+    }
+    
+    function updateInfoDisplay() {
+        if (userData) {
+            document.getElementById('spinCount').innerHTML = `📊 عدد المرات: ${userData.spin_count || 0}`;
+            document.getElementById('depositInfo').innerHTML = `💰 إجمالي الشحن: ${(userData.total_deposit || 0).toLocaleString()} ل.س`;
+            document.getElementById('withdrawInfo').innerHTML = `💸 إجمالي السحب: ${(userData.total_withdraw || 0).toLocaleString()} ل.س`;
+        }
+    }
+    
+    // تحميل بيانات المستخدم
+    async function loadUserData() {
+        let userId = null;
+        
+        // محاولة جلب userId من Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
+            const webApp = window.Telegram.WebApp;
+            const initData = webApp.initDataUnsafe;
+            userId = initData.user?.id;
+        }
+        
+        // إذا لم يتم العثور عليه، نستخدم userId من URL parameters
+        if (!userId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            userId = urlParams.get('user_id') || urlParams.get('telegramId');
+        }
+        
+        if (!userId) {
+            showStatus("❌ لم يتم التعرف على المستخدم. يرجى إعادة المحاولة.", "error");
+            return false;
+        }
         
         try {
-            tg = window.Telegram.WebApp;
-            addLog('✅ تم العثور على Telegram.WebApp', 'success');
-        } catch (e) {
-            addLog(`❌ خطأ: لم يتم العثور على Telegram.WebApp - ${e.message}`, 'error');
-            document.getElementById('tgStatus').innerHTML = '❌ غير متاح';
-            document.getElementById('tgStatus').style.color = '#ff4444';
-        }
-        
-        if (tg) {
-            try {
-                tg.ready();
-                addLog('✅ tg.ready() تم بنجاح', 'success');
-                
-                tg.expand();
-                addLog('✅ tg.expand() تم بنجاح', 'success');
-                
-                const user = tg.initDataUnsafe?.user;
-                if (user) {
-                    addLog(`👤 معلومات المستخدم: ${user.first_name} (ID: ${user.id})`, 'success');
-                } else {
-                    addLog('⚠️ لا توجد معلومات مستخدم (قد يكون خارج تليجرام)', 'info');
-                }
-                
-                document.getElementById('tgStatus').innerHTML = '✅ متصل وجاهز';
-                document.getElementById('tgStatus').style.color = '#00ff88';
-                tgReady = true;
-                
-            } catch (e) {
-                addLog(`❌ خطأ في تهيئة WebApp: ${e.message}`, 'error');
-                document.getElementById('tgStatus').innerHTML = '❌ خطأ في التهيئة';
-                document.getElementById('tgStatus').style.color = '#ff4444';
-            }
-        }
-        
-        // ================ إرسال البيانات ================
-        async function sendData() {
-            addLog('📤 بدء عملية الإرسال...', 'info');
+            showStatus("🔄 جاري التحقق من البيانات...", "info");
             
-            if (!tg) {
-                addLog('❌ فشل: Telegram.WebApp غير متاح', 'error');
-                alert('Telegram.WebApp غير متاح. تأكد من فتح الصفحة من داخل تليجرام!');
-                return;
+            const response = await fetch(`${GAS_URL}?action=checkEligibility&telegramId=${userId}`);
+            
+            if (!response.ok) {
+                throw new Error('فشل الاتصال بالسكريبت');
             }
             
-            if (!tgReady) {
-                addLog('❌ فشل: WebApp لم يتم تهيئته بشكل كامل', 'error');
-                return;
-            }
+            const result = await response.json();
             
-            // بيانات الاختبار
-            const testData = {
-                prize: "جائزة اختبارية",
-                prize_value: 1000,
-                prize_type: "amount",
-                spin_count: 1,
-                total_recharge: 500,
-                total_withdraw: 200,
-                user_id: tg.initDataUnsafe?.user?.id || "unknown",
-                timestamp: new Date().toISOString(),
-                test: true
+            userData = {
+                user_id: userId,
+                total_deposit: result.totalDeposits || 0,
+                total_withdraw: result.totalWithdrawals || 0,
+                spin_count: result.usageCount || 0,
+                can_spin: result.canSpin,
+                remaining_time: result.remainingTime || 0,
+                last_spin_time: result.lastSpinTime,
+                prize: result.prize || { name: "25%", type: "percentage", value: 25 }
             };
             
-            addLog(`📦 البيانات المرسلة: ${JSON.stringify(testData, null, 2)}`, 'info');
+            updateInfoDisplay();
             
-            try {
-                // محاولة الإرسال
-                addLog('📡 استدعاء tg.sendData()...', 'info');
-                tg.sendData(JSON.stringify(testData));
-                addLog('✅ tg.sendData() تم التنفيذ بنجاح!', 'success');
-                
-                // تغيير نص الزر
-                const sendBtn = document.getElementById('sendBtn');
-                sendBtn.textContent = '✅ تم الإرسال!';
-                sendBtn.style.background = '#00aa44';
-                
-                // إغلاق بعد 1.5 ثانية
-                addLog('⏳ سيتم إغلاق النافذة بعد 1.5 ثانية...', 'info');
-                setTimeout(() => {
-                    addLog('🔒 استدعاء tg.close()...', 'info');
-                    try {
-                        tg.close();
-                        addLog('✅ tg.close() تم بنجاح', 'success');
-                    } catch(e) {
-                        addLog(`⚠️ خطأ في الإغلاق: ${e.message}`, 'error');
-                    }
-                }, 1500);
-                
-            } catch (e) {
-                addLog(`❌ فشل الإرسال: ${e.message}`, 'error');
-                addLog(`📋 تفاصيل الخطأ: ${e.stack || 'لا توجد تفاصيل'}`, 'error');
-                alert(`خطأ في الإرسال: ${e.message}\n\nراجع السجل للتفاصيل`);
-            }
-        }
-        
-        // ================ التحقق من البيئة ================
-        function checkEnvironment() {
-            addLog('🔍 فحص البيئة...', 'info');
-            
-            // فحص البروتوكول
-            const protocol = window.location.protocol;
-            addLog(`🌐 البروتوكول: ${protocol}`, protocol === 'https:' ? 'success' : 'error');
-            if (protocol !== 'https:') {
-                addLog('⚠️ تحذير: تليجرام يتطلب HTTPS!', 'error');
+            if (userData.can_spin) {
+                const prizeText = userData.prize.type === "fixed" ? `${userData.prize.value} ل.س` : userData.prize.name;
+                showStatus(`🎯 الجائزة المتوقعة: ${prizeText}`, "info");
+            } else {
+                const hours = Math.floor(userData.remaining_time / 3600000);
+                const minutes = Math.floor((userData.remaining_time % 3600000) / 60000);
+                showStatus(`⏳ انتظر ${hours} ساعة و ${minutes} دقيقة`, "warning");
             }
             
-            // فحص URL
-            addLog(`🔗 الرابط الحالي: ${window.location.href}`, 'info');
+            return true;
             
-            // فحص المعاملات
-            const params = new URLSearchParams(window.location.search);
-            const hasParams = params.toString().length > 0;
-            addLog(`📋 معاملات الرابط: ${hasParams ? params.toString() : 'لا توجد'}`, 'info');
-        }
-        
-        // ================ ربط الأزرار ================
-        document.getElementById('sendBtn').onclick = sendData;
-        document.getElementById('closeBtn').onclick = () => {
-            addLog('🔒 إغلاق يدوي...', 'info');
-            try { tg.close(); } catch(e) { addLog(`خطأ: ${e.message}`, 'error'); }
-        };
-        document.getElementById('clearBtn').onclick = clearLogs;
-        
-        // ================ التشغيل التلقائي ================
-        addLog('🚀 بدء تشغيل صفحة الاختبار...', 'info');
-        checkEnvironment();
-        
-        // إرسال إشارة أن الصفحة جاهزة (اختياري)
-        setTimeout(() => {
-            addLog('✅ الصفحة جاهزة للاختبار', 'success');
-        }, 500);
-        
-        // عرض جميع الأخطاء غير المعالجة
-        window.onerror = function(msg, url, line, col, error) {
-            addLog(`🔥 خطأ غير متوقع: ${msg} في السطر ${line}`, 'error');
+        } catch (error) {
+            console.log("خطأ في جلب البيانات:", error);
+            showStatus("❌ فشل الاتصال بالخادم. يرجى المحاولة لاحقاً.", "error");
             return false;
-        };
-    </script>
+        }
+    }
+    
+    // تهيئة Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+        window.Telegram.WebApp.enableClosingConfirmation();
+    }
+    
+    // بدء التشغيل
+    loadUserData().then((success) => {
+        drawWheel();
+        if (success) {
+            document.getElementById('spinBtn').addEventListener('click', spinWheel);
+        } else {
+            document.getElementById('spinBtn').disabled = true;
+        }
+    });
+    
+    // تحديث الحجم عند تغيير الاتجاه
+    window.addEventListener('resize', () => drawWheel());
+</script>
 </body>
 </html>
