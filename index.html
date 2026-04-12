@@ -20,14 +20,13 @@
             font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
         }
 
-        /* شاشة التحميل */
         .loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             z-index: 1000;
             display: flex;
             justify-content: center;
@@ -72,7 +71,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(3px);
         }
 
@@ -169,7 +168,7 @@
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(20px);
             padding: 15px 30px;
             border-radius: 50px;
@@ -219,18 +218,17 @@
 
 <script>
     (function() {
-        // ==================== بيانات المستخدم من الرابط ====================
         let userData = null;
         let canSpinNow = false;
+        let targetSegmentIndex = -1; // الجائزة المحددة مسبقاً
         
-        // أقسام العجلة
         const SEGMENTS = [
-            { id: "50",   value: 50,   type: "coins",   imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331967.png" },
-            { id: "100",  value: 100,  type: "coins",   imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
-            { id: "500",  value: 500,  type: "coins",   imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331976.png" },
-            { id: "1000", value: 1000, type: "coins",   imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331985.png" },
-            { id: "5%",   value: 5,    type: "percent", imgUrl: "https://cdn-icons-png.flaticon.com/512/3208/3208699.png" },
-            { id: "25%",  value: 25,   type: "percent", imgUrl: "https://cdn-icons-png.flaticon.com/512/1040/1040243.png" }
+            { id: "50",   value: 50,   type: "coins",   prizeValue: 5000, imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331967.png" },
+            { id: "100",  value: 100,  type: "coins",   prizeValue: 10000, imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
+            { id: "500",  value: 500,  type: "coins",   prizeValue: 50000, imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331976.png" },
+            { id: "1000", value: 1000, type: "coins",   prizeValue: 100000, imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331985.png" },
+            { id: "5%",   value: 5,    type: "percent", prizeValue: 0, imgUrl: "https://cdn-icons-png.flaticon.com/512/3208/3208699.png" },
+            { id: "25%",  value: 25,   type: "percent", prizeValue: 0, imgUrl: "https://cdn-icons-png.flaticon.com/512/1040/1040243.png" }
         ];
 
         const COLORS = ["#E74C3C", "#F39C12", "#2ECC71", "#3498DB", "#9B59B6", "#E67E22"];
@@ -246,7 +244,6 @@
         const loadingScreen = document.getElementById("loadingScreen");
         const wheelContainer = document.getElementById("wheelContainer");
         
-        // ==================== استخراج البيانات من الرابط ====================
         function getDataFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const encodedData = urlParams.get('data');
@@ -267,103 +264,97 @@
             }
         }
         
-        // ==================== التحقق من إمكانية التدوير ====================
         function checkCanSpin(userInfo) {
             const now = Math.floor(Date.now() / 1000);
             const lastSpin = userInfo.last_spin || 0;
             const hoursPassed = (now - lastSpin) / 3600;
-            
-            // 48 ساعة بين كل تدوير
             return hoursPassed >= 48;
         }
         
-        // ==================== تحديد الجائزة حسب الشروط ====================
-        function determinePrize(userInfo) {
+        // تحديد الجائزة بناءً على البيانات (بدون عشوائية)
+        function determinePrizeByData(userInfo) {
             // أول استخدام -> 25%
             if (userInfo.spins_count === 0 && userInfo.first_spin_used === 0) {
-                return SEGMENTS.findIndex(s => s.id === "25%");
+                return { index: SEGMENTS.findIndex(s => s.id === "25%"), prize: "25%" };
             }
             
             // ثاني تدوير بعد شحن -> 50
             if (userInfo.spins_count === 1 && userInfo.total_charge > 0) {
-                return SEGMENTS.findIndex(s => s.id === "50");
+                return { index: SEGMENTS.findIndex(s => s.id === "50"), prize: "50" };
             }
             
             // ثالث تدوير -> 5%
             if (userInfo.spins_count === 2) {
-                return SEGMENTS.findIndex(s => s.id === "5%");
+                return { index: SEGMENTS.findIndex(s => s.id === "5%"), prize: "5%" };
             }
             
             // شرط 100: إجمالي الشحن > 250,000
             if (userInfo.total_charge > 250000) {
-                return SEGMENTS.findIndex(s => s.id === "100");
+                return { index: SEGMENTS.findIndex(s => s.id === "100"), prize: "100" };
             }
             
             // شرط 500: شحن > 700,000 وسحب <= 200,000
             if (userInfo.total_charge > 700000 && userInfo.total_withdraw <= 200000) {
-                return SEGMENTS.findIndex(s => s.id === "500");
+                return { index: SEGMENTS.findIndex(s => s.id === "500"), prize: "500" };
             }
             
             // شرط 1000: شحن > 1,800,000 وسحب <= 400,000
             if (userInfo.total_charge > 1800000 && userInfo.total_withdraw <= 400000) {
-                return SEGMENTS.findIndex(s => s.id === "1000");
+                return { index: SEGMENTS.findIndex(s => s.id === "1000"), prize: "1000" };
             }
             
             // افتراضياً -> 5%
-            return SEGMENTS.findIndex(s => s.id === "5%");
+            return { index: SEGMENTS.findIndex(s => s.id === "5%"), prize: "5%" };
         }
         
-        // ==================== تطبيق الجائزة وإرسال البيانات للبوت ====================
         function applyPrize(segment, userInfo) {
             let message = "";
-            let prizeApplied = false;
+            let prizeAmount = 0;
             
             if (segment.id === "25%") {
                 message = "🎉 25% رصيد إضافي على أول شحن! 🎉";
                 userInfo.first_spin_used = 1;
-                prizeApplied = true;
             }
             else if (segment.id === "50") {
-                message = "🎁 ربحت 5,000 ل.س تضاف إلى حسابك! 🎁";
-                prizeApplied = true;
+                prizeAmount = 5000;
+                message = `🎁 ربحت ${prizeAmount.toLocaleString()} ل.س تضاف إلى حسابك! 🎁`;
             }
             else if (segment.id === "5%") {
                 message = "✨ 5% إضافية على عملية الشحن التالية ✨";
-                prizeApplied = true;
             }
             else if (segment.id === "100") {
-                message = "🏆 ربحت 10,000 ل.س هدية! 🏆";
-                prizeApplied = true;
+                prizeAmount = 10000;
+                message = `🏆 ربحت ${prizeAmount.toLocaleString()} ل.س هدية! 🏆`;
             }
             else if (segment.id === "500") {
-                message = "💎 ربحت 50,000 ل.س في حسابك! 💎";
-                prizeApplied = true;
+                prizeAmount = 50000;
+                message = `💎 ربحت ${prizeAmount.toLocaleString()} ل.س في حسابك! 💎`;
             }
             else if (segment.id === "1000") {
-                message = "👑 فوز كبير! 100,000 ل.س مضافة 👑";
-                prizeApplied = true;
+                prizeAmount = 100000;
+                message = `👑 فوز كبير! ${prizeAmount.toLocaleString()} ل.س مضافة 👑`;
             }
             
             resultMsg.textContent = message;
             
-            if (prizeApplied) {
-                // تحديث بيانات المستخدم
-                userInfo.spins_count += 1;
-                userInfo.last_spin = Math.floor(Date.now() / 1000);
-                
-                // إرسال البيانات إلى البوت عبر Telegram WebApp
-                if (window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.sendData(JSON.stringify({
-                        user_id: userInfo.user_id,
-                        new_spin_time: userInfo.last_spin,
-                        new_spins_count: userInfo.spins_count,
-                        first_spin_used: userInfo.first_spin_used
-                    }));
-                }
-                
-                // حفظ البيانات محلياً
-                localStorage.setItem("userWheelData", JSON.stringify(userInfo));
+            // تحديث بيانات المستخدم
+            userInfo.spins_count += 1;
+            userInfo.last_spin = Math.floor(Date.now() / 1000);
+            
+            // إرسال البيانات إلى البوت عبر WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.sendData(JSON.stringify({
+                    user_id: userInfo.user_id,
+                    new_spin_time: userInfo.last_spin,
+                    new_spins_count: userInfo.spins_count,
+                    first_spin_used: userInfo.first_spin_used,
+                    prize_amount: prizeAmount,
+                    prize_type: segment.id
+                }));
             }
+            
+            // حفظ البيانات محلياً
+            localStorage.setItem("userWheelData", JSON.stringify(userInfo));
             
             setTimeout(() => {
                 if (resultMsg.textContent === message) {
@@ -372,7 +363,6 @@
             }, 4000);
         }
         
-        // ==================== رسم العجلة ====================
         function drawWheel() {
             const size = canvas.width;
             const centerX = size/2, centerY = size/2;
@@ -395,7 +385,6 @@
                 ctx.stroke();
             }
             
-            // رسم الصور
             for(let i = 0; i < SEGMENTS.length; i++) {
                 const midAngle = currentAngle + (i + 0.5) * angleStep;
                 const imgRadius = radius * 0.65;
@@ -407,7 +396,6 @@
                 }
             }
             
-            // دائرة المنتصف
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.12, 0, Math.PI * 2);
             ctx.fillStyle = "#FFD700";
@@ -418,7 +406,6 @@
             ctx.fill();
         }
         
-        // تحميل الصور
         function loadImages(callback) {
             let loaded = 0;
             SEGMENTS.forEach((seg, idx) => {
@@ -438,12 +425,8 @@
             });
         }
         
-        // دوران العجلة
         function startSpin() {
-            if(spinning || !canSpinNow) return;
-            
-            const targetIndex = determinePrize(userData);
-            if(targetIndex === -1) return;
+            if(spinning || !canSpinNow || targetSegmentIndex === -1) return;
             
             spinning = true;
             spinBtn.disabled = true;
@@ -454,7 +437,7 @@
             let currentRawAngle = (Math.PI * 2 - (currentAngle % (Math.PI * 2))) % (Math.PI * 2);
             let currentSeg = Math.floor(currentRawAngle / angleStep) % SEGMENTS.length;
             
-            let delta = (targetIndex - currentSeg + SEGMENTS.length) % SEGMENTS.length;
+            let delta = (targetSegmentIndex - currentSeg + SEGMENTS.length) % SEGMENTS.length;
             let targetAngleRad = delta * angleStep;
             let finalAngle = currentAngle + (spins * 2 * Math.PI) + targetAngleRad;
             
@@ -483,25 +466,31 @@
                     spinning = false;
                     spinBtn.disabled = false;
                     
-                    // بعد التدوير، نتحقق إذا كان يمكن التدوير مجدداً
                     canSpinNow = checkCanSpin(userData);
                     if (!canSpinNow) {
+                        spinBtn.disabled = true;
                         spinBtn.style.opacity = "0.5";
                     }
+                    
+                    // إغلاق الويب آب بعد ثواني
+                    setTimeout(() => {
+                        if (window.Telegram && window.Telegram.WebApp) {
+                            window.Telegram.WebApp.close();
+                        }
+                    }, 3000);
                 }
             }
             
             requestAnimationFrame(animate);
         }
         
-        // ==================== تهيئة الصفحة ====================
         async function init() {
-            // استخراج البيانات من الرابط
             const urlData = getDataFromURL();
             if (!urlData) {
                 loadingScreen.style.display = "none";
                 wheelContainer.style.opacity = "1";
                 spinBtn.style.display = "none";
+                resultMsg.textContent = "❌ خطأ في تحميل البيانات";
                 return;
             }
             
@@ -518,10 +507,14 @@
                 withdraw_count: urlData.withdraw_count || 0
             };
             
-            // التحقق من إمكانية التدوير
+            // تحديد الجائزة بناءً على البيانات (بدون عشوائية)
+            const prizeResult = determinePrizeByData(userData);
+            targetSegmentIndex = prizeResult.index;
+            
+            console.log(`الجائزة المحددة: ${prizeResult.prize} بناءً على بيانات المستخدم`);
+            
             canSpinNow = checkCanSpin(userData);
             
-            // تحميل الصور وإظهار العجلة
             loadImages(() => {
                 loadingScreen.style.display = "none";
                 wheelContainer.style.opacity = "1";
@@ -532,18 +525,17 @@
                     spinBtn.disabled = true;
                     spinBtn.style.opacity = "0.5";
                     const nextSpinTime = new Date((userData.last_spin + 48 * 3600) * 1000);
-                    resultMsg.textContent = `⏳ ينتظر 48 ساعة - متاح بعد: ${nextSpinTime.toLocaleTimeString()}`;
+                    resultMsg.textContent = `⏳ ينتظر 48 ساعة - متاح بعد: ${nextSpinTime.toLocaleString()}`;
                 } else {
                     spinBtn.disabled = false;
                     spinBtn.style.opacity = "1";
-                    resultMsg.textContent = "✨ اضغط للتدوير ✨";
+                    resultMsg.textContent = `🎯 الجائزة المحددة: ${prizeResult.prize} - اضغط للتدوير ✨`;
                 }
             });
             
             spinBtn.addEventListener("click", startSpin);
         }
         
-        // تغيير حجم canvas
         function resizeCanvas() {
             const wrapper = document.querySelector('.wheel-wrapper');
             const size = wrapper.clientWidth;
@@ -557,7 +549,6 @@
         window.addEventListener('resize', () => setTimeout(resizeCanvas, 100));
         setTimeout(resizeCanvas, 100);
         
-        // دمج مع Telegram WebApp
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand();
