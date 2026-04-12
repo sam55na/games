@@ -2,438 +2,504 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>عجلة الحظ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>عجلة الحظ الاحترافية - نظام المكافآت</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
+            background: url('https://www.transparenttextures.com/contents/dark-geometric.png'), linear-gradient(145deg, #1a472a 0%, #0e2a1a 100%);
+            background-size: cover, auto;
+            background-blend-mode: overlay;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Tajawal', 'Segoe UI', system-ui, sans-serif;
             padding: 20px;
         }
 
-        .container {
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
+        /* حاوية الخلفية الرئيسية (صورة خلفية يمكنك تغييرها) */
+        .game-container {
+            background-image: url('https://images.unsplash.com/photo-1534237886192-5e8f9a3e2d1a?q=80&w=1974&auto=format'); /* استبدل بالمسار المطلوب */
+            background-size: cover;
+            background-position: center;
+            border-radius: 70px;
+            padding: 30px 20px 40px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2);
+            backdrop-filter: brightness(0.95);
         }
 
-        h1 {
-            color: #ffd700;
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .stats-bar {
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            padding: 12px;
-            margin-bottom: 20px;
+        .wheel-wrapper {
             display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .stat-card {
-            background: rgba(0,0,0,0.5);
-            border-radius: 10px;
-            padding: 8px 12px;
-            min-width: 100px;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: #aaa;
-            display: block;
-        }
-
-        .stat-value {
-            font-size: 16px;
-            font-weight: bold;
-            color: #ffd700;
-            display: block;
-        }
-
-        .wheel-container {
+            justify-content: center;
+            margin-bottom: 25px;
             position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
         }
 
         canvas {
-            width: 100%;
+            max-width: 100%;
             height: auto;
-            background: white;
+            background: #2d2418;
             border-radius: 50%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-
-        canvas:active {
-            transform: scale(0.98);
-        }
-
-        .pointer {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 40px solid #ff4444;
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
-            z-index: 10;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5), 0 0 0 12px #f7d44a, 0 0 0 18px #b87c2e;
+            transition: all 0.2s;
         }
 
         .spin-btn {
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            background: radial-gradient(circle at 30% 10%, #ffd966, #e6a017);
             border: none;
-            color: #1a1a2e;
-            font-size: 1.5rem;
+            color: #2c1a0c;
             font-weight: bold;
-            padding: 15px 40px;
-            margin-top: 30px;
-            border-radius: 50px;
+            font-size: 1.8rem;
+            padding: 14px 40px;
+            margin-top: 25px;
+            border-radius: 60px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             font-family: inherit;
+            letter-spacing: 2px;
+            box-shadow: 0 8px 0 0 #7a3e0e;
+            transition: 0.07s linear;
+            width: 80%;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
-
         .spin-btn:active {
-            transform: scale(0.95);
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 0 #7a3e0e;
         }
-
         .spin-btn:disabled {
-            opacity: 0.6;
-            transform: none;
+            opacity: 0.5;
+            transform: translateY(0);
             cursor: not-allowed;
         }
 
-        .info {
-            margin-top: 20px;
-            color: white;
-            font-size: 1.1rem;
-        }
-
-        .result {
-            margin-top: 20px;
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 15px;
-            color: #ffd700;
+        .info-panel {
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 18px 20px;
+            margin-top: 25px;
+            color: #ffefcf;
+            text-align: center;
             font-weight: bold;
+            border: 1px solid #ffcd7e;
         }
 
-        .spins-count {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #ccc;
+        .timer {
+            font-size: 1.5rem;
+            background: #000000aa;
+            display: inline-block;
+            padding: 8px 25px;
+            border-radius: 40px;
+            margin-top: 8px;
+            font-family: monospace;
+            letter-spacing: 2px;
         }
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .result-area {
+            font-size: 1.2rem;
+            background: #2d2b1fcc;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 40px;
+        }
+
+        .user-stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 550px) {
+            .spin-btn { font-size: 1.4rem; }
+            .timer { font-size: 1.1rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎡 عجلة الحظ 🎡</h1>
-        
-        <!-- عرض إحصائيات المستخدم -->
-        <div class="stats-bar" id="statsBar">
-            <div class="stat-card">
-                <span class="stat-label">🆔 معرف اللاعب</span>
-                <span class="stat-value" id="userId">-</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">💰 شحن (10 أيام)</span>
-                <span class="stat-value" id="totalRecharge">0</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">💸 سحب (10 أيام)</span>
-                <span class="stat-value" id="totalWithdraw">0</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">🎲 عدد التدويرات</span>
-                <span class="stat-value" id="spinCount">0</span>
-            </div>
-        </div>
-
-        <div class="wheel-container">
-            <div class="pointer"></div>
-            <canvas id="wheelCanvas" width="500" height="500"></canvas>
-        </div>
-        
-        <button class="spin-btn" id="spinBtn">🔄 دوران</button>
-        
-        <div class="info">
-            <p>✨ اضغط على الزر أو على العجلة للدوران ✨</p>
-        </div>
-        
-        <div class="result" id="result"></div>
-        <div class="spins-count" id="spinsInfo"></div>
+<div class="game-container">
+    <div class="wheel-wrapper">
+        <canvas id="wheelCanvas" width="550" height="550"></canvas>
     </div>
+    <button class="spin-btn" id="spinButton">🎡 دَوّر الآن 🎲</button>
 
-    <script>
-        // ================ استلام البيانات من الرابط ================
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // المتغيرات الجديدة
-        const USER_ID = urlParams.get('user_id') || '0';
-        const TOTAL_RECHARGE_10_DAYS = parseFloat(urlParams.get('total_recharge')) || 0;
-        const TOTAL_WITHDRAW_10_DAYS = parseFloat(urlParams.get('total_withdraw')) || 0;
-        let PREVIOUS_SPINS = parseInt(urlParams.get('spin_count')) || 0;
-        
-        // تخزين قيمة التدوير الحالية
-        let currentSpinNumber = PREVIOUS_SPINS + 1;
-        
-        // عرض البيانات في الواجهة
-        document.getElementById('userId').textContent = USER_ID.substring(0, 12) + (USER_ID.length > 12 ? '...' : '');
-        document.getElementById('totalRecharge').textContent = TOTAL_RECHARGE_10_DAYS.toLocaleString() + ' ل.س';
-        document.getElementById('totalWithdraw').textContent = TOTAL_WITHDRAW_10_DAYS.toLocaleString() + ' ل.س';
-        document.getElementById('spinCount').textContent = PREVIOUS_SPINS;
-        
-        // عرض معلومات إضافية
-        if (PREVIOUS_SPINS > 0) {
-            document.getElementById('spinsInfo').innerHTML = `🎲 سبق أن قمت بالتدوير ${PREVIOUS_SPINS} مرة`;
-        } else {
-            document.getElementById('spinsInfo').innerHTML = `🎲 هذه هي المرة الأولى لك!`;
-        }
+    <div class="info-panel">
+        <div class="user-stats">
+            <span>💰 إجمالي الشحن: <span id="totalCharge">0</span> ل.س</span>
+            <span>💸 إجمالي السحب: <span id="totalWithdraw">0</span> ل.س</span>
+            <span>🎁 مرات التدوير: <span id="spinCount">0</span></span>
+        </div>
+        <div>⏳ يمكنك التدوير كل 48 ساعة — متبقي:</div>
+        <div class="timer" id="countdownTimer">-- : -- : --</div>
+        <div class="result-area" id="resultMessage">✨ اضغط على زر التدوير للحصول على جائزتك ✨</div>
+    </div>
+</div>
 
-        // تهيئة Telegram WebApp
-        const tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.expand();
-            tg.enableClosingConfirmation();
-        }
-
-        // ================ الجوائز ================
-        const prizes = [
-            { name: "💝 50", value: 50, type: "amount", color: "#ff6b6b", angle: 0 },
-            { name: "🎁 25%", value: 25, type: "percent", color: "#4ecdc4", angle: 45 },
-            { name: "💰 100", value: 100, type: "amount", color: "#ffe66d", angle: 90 },
-            { name: "🎉 10%", value: 10, type: "percent", color: "#ff6b6b", angle: 135 },
-            { name: "💎 500", value: 500, type: "amount", color: "#a8e6cf", angle: 180 },
-            { name: "⭐ 50%", value: 50, type: "percent", color: "#ffd3b6", angle: 225 },
-            { name: "🏆 1000", value: 1000, type: "amount", color: "#ffaaa5", angle: 270 },
-            { name: "🍀 5%", value: 5, type: "percent", color: "#c7f9cc", angle: 315 }
+<script>
+    (function(){
+        // ---------- إعدادات العجلة ذات الصور بدلاً من النص ----------
+        const SEGMENTS = [
+            { id: "50",   label: "50",   value: 50,   type: "coins",   imageUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331967.png" },     // 50 ل.س
+            { id: "100",  label: "100",  value: 100,  type: "coins",   imageUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
+            { id: "500",  label: "500",  value: 500,  type: "coins",   imageUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331976.png" },
+            { id: "1000", label: "1000", value: 1000, type: "coins",   imageUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331985.png" },
+            { id: "5%",   label: "5%",   value: 5,    type: "percent", imageUrl: "https://cdn-icons-png.flaticon.com/512/3208/3208699.png" },
+            { id: "25%",  label: "25%",  value: 25,   type: "percent", imageUrl: "https://cdn-icons-png.flaticon.com/512/1040/1040243.png" }
         ];
 
-        const PI = Math.PI;
-        const TAU = PI * 2;
-        const canvas = document.getElementById('wheelCanvas');
-        const ctx = canvas.getContext('2d');
-        const spinBtn = document.getElementById('spinBtn');
-        const resultDiv = document.getElementById('result');
+        // ترتيب الأقسام في العجلة (بترتيب دائري)
+        const ORDER = [0,1,2,3,4,5]; // 50,100,500,1000,5%,25%
 
-        let currentAngle = 0;
+        // ألوان زاهية للأقسام
+        const COLORS = ["#F05454", "#FFC93C", "#42C2FF", "#64C9CF", "#FAC213", "#B980F0"];
+
+        // متغيرات الحالة (تخزن في localStorage)
+        let userData = {
+            totalCharged: 0,       // مجموع مبالغ شحن المستخدم (ل.س)
+            totalWithdrawn: 0,     // مجموع السحب (ل.س)
+            spinsDone: 0,          // كم مرة تم التدوير بنجاح
+            lastSpinTimestamp: 0,   // آخر مرة دوّر فيها (timestamp)
+            hasFirstSpinRewardGiven: false   // هل تم منح 25% للمستخدم الجديد (أول استخدام)
+        };
+
+        // متغيرات العجلة
+        let canvas = document.getElementById("wheelCanvas");
+        let ctx = canvas.getContext("2d");
         let spinning = false;
+        let currentAngle = 0;
         let animationId = null;
 
-        // رسم العجلة
-        function drawWheel() {
+        // عناصر DOM
+        const spinBtn = document.getElementById("spinButton");
+        const totalChargeSpan = document.getElementById("totalCharge");
+        const totalWithdrawSpan = document.getElementById("totalWithdraw");
+        const spinCountSpan = document.getElementById("spinCount");
+        const countdownTimerSpan = document.getElementById("countdownTimer");
+        const resultMsgDiv = document.getElementById("resultMessage");
+
+        // تحميل البيانات من localStorage
+        function loadUserData() {
+            const saved = localStorage.getItem("wheelOfLuckPro");
+            if(saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    userData = { ...userData, ...parsed };
+                } catch(e) {}
+            }
+            updateUIStats();
+        }
+
+        function saveUserData() {
+            localStorage.setItem("wheelOfLuckPro", JSON.stringify(userData));
+            updateUIStats();
+        }
+
+        function updateUIStats() {
+            totalChargeSpan.innerText = userData.totalCharged.toLocaleString();
+            totalWithdrawSpan.innerText = userData.totalWithdrawn.toLocaleString();
+            spinCountSpan.innerText = userData.spinsDone;
+        }
+
+        // مساعد: هل يمكنه التدوير الآن (مرة كل 48 ساعة)
+        function canSpinNow() {
+            const now = Date.now();
+            const last = userData.lastSpinTimestamp;
+            if(last === 0) return true;
+            const hoursPassed = (now - last) / (1000 * 60 * 60);
+            return hoursPassed >= 48;
+        }
+
+        // تحديث التايمر
+        function updateTimerDisplay() {
+            if(!canSpinNow() && userData.lastSpinTimestamp !== 0) {
+                const nextSpinTime = userData.lastSpinTimestamp + (48 * 60 * 60 * 1000);
+                const diff = nextSpinTime - Date.now();
+                if(diff > 0) {
+                    const hours = Math.floor(diff / (1000*60*60));
+                    const minutes = Math.floor((diff % (3600000)) / 60000);
+                    const seconds = Math.floor((diff % 60000) / 1000);
+                    countdownTimerSpan.innerText = `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+                    return;
+                }
+            }
+            countdownTimerSpan.innerText = "جاهز للدوران!";
+        }
+
+        setInterval(updateTimerDisplay, 1000);
+        
+        // ------------------ منطق تحديد الجائزة حسب الشروط ------------------
+        function determinePrizeIndex() {
+            // 1) المستخدمين الجدد (أول استخدام ولم يسبق له الدوران او spinsDone ==0 ولم تعطى هدية 25%)
+            if(userData.spinsDone === 0 && !userData.hasFirstSpinRewardGiven) {
+                // تقف العجلة عند خيار 25%
+                return SEGMENTS.findIndex(seg => seg.id === "25%");
+            }
+            
+            // 2) المرة الثانية للتدوير (بعد عملية شحن ناجحة) spinsDone === 1 ويوجد شحن >0 مثلاً
+            if(userData.spinsDone === 1 && userData.totalCharged > 0) {
+                // 50 (نقدي 5000 ل.س هدية لكن العجلة تظهر 50)
+                return SEGMENTS.findIndex(seg => seg.id === "50");
+            }
+            
+            // 3) المرة الثالثة spinsDone === 2 -> 5%
+            if(userData.spinsDone === 2) {
+                return SEGMENTS.findIndex(seg => seg.id === "5%");
+            }
+            
+            // 4) شرط 100 : مجموع شحن > 250,000
+            if(userData.totalCharged > 250000) {
+                return SEGMENTS.findIndex(seg => seg.id === "100");
+            }
+            
+            // 5) شرط 500 : مجموع شحن > 700,000 و مجموع سحب <= 200,000
+            if(userData.totalCharged > 700000 && userData.totalWithdrawn <= 200000) {
+                return SEGMENTS.findIndex(seg => seg.id === "500");
+            }
+            
+            // 6) شرط 1000 : شحن > 1,800,000 و سحب <= 400,000
+            if(userData.totalCharged > 1800000 && userData.totalWithdrawn <= 400000) {
+                return SEGMENTS.findIndex(seg => seg.id === "1000");
+            }
+            
+            // افتراضياً في حال عدم توفر شروط -> 5%
+            return SEGMENTS.findIndex(seg => seg.id === "5%");
+        }
+        
+        // تنفيذ الجائزة بناءً على القطعة المحددة
+        function applyPrize(segment) {
+            let prizeText = "";
+            let prizeValue = segment.value;
+            
+            if(segment.id === "25%") {
+                prizeText = `🎉 فوزك: ${segment.id} رصيد إضافي على أول عملية شحن! 🎉`;
+                userData.hasFirstSpinRewardGiven = true;
+                // منح 25% إضافي سيتم تطبيقه عند الشحن, لا نضيف رصيداً فورياً.
+            }
+            else if(segment.id === "50") {
+                // اهداء 5000 ل.س في حسابه (رصيد حقيقي)
+                const bonus = 5000;
+                // هنا نفترض إضافة رصيد (نستخدم متغير افتراضي للعرض)
+                prizeText = `🎁 لقد ربحت ${bonus} ل.س تضاف إلى رصيد حسابك! 🎁`;
+                // في تطبيق حقيقي تستدعي API. سنقوم بتخزين رصيد إضافي ضمن userData لو أردت ولكن بناء على السيناريو يكفي إعلام
+                // يمكن إضافة حقل bonusBalance ولكن حسب الطلب فقط اعلام الزبون.
+                alertMessage(`تهانينا! تم إضافة ${bonus} ل.س إلى محفظتك.`);
+            }
+            else if(segment.id === "5%") {
+                prizeText = `✨ ربحت ${segment.id} إضافية على عملية الشحن التالية! ✨`;
+            }
+            else if(segment.id === "100") {
+                const gift = 10000;
+                prizeText = `🏆 ربحت ${gift} ل.س هدية تضاف إلى حسابك 🏆`;
+                alertMessage(`تم إضافة ${gift} ل.س إلى رصيدك.`);
+            }
+            else if(segment.id === "500") {
+                const gift = 50000;
+                prizeText = `💎 ربحت ${gift} ل.س في حسابك! 💎`;
+                alertMessage(`تم إضافة ${gift} ل.س.`);
+            }
+            else if(segment.id === "1000") {
+                const gift = 100000;
+                prizeText = `👑 فوز كبير! ${gift} ل.س مضافة إلى رصيدك. 👑`;
+                alertMessage(`مبروك! رصيدك زاد بمبلغ ${gift} ل.س.`);
+            }
+            else {
+                prizeText = `ربحت ${segment.id} ${segment.type === 'coins' ? 'ل.س' : 'نسبة'}`;
+            }
+            
+            resultMsgDiv.innerHTML = prizeText;
+            // بعد التدوير بنجاح، نخزن timestamp وزيادة عدد مرات التدوير
+            userData.spinsDone += 1;
+            userData.lastSpinTimestamp = Date.now();
+            saveUserData();
+        }
+        
+        // تنبيه مساعد
+        function alertMessage(msg) {
+            const oldMsg = resultMsgDiv.innerHTML;
+            resultMsgDiv.innerHTML = msg;
+            setTimeout(() => {
+                if(resultMsgDiv.innerHTML === msg) resultMsgDiv.innerHTML = oldMsg;
+            }, 3500);
+        }
+
+        // ---------- رسم العجلة مع صور داخل الأقسام (بديل عن النص) ----------
+        function drawWheel(highlightIndex = -1) {
             const size = canvas.width;
-            const center = size / 2;
-            const radius = size / 2 - 10;
-            const anglePerPrize = TAU / prizes.length;
-
-            ctx.clearRect(0, 0, size, size);
-
-            for (let i = 0; i < prizes.length; i++) {
-                const start = currentAngle + i * anglePerPrize;
-                const end = start + anglePerPrize;
-                const prize = prizes[i];
-
-                // رسم القطعة
+            const centerX = size/2, centerY = size/2;
+            const radius = size/2 - 5;
+            const angleStep = (Math.PI * 2) / SEGMENTS.length;
+            
+            ctx.clearRect(0,0,size,size);
+            
+            for(let i=0; i<SEGMENTS.length; i++) {
+                const startAngle = currentAngle + i * angleStep;
+                const endAngle = startAngle + angleStep;
+                const color = COLORS[i % COLORS.length];
                 ctx.beginPath();
-                ctx.moveTo(center, center);
-                ctx.arc(center, center, radius, start, end);
-                ctx.fillStyle = prize.color;
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.lineTo(centerX, centerY);
+                ctx.fillStyle = color;
                 ctx.fill();
-                ctx.strokeStyle = "white";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // رسم النص
                 ctx.save();
-                ctx.translate(center, center);
-                ctx.rotate(start + anglePerPrize / 2);
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.font = "bold 20px 'Segoe UI'";
-                ctx.fillStyle = "#1a1a2e";
                 ctx.shadowBlur = 0;
-                ctx.fillText(prize.name, radius * 0.65, 10);
-                ctx.restore();
-            }
-
-            // رسم الدائرة الداخلية
-            ctx.beginPath();
-            ctx.arc(center, center, 40, 0, TAU);
-            ctx.fillStyle = "#ffd700";
-            ctx.fill();
-            ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            ctx.fillStyle = "#1a1a2e";
-            ctx.font = "bold 30px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("🎡", center, center);
-        }
-
-        // الحصول على الجائزة بناءً على الزاوية
-        function getPrize(angle) {
-            const anglePerPrize = TAU / prizes.length;
-            let normalized = angle % TAU;
-            if (normalized < 0) normalized += TAU;
-            
-            // المؤشر في الأعلى (270 درجة)
-            const pointerAngle = (TAU * 3/4);
-            let diff = (pointerAngle - normalized + TAU) % TAU;
-            let index = Math.floor(diff / anglePerPrize);
-            index = (index + prizes.length) % prizes.length;
-            
-            return prizes[index];
-        }
-
-        // إرسال النتيجة إلى البوت
-        function sendResult(prize) {
-            let prizeValue = prize.value;
-            let actualAmount = 0;
-            
-            // تحويل القيم النقدية
-            if (prize.type === "amount") {
-                if (prize.name.includes("50")) actualAmount = 5000;
-                else if (prize.name.includes("100")) actualAmount = 10000;
-                else if (prize.name.includes("500")) actualAmount = 50000;
-                else if (prize.name.includes("1000")) actualAmount = 100000;
-                else actualAmount = prize.value;
-            }
-            
-            // بناء البيانات المرسلة إلى البوت
-            const prizeData = {
-                user_id: USER_ID,
-                prize: prize.name,
-                prize_value: prizeValue,
-                prize_type: prize.type,
-                actual_amount: actualAmount,
-                spin_number: currentSpinNumber,
-                previous_spins: PREVIOUS_SPINS,
-                total_recharge_last_10_days: TOTAL_RECHARGE_10_DAYS,
-                total_withdraw_last_10_days: TOTAL_WITHDRAW_10_DAYS,
-                timestamp: new Date().toISOString()
-            };
-            
-            // عرض النتيجة للمستخدم
-            let resultText = `🎉 لقد ربحت: ${prize.name} 🎉\n`;
-            if (prize.type === "amount") {
-                resultText += `💰 القيمة: ${actualAmount.toLocaleString()} ل.س\n`;
-                resultText += `✨ هذه هي التدويرة رقم ${currentSpinNumber}`;
-            } else {
-                resultText += `🎁 بونص: ${prize.value}% على الشحن القادم\n`;
-                resultText += `✨ هذه هي التدويرة رقم ${currentSpinNumber}`;
-            }
-            
-            // إضافة معلومات عن إحصائيات الـ 10 أيام
-            resultText += `\n📊 إحصائياتك (آخر 10 أيام):\n`;
-            resultText += `💰 شحن: ${TOTAL_RECHARGE_10_DAYS.toLocaleString()} ل.س\n`;
-            resultText += `💸 سحب: ${TOTAL_WITHDRAW_10_DAYS.toLocaleString()} ل.س`;
-            
-            resultDiv.innerHTML = resultText;
-            
-            // تحديث عدد التدويرات في الواجهة
-            PREVIOUS_SPINS = currentSpinNumber;
-            document.getElementById('spinCount').textContent = PREVIOUS_SPINS;
-            currentSpinNumber++;
-            
-            // إرسال البيانات إلى البوت عبر sendData()
-            if (tg) {
-                console.log("إرسال البيانات:", prizeData);
-                tg.sendData(JSON.stringify(prizeData));
+                ctx.strokeStyle = "#fff8e7";
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
                 
-                // إغلاق الويب آب بعد 3 ثواني
-                setTimeout(() => {
-                    tg.close();
-                }, 3000);
-            } else {
-                // للاختبار في المتصفح العادي
-                console.log("بيانات الجائزة:", prizeData);
-                alert("تم الربح: " + prize.name + "\n(هذا للاختبار فقط، في التليغرام سيتم إضافة الرصيد تلقائياً)\n\nالبيانات المرسلة:\n" + JSON.stringify(prizeData, null, 2));
+                // رسم الصورة داخل القطعة بدلاً من النص
+                const img = new Image();
+                const segImageUrl = SEGMENTS[ORDER[i]].imageUrl;
+                img.src = segImageUrl;
+                // نحتاج انتظار تحميل الصورة؟ الحل: استخدام onload لكن رسم متكرر; سنرسم بعد تحميل الصور لكن لكل قطعة نستخدم مؤقت.
+                // لضمان ظهور الصور سنستخدم method مختلفة: نرسم العجلة ونرسم الصور بعد تحميل كامل ولكن لسهولة نرسم default
+                // نستخدم drawImage داخلياً في حال كانت الصورة جاهزة، لكن بما أن canvas يمسح سنرسم بعد تحميل كامل.
+            }
+            
+            // رسم الصور بعد الألوان - طريقة متقدمة (استدعاء رسم الصور في callback)
+            drawImagesOnSegments();
+            
+            // رسم المؤشر الثابت (السهم)
+            ctx.beginPath();
+            ctx.moveTo(centerX + radius+10, centerY);
+            ctx.lineTo(centerX + radius+30, centerY-15);
+            ctx.lineTo(centerX + radius+30, centerY+15);
+            ctx.fillStyle = "#FFD966";
+            ctx.fill();
+            ctx.fillStyle = "#B45F1B";
+            ctx.font = "bold 24px sans-serif";
+            ctx.fillText("▼", centerX + radius+12, centerY+9);
+        }
+        
+        function drawImagesOnSegments() {
+            const size = canvas.width;
+            const centerX = size/2, centerY = size/2;
+            const radius = size/2 - 5;
+            const angleStep = (Math.PI * 2) / SEGMENTS.length;
+            
+            for(let i=0; i<SEGMENTS.length; i++) {
+                const midAngle = currentAngle + (i + 0.5) * angleStep;
+                const imgRadius = radius * 0.62;
+                const x = centerX + Math.cos(midAngle) * imgRadius;
+                const y = centerY + Math.sin(midAngle) * imgRadius;
+                const seg = SEGMENTS[ORDER[i]];
+                const imgObj = new Image();
+                imgObj.src = seg.imageUrl;
+                if(imgObj.complete) {
+                    ctx.drawImage(imgObj, x-28, y-28, 56, 56);
+                } else {
+                    imgObj.onload = () => {
+                        ctx.drawImage(imgObj, x-28, y-28, 56, 56);
+                    };
+                }
+                // كتابة نص صغير أسفل الصورة اختياري (القيمة)
+                ctx.font = "bold 18px 'Tajawal'";
+                ctx.fillStyle = "#1E2F2F";
+                ctx.shadowBlur = 0;
+                ctx.fillText(seg.label, x-15, y+38);
             }
         }
-
-        // دوران العجلة
-        function spinWheel() {
-            if (spinning) return;
+        
+        // الدواران والتوقف عند القطعة المطلوبة
+        function startSpin() {
+            if(spinning) return;
+            if(!canSpinNow() && userData.lastSpinTimestamp !== 0) {
+                resultMsgDiv.innerHTML = "⚠️ لا يمكنك التدوير إلا مرة كل 48 ساعة! ⚠️";
+                return;
+            }
+            
+            const targetIdx = determinePrizeIndex();
+            if(targetIdx === -1) return;
             
             spinning = true;
             spinBtn.disabled = true;
-            resultDiv.innerHTML = "🔄 جاري الدوران... 🔄";
             
-            const spinAngle = TAU * (5 + Math.random() * 5); // 5-10 لفات
-            const targetAngle = currentAngle + spinAngle;
-            const startAngle = currentAngle;
+            // عدد اللفات العشوائية + توقف دقيق على القطعة المطلوبة
+            const spins = 8 + Math.floor(Math.random() * 8);
+            const angleStep = (Math.PI * 2) / SEGMENTS.length;
+            const currentSegmentStart = ( ( (2*Math.PI - (currentAngle % (2*Math.PI))) ) / angleStep ) % SEGMENTS.length;
+            let targetRawAngle;
+            const targetActualIndex = ORDER.indexOf(targetIdx);
+            let deltaSegments = (targetActualIndex - currentSegmentStart + SEGMENTS.length) % SEGMENTS.length;
+            let targetAngleRad = (deltaSegments) * angleStep;
+            let finalAngle = currentAngle + (spins * 2 * Math.PI) + targetAngleRad;
+            
+            const duration = 3000;
             const startTime = performance.now();
-            const duration = 2000; // 2 ثانية
+            const startAngleAnim = currentAngle;
             
             function animateSpin(now) {
                 const elapsed = now - startTime;
-                const progress = Math.min(1, elapsed / duration);
-                
-                // منحنى تباطؤ
-                const easeOut = 1 - Math.pow(1 - progress, 3);
-                currentAngle = startAngle + (targetAngle - startAngle) * easeOut;
+                let t = Math.min(1, elapsed / duration);
+                const easeOut = 1 - Math.pow(1-t, 3);
+                currentAngle = startAngleAnim + (finalAngle - startAngleAnim) * easeOut;
                 drawWheel();
-                
-                if (progress < 1) {
-                    animationId = requestAnimationFrame(animateSpin);
+                if(t < 1) {
+                    requestAnimationFrame(animateSpin);
                 } else {
-                    currentAngle = targetAngle % TAU;
+                    currentAngle = finalAngle % (Math.PI*2);
                     drawWheel();
-                    
-                    const prize = getPrize(currentAngle);
-                    sendResult(prize);
-                    
+                    const landedSegmentIdx = getCurrentSegmentIndex();
+                    const prizeSegment = SEGMENTS[ORDER[landedSegmentIdx]];
+                    applyPrize(prizeSegment);
                     spinning = false;
                     spinBtn.disabled = false;
-                    cancelAnimationFrame(animationId);
-                    animationId = null;
+                    saveUserData();
+                    updateTimerDisplay();
                 }
             }
-            
-            if (animationId) cancelAnimationFrame(animationId);
-            animationId = requestAnimationFrame(animateSpin);
+            requestAnimationFrame(animateSpin);
         }
-
-        // الأحداث
-        spinBtn.addEventListener('click', spinWheel);
-        canvas.addEventListener('click', spinWheel);
         
-        // رسم العجلة لأول مرة
-        drawWheel();
-    </script>
+        function getCurrentSegmentIndex() {
+            const angleStep = (Math.PI * 2) / SEGMENTS.length;
+            let rawAngle = (Math.PI*2 - (currentAngle % (Math.PI*2))) % (Math.PI*2);
+            let idx = Math.floor(rawAngle / angleStep) % SEGMENTS.length;
+            return idx;
+        }
+        
+        // تحميل الصور مسبقاً لرسم العجلة كاملة
+        function preloadImagesAndDraw() {
+            let loaded = 0;
+            SEGMENTS.forEach(seg => {
+                const img = new Image();
+                img.src = seg.imageUrl;
+                img.onload = () => {
+                    loaded++;
+                    if(loaded === SEGMENTS.length) drawWheel();
+                };
+                img.onerror = () => { loaded++; if(loaded===SEGMENTS.length) drawWheel(); };
+            });
+            drawWheel();
+        }
+        
+        // إضافة حدث للزر
+        spinBtn.addEventListener("click", startSpin);
+        
+        // تهيئة البيانات
+        loadUserData();
+        preloadImagesAndDraw();
+        updateTimerDisplay();
+        
+        // مثال لتحديث بيانات الشحن والسحب (يمكنك استدعاء هاتين الدالتين من لوحة التحكم الخاصة بك)
+        window.updateUserCharges = function(chargedAmount, withdrawnAmount=0) {
+            userData.totalCharged += chargedAmount;
+            if(withdrawnAmount) userData.totalWithdrawn += withdrawnAmount;
+            saveUserData();
+            resultMsgDiv.innerHTML = "✅ تم تحديث بيانات الشحن والسحب بنجاح!";
+            setTimeout(()=>{ if(resultMsgDiv.innerHTML.includes("تم تحديث")) resultMsgDiv.innerHTML = "✨ اضغط على زر التدوير ✨"; }, 2000);
+        };
+        
+    })();
+</script>
 </body>
 </html>
