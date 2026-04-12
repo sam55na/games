@@ -36,6 +36,38 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
+        .stats-bar {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card {
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 8px 12px;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #aaa;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffd700;
+            display: block;
+        }
+
         .wheel-container {
             position: relative;
             width: 100%;
@@ -111,6 +143,12 @@
             font-weight: bold;
         }
 
+        .spins-count {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #ccc;
+        }
+
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -120,25 +158,67 @@
 <body>
     <div class="container">
         <h1>🎡 عجلة الحظ 🎡</h1>
+        
+        <!-- عرض إحصائيات المستخدم -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-card">
+                <span class="stat-label">🆔 معرف اللاعب</span>
+                <span class="stat-value" id="userId">-</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">💰 شحن (10 أيام)</span>
+                <span class="stat-value" id="totalRecharge">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">💸 سحب (10 أيام)</span>
+                <span class="stat-value" id="totalWithdraw">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">🎲 عدد التدويرات</span>
+                <span class="stat-value" id="spinCount">0</span>
+            </div>
+        </div>
+
         <div class="wheel-container">
             <div class="pointer"></div>
             <canvas id="wheelCanvas" width="500" height="500"></canvas>
         </div>
+        
         <button class="spin-btn" id="spinBtn">🔄 دوران</button>
+        
         <div class="info">
             <p>✨ اضغط على الزر أو على العجلة للدوران ✨</p>
         </div>
+        
         <div class="result" id="result"></div>
+        <div class="spins-count" id="spinsInfo"></div>
     </div>
 
     <script>
-        // الحصول على بيانات المستخدم من URL
+        // ================ استلام البيانات من الرابط ================
         const urlParams = new URLSearchParams(window.location.search);
-        const USER_ID = urlParams.get('user_id');
-        const TOTAL_RECHARGE = parseFloat(urlParams.get('total_recharge')) || 0;
-        const TOTAL_WITHDRAW = parseFloat(urlParams.get('total_withdraw')) || 0;
-        let SPIN_COUNT = parseInt(urlParams.get('spin_count')) || 0;
-        const LAST_SPIN_TIME = parseInt(urlParams.get('last_spin_time')) || 0;
+        
+        // المتغيرات الجديدة
+        const USER_ID = urlParams.get('user_id') || '0';
+        const TOTAL_RECHARGE_10_DAYS = parseFloat(urlParams.get('total_recharge')) || 0;
+        const TOTAL_WITHDRAW_10_DAYS = parseFloat(urlParams.get('total_withdraw')) || 0;
+        let PREVIOUS_SPINS = parseInt(urlParams.get('spin_count')) || 0;
+        
+        // تخزين قيمة التدوير الحالية
+        let currentSpinNumber = PREVIOUS_SPINS + 1;
+        
+        // عرض البيانات في الواجهة
+        document.getElementById('userId').textContent = USER_ID.substring(0, 12) + (USER_ID.length > 12 ? '...' : '');
+        document.getElementById('totalRecharge').textContent = TOTAL_RECHARGE_10_DAYS.toLocaleString() + ' ل.س';
+        document.getElementById('totalWithdraw').textContent = TOTAL_WITHDRAW_10_DAYS.toLocaleString() + ' ل.س';
+        document.getElementById('spinCount').textContent = PREVIOUS_SPINS;
+        
+        // عرض معلومات إضافية
+        if (PREVIOUS_SPINS > 0) {
+            document.getElementById('spinsInfo').innerHTML = `🎲 سبق أن قمت بالتدوير ${PREVIOUS_SPINS} مرة`;
+        } else {
+            document.getElementById('spinsInfo').innerHTML = `🎲 هذه هي المرة الأولى لك!`;
+        }
 
         // تهيئة Telegram WebApp
         const tg = window.Telegram?.WebApp;
@@ -148,7 +228,7 @@
             tg.enableClosingConfirmation();
         }
 
-        // الجوائز (زواياها)
+        // ================ الجوائز ================
         const prizes = [
             { name: "💝 50", value: 50, type: "amount", color: "#ff6b6b", angle: 0 },
             { name: "🎁 25%", value: 25, type: "percent", color: "#4ecdc4", angle: 45 },
@@ -241,11 +321,10 @@
 
         // إرسال النتيجة إلى البوت
         function sendResult(prize) {
-            SPIN_COUNT++;
-            
             let prizeValue = prize.value;
             let actualAmount = 0;
             
+            // تحويل القيم النقدية
             if (prize.type === "amount") {
                 if (prize.name.includes("50")) actualAmount = 5000;
                 else if (prize.name.includes("100")) actualAmount = 10000;
@@ -254,32 +333,55 @@
                 else actualAmount = prize.value;
             }
             
+            // بناء البيانات المرسلة إلى البوت
             const prizeData = {
+                user_id: USER_ID,
                 prize: prize.name,
                 prize_value: prizeValue,
                 prize_type: prize.type,
-                spin_count: SPIN_COUNT,
-                total_recharge: TOTAL_RECHARGE,
-                total_withdraw: TOTAL_WITHDRAW
+                actual_amount: actualAmount,
+                spin_number: currentSpinNumber,
+                previous_spins: PREVIOUS_SPINS,
+                total_recharge_last_10_days: TOTAL_RECHARGE_10_DAYS,
+                total_withdraw_last_10_days: TOTAL_WITHDRAW_10_DAYS,
+                timestamp: new Date().toISOString()
             };
             
             // عرض النتيجة للمستخدم
             let resultText = `🎉 لقد ربحت: ${prize.name} 🎉\n`;
             if (prize.type === "amount") {
-                resultText += `💰 القيمة: ${actualAmount.toLocaleString()} ل.س`;
+                resultText += `💰 القيمة: ${actualAmount.toLocaleString()} ل.س\n`;
+                resultText += `✨ هذه هي التدويرة رقم ${currentSpinNumber}`;
             } else {
-                resultText += `🎁 بونص: ${prize.value}% على الشحن القادم`;
+                resultText += `🎁 بونص: ${prize.value}% على الشحن القادم\n`;
+                resultText += `✨ هذه هي التدويرة رقم ${currentSpinNumber}`;
             }
+            
+            // إضافة معلومات عن إحصائيات الـ 10 أيام
+            resultText += `\n📊 إحصائياتك (آخر 10 أيام):\n`;
+            resultText += `💰 شحن: ${TOTAL_RECHARGE_10_DAYS.toLocaleString()} ل.س\n`;
+            resultText += `💸 سحب: ${TOTAL_WITHDRAW_10_DAYS.toLocaleString()} ل.س`;
+            
             resultDiv.innerHTML = resultText;
+            
+            // تحديث عدد التدويرات في الواجهة
+            PREVIOUS_SPINS = currentSpinNumber;
+            document.getElementById('spinCount').textContent = PREVIOUS_SPINS;
+            currentSpinNumber++;
             
             // إرسال البيانات إلى البوت عبر sendData()
             if (tg) {
+                console.log("إرسال البيانات:", prizeData);
                 tg.sendData(JSON.stringify(prizeData));
-                tg.close();
+                
+                // إغلاق الويب آب بعد 3 ثواني
+                setTimeout(() => {
+                    tg.close();
+                }, 3000);
             } else {
                 // للاختبار في المتصفح العادي
                 console.log("بيانات الجائزة:", prizeData);
-                alert("تم الربح: " + prize.name + "\n(هذا للاختبار فقط، في التليغرام سيتم إضافة الرصيد تلقائياً)");
+                alert("تم الربح: " + prize.name + "\n(هذا للاختبار فقط، في التليغرام سيتم إضافة الرصيد تلقائياً)\n\nالبيانات المرسلة:\n" + JSON.stringify(prizeData, null, 2));
             }
         }
 
@@ -332,12 +434,6 @@
         
         // رسم العجلة لأول مرة
         drawWheel();
-        
-        // إظهار عدد المرات المتبقية إذا وجد
-        if (SPIN_COUNT > 0) {
-            const infoDiv = document.querySelector('.info');
-            infoDiv.innerHTML += `<p>🎲 عدد مرات اللعب: ${SPIN_COUNT}</p>`;
-        }
     </script>
 </body>
 </html>
