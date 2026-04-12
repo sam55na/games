@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>عجلة الحظ</title>
+    <title>عجلة الحظ - بوت تلغرام</title>
     <style>
         * {
             margin: 0;
@@ -11,14 +11,46 @@
             box-sizing: border-box;
             user-select: none;
         }
+
         body {
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            background: linear-gradient(135deg, #0f0c1f, #1a1a2e);
-            font-family: system-ui;
+            background: linear-gradient(135deg, #0f0c1f 0%, #1a1a2e 50%, #0f0c1f 100%);
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
         }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,215,0,0.3);
+            border-top-color: #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .wheel-container {
+            position: relative;
             width: 100%;
             height: 100%;
             display: flex;
@@ -26,268 +58,532 @@
             align-items: center;
             background-image: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2071&auto=format');
             background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
+
+        .wheel-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(3px);
+        }
+
+        .wheel-content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
         .wheel-wrapper {
             position: relative;
-            width: 90vw;
-            max-width: 500px;
-            aspect-ratio: 1/1;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-width: 550px;
+            margin: 0 auto;
         }
+
         canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100% !important;
             height: 100% !important;
             border-radius: 50%;
-            box-shadow: 0 0 0 8px gold;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), 0 0 0 8px rgba(255, 215, 0, 0.6), 0 0 0 15px rgba(255, 215, 0, 0.3);
         }
+
         .lightning-icon {
             position: absolute;
             top: -40px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 48px;
-            animation: glow 1s infinite;
+            z-index: 20;
+            filter: drop-shadow(0 0 10px #ffd700);
+            animation: glow 1.2s ease-in-out infinite;
             pointer-events: none;
         }
+
         @keyframes glow {
-            0% { text-shadow: 0 0 5px gold; transform: translateX(-50%) scale(1);}
-            50% { text-shadow: 0 0 25px orange; transform: translateX(-50%) scale(1.2);}
+            0% {
+                text-shadow: 0 0 5px #ffd700, 0 0 10px #ffaa00;
+                transform: translateX(-50%) scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                text-shadow: 0 0 20px #ffea00, 0 0 35px #ffcc00;
+                transform: translateX(-50%) scale(1.15);
+                opacity: 1;
+            }
+            100% {
+                text-shadow: 0 0 5px #ffd700, 0 0 10px #ffaa00;
+                transform: translateX(-50%) scale(1);
+                opacity: 0.8;
+            }
         }
-        .spin-btn {
-            display: block;
-            margin: 30px auto;
-            padding: 14px 40px;
-            background: gold;
+
+        .spin-button {
+            margin-top: 40px;
+            background: linear-gradient(135deg, #ffd89b, #c7e9fb);
             border: none;
+            padding: 16px 50px;
             border-radius: 60px;
             font-size: 1.5rem;
             font-weight: bold;
+            color: #2c1810;
             cursor: pointer;
+            font-family: inherit;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 5px 0 0 #b8860b;
+            transition: 0.08s linear;
+            text-transform: uppercase;
         }
-        .result {
+
+        .spin-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 2px 0 0 #b8860b;
+        }
+
+        .spin-button:disabled {
+            opacity: 0.6;
+            transform: translateY(0);
+            cursor: not-allowed;
+        }
+
+        .result-message {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            color: gold;
-            text-align: center;
-            padding: 12px;
-            border-radius: 40px;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: #ffd966;
+            font-size: 1.1rem;
             font-weight: bold;
+            text-align: center;
+            z-index: 100;
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+            .spin-button {
+                padding: 12px 35px;
+                font-size: 1.2rem;
+            }
+            .result-message {
+                font-size: 0.9rem;
+                padding: 10px 20px;
+                white-space: normal;
+                width: 90%;
+            }
+            .lightning-icon {
+                font-size: 36px;
+                top: -30px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="wheel-container">
-    <div style="text-align:center">
+<div class="loading-screen" id="loadingScreen">
+    <div class="spinner"></div>
+    <div>جاري تحميل البيانات...</div>
+</div>
+
+<div class="wheel-container" id="wheelContainer">
+    <div class="wheel-content">
         <div class="wheel-wrapper">
             <canvas id="wheelCanvas" width="600" height="600"></canvas>
             <div class="lightning-icon">⚡</div>
         </div>
-        <button class="spin-btn" id="spinBtn">🎡 دَوّر</button>
+        <button class="spin-button" id="spinBtn" style="display:none;">🎡 دَوّر</button>
     </div>
+    <div class="result-message" id="resultMsg">✨ جاري التحميل ✨</div>
 </div>
-<div class="result" id="resultMsg">✨ اضغط للتدوير ✨</div>
 
 <script>
-    const SEGMENTS = [
-        { id: "50",   value: 5000,  img: "https://cdn-icons-png.flaticon.com/512/2331/2331967.png" },
-        { id: "100",  value: 10000, img: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
-        { id: "500",  value: 50000, img: "https://cdn-icons-png.flaticon.com/512/2331/2331976.png" },
-        { id: "1000", value: 100000,img: "https://cdn-icons-png.flaticon.com/512/2331/2331985.png" },
-        { id: "5%",   value: 0,     img: "https://cdn-icons-png.flaticon.com/512/3208/3208699.png" },
-        { id: "25%",  value: 0,     img: "https://cdn-icons-png.flaticon.com/512/1040/1040243.png" }
-    ];
-    const COLORS = ["#E74C3C","#F39C12","#2ECC71","#3498DB","#9B59B6","#E67E22"];
+    (function() {
+        let userData = null;
+        let canSpinNow = false;
+        let targetSegmentIndex = -1;
+        let spinning = false;
+        let currentAngle = 0;
+        let segmentImages = [];
+        
+        // إعدادات الجوائز
+        const SEGMENTS = [
+            { id: "50",   value: 50,   type: "coins",   prizeAmount: 5000,   name: "🎁 50 نقطة", imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331967.png" },
+            { id: "100",  value: 100,  type: "coins",   prizeAmount: 10000,  name: "💰 100 نقطة", imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
+            { id: "500",  value: 500,  type: "coins",   prizeAmount: 50000,  name: "🏆 500 نقطة", imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331976.png" },
+            { id: "1000", value: 1000, type: "coins",   prizeAmount: 100000, name: "👑 1000 نقطة", imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331985.png" },
+            { id: "5%",   value: 5,    type: "percent", prizeAmount: 0,      name: "✨ 5% خصم", imgUrl: "https://cdn-icons-png.flaticon.com/512/3208/3208699.png" },
+            { id: "25%",  value: 25,   type: "percent", prizeAmount: 0,      name: "🎯 25% مكافأة", imgUrl: "https://cdn-icons-png.flaticon.com/512/1040/1040243.png" }
+        ];
 
-    let userData = null;
-    let targetIndex = -1;
-    let spinning = false;
-    let currentAngle = 0;
-    let images = [];
-
-    const canvas = document.getElementById("wheelCanvas");
-    const ctx = canvas.getContext("2d");
-    const spinBtn = document.getElementById("spinBtn");
-    const resultMsg = document.getElementById("resultMsg");
-
-    // استخراج البيانات من الرابط
-    function getDataFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const encoded = params.get('data');
-        if (!encoded) return null;
-        try {
-            return JSON.parse(atob(encoded));
-        } catch(e) {
-            return null;
+        const COLORS = ["#E74C3C", "#F39C12", "#2ECC71", "#3498DB", "#9B59B6", "#E67E22"];
+        
+        let canvas = document.getElementById("wheelCanvas");
+        let ctx = canvas.getContext("2d");
+        
+        const spinBtn = document.getElementById("spinBtn");
+        const resultMsg = document.getElementById("resultMsg");
+        const loadingScreen = document.getElementById("loadingScreen");
+        const wheelContainer = document.getElementById("wheelContainer");
+        
+        // دالة sendData() المطلوبة
+        function sendData(payload) {
+            console.log("📤 sendData called with:", payload);
+            
+            // استخدام Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.sendData(JSON.stringify(payload));
+                console.log("✅ تم الإرسال عبر Telegram.WebApp.sendData");
+                return true;
+            }
+            
+            // محاكاة للاختبار
+            console.warn("⚠️ Telegram WebApp غير متوفر، تم محاكاة الإرسال");
+            return false;
         }
-    }
-
-    // تحديد الجائزة حسب البيانات (بدون عشوائية)
-    function determinePrize(data) {
-        if (data.spins_count === 0 && !data.first_spin_used) return 5; // 25%
-        if (data.spins_count === 1 && data.total_charge > 0) return 0; // 50
-        if (data.spins_count === 2) return 4; // 5%
-        if (data.total_charge > 250000) return 1; // 100
-        if (data.total_charge > 700000 && data.total_withdraw <= 200000) return 2; // 500
-        if (data.total_charge > 1800000 && data.total_withdraw <= 400000) return 3; // 1000
-        return 4; // 5% افتراضي
-    }
-
-    // إرسال النتيجة إلى البوت (بشكل فوري)
-    function sendResultToBot(segment, prizeAmount, userInfo) {
-        if (!window.Telegram?.WebApp) {
-            console.log("WebApp not available");
-            return;
+        
+        function getDataFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('data');
+            
+            if (!encodedData) {
+                resultMsg.textContent = "❌ خطأ: لا توجد بيانات";
+                return null;
+            }
+            
+            try {
+                const decodedData = atob(encodedData);
+                const data = JSON.parse(decodedData);
+                return data;
+            } catch(e) {
+                console.error("خطأ في فك التشفير:", e);
+                resultMsg.textContent = "❌ خطأ في تحميل البيانات";
+                return null;
+            }
         }
-
-        const payload = {
-            user_id: userInfo.user_id,
-            new_spin_time: Math.floor(Date.now() / 1000),
-            new_spins_count: userInfo.spins_count + 1,
-            first_spin_used: segment.id === "25%" ? 1 : userInfo.first_spin_used,
-            prize_amount: prizeAmount,
-            prize_type: segment.id
-        };
-
-        // ✅ إرسال البيانات عبر sendData()
-        window.Telegram.WebApp.sendData(JSON.stringify(payload));
-        console.log("✅ تم إرسال البيانات:", payload);
-
-        // إغلاق الويب آب بعد ثانية (اختياري)
-        setTimeout(() => {
-            window.Telegram.WebApp.close();
-        }, 1500);
-    }
-
-    // رسم العجلة
-    function drawWheel() {
-        const size = canvas.width;
-        const center = size/2;
-        const radius = size/2 - 8;
-        const angleStep = (Math.PI * 2) / SEGMENTS.length;
-
-        for (let i = 0; i < SEGMENTS.length; i++) {
-            const start = currentAngle + i * angleStep;
-            const end = start + angleStep;
+        
+        function checkCanSpin(userInfo) {
+            const now = Math.floor(Date.now() / 1000);
+            const lastSpin = userInfo.last_spin || 0;
+            const hoursPassed = (now - lastSpin) / 3600;
+            return hoursPassed >= 48;
+        }
+        
+        // تحديد الجائزة بناءً على البيانات
+        function determinePrizeByData(userInfo) {
+            if (userInfo.spins_count === 0 && userInfo.first_spin_used === 0) {
+                return { index: SEGMENTS.findIndex(s => s.id === "25%"), prize: SEGMENTS.find(s => s.id === "25%") };
+            }
+            
+            if (userInfo.spins_count === 1 && userInfo.total_charge > 0) {
+                return { index: SEGMENTS.findIndex(s => s.id === "50"), prize: SEGMENTS.find(s => s.id === "50") };
+            }
+            
+            if (userInfo.spins_count === 2) {
+                return { index: SEGMENTS.findIndex(s => s.id === "5%"), prize: SEGMENTS.find(s => s.id === "5%") };
+            }
+            
+            if (userInfo.total_charge > 250000) {
+                return { index: SEGMENTS.findIndex(s => s.id === "100"), prize: SEGMENTS.find(s => s.id === "100") };
+            }
+            
+            if (userInfo.total_charge > 700000 && userInfo.total_withdraw <= 200000) {
+                return { index: SEGMENTS.findIndex(s => s.id === "500"), prize: SEGMENTS.find(s => s.id === "500") };
+            }
+            
+            if (userInfo.total_charge > 1800000 && userInfo.total_withdraw <= 400000) {
+                return { index: SEGMENTS.findIndex(s => s.id === "1000"), prize: SEGMENTS.find(s => s.id === "1000") };
+            }
+            
+            return { index: SEGMENTS.findIndex(s => s.id === "5%"), prize: SEGMENTS.find(s => s.id === "5%") };
+        }
+        
+        function applyPrize(segment, userInfo) {
+            let message = "";
+            let prizeAmount = segment.prizeAmount;
+            
+            if (segment.id === "25%") {
+                message = "🎉 25% رصيد إضافي على أول شحن! 🎉";
+                userInfo.first_spin_used = 1;
+            }
+            else if (segment.id === "50") {
+                message = `🎁 ربحت ${prizeAmount.toLocaleString()} ل.س تضاف إلى حسابك! 🎁`;
+            }
+            else if (segment.id === "5%") {
+                message = "✨ 5% إضافية على عملية الشحن التالية ✨";
+            }
+            else if (segment.id === "100") {
+                message = `🏆 ربحت ${prizeAmount.toLocaleString()} ل.س هدية! 🏆`;
+            }
+            else if (segment.id === "500") {
+                message = `💎 ربحت ${prizeAmount.toLocaleString()} ل.س في حسابك! 💎`;
+            }
+            else if (segment.id === "1000") {
+                message = `👑 فوز كبير! ${prizeAmount.toLocaleString()} ل.س مضافة 👑`;
+            }
+            
+            resultMsg.textContent = message;
+            
+            // تحديث بيانات المستخدم
+            userInfo.spins_count += 1;
+            userInfo.last_spin = Math.floor(Date.now() / 1000);
+            
+            // إرسال البيانات إلى البوت باستخدام sendData()
+            const payload = {
+                action: "spin_result",
+                user_id: userInfo.user_id,
+                prize_id: segment.id,
+                prize_name: segment.name,
+                prize_amount: prizeAmount,
+                prize_type: segment.type,
+                new_spin_time: userInfo.last_spin,
+                new_spins_count: userInfo.spins_count,
+                first_spin_used: userInfo.first_spin_used,
+                total_charge: userInfo.total_charge,
+                total_withdraw: userInfo.total_withdraw,
+                timestamp: Date.now()
+            };
+            
+            sendData(payload);
+            
+            // حفظ البيانات محلياً
+            localStorage.setItem("userWheelData", JSON.stringify(userInfo));
+            
+            setTimeout(() => {
+                if (resultMsg.textContent === message) {
+                    resultMsg.textContent = "✨ استعد للدوران التالي ✨";
+                }
+            }, 4000);
+        }
+        
+        function drawWheel() {
+            const size = canvas.width;
+            const centerX = size/2, centerY = size/2;
+            const radius = size/2 - 8;
+            const angleStep = (Math.PI * 2) / SEGMENTS.length;
+            
+            ctx.clearRect(0, 0, size, size);
+            
+            // رسم القطاعات
+            for(let i = 0; i < SEGMENTS.length; i++) {
+                const startAngle = currentAngle + i * angleStep;
+                const endAngle = startAngle + angleStep;
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.lineTo(centerX, centerY);
+                ctx.fillStyle = COLORS[i % COLORS.length];
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,255,255,0.5)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // رسم النص
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + angleStep / 2);
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.font = `bold ${Math.floor(radius * 0.08)}px "Segoe UI", "Cairo"`;
+                ctx.fillStyle = "#FFFFFF";
+                ctx.shadowBlur = 2;
+                ctx.shadowColor = "black";
+                ctx.fillText(SEGMENTS[i].name, radius * 0.7, 10);
+                ctx.restore();
+            }
+            
+            // رسم الصور
+            for(let i = 0; i < SEGMENTS.length; i++) {
+                const midAngle = currentAngle + (i + 0.5) * angleStep;
+                const imgRadius = radius * 0.45;
+                const x = centerX + Math.cos(midAngle) * imgRadius;
+                const y = centerY + Math.sin(midAngle) * imgRadius;
+                
+                if(segmentImages[i] && segmentImages[i].complete) {
+                    ctx.drawImage(segmentImages[i], x - 25, y - 25, 50, 50);
+                }
+            }
+            
+            // رسم المركز
             ctx.beginPath();
-            ctx.arc(center, center, radius, start, end);
-            ctx.lineTo(center, center);
-            ctx.fillStyle = COLORS[i];
+            ctx.arc(centerX, centerY, radius * 0.12, 0, Math.PI * 2);
+            ctx.fillStyle = "#FFD700";
             ctx.fill();
-            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.08, 0, Math.PI * 2);
+            ctx.fillStyle = "#FFF8DC";
+            ctx.fill();
         }
-
-        for (let i = 0; i < SEGMENTS.length; i++) {
-            const mid = currentAngle + (i + 0.5) * angleStep;
-            const x = center + Math.cos(mid) * radius * 0.65;
-            const y = center + Math.sin(mid) * radius * 0.65;
-            if (images[i]?.complete) {
-                ctx.drawImage(images[i], x-28, y-28, 56, 56);
-            }
+        
+        function loadImages(callback) {
+            let loaded = 0;
+            SEGMENTS.forEach((seg, idx) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.src = seg.imgUrl;
+                img.onload = () => {
+                    segmentImages[idx] = img;
+                    loaded++;
+                    if(loaded === SEGMENTS.length) callback();
+                };
+                img.onerror = () => {
+                    segmentImages[idx] = null;
+                    loaded++;
+                    if(loaded === SEGMENTS.length) callback();
+                };
+            });
         }
-    }
-
-    // تحميل الصور
-    function loadImages(cb) {
-        let loaded = 0;
-        SEGMENTS.forEach((seg, i) => {
-            const img = new Image();
-            img.src = seg.img;
-            img.onload = () => {
-                images[i] = img;
-                if (++loaded === SEGMENTS.length) cb();
-            };
-            img.onerror = () => {
-                images[i] = null;
-                if (++loaded === SEGMENTS.length) cb();
-            };
-        });
-    }
-
-    // بدء التدوير والتوقف عند الجائزة المحددة
-    function startSpin() {
-        if (spinning || targetIndex === -1) return;
-
-        spinning = true;
-        spinBtn.disabled = true;
-
-        const spins = 12;
-        const angleStep = (Math.PI * 2) / SEGMENTS.length;
-        const currentRaw = (Math.PI * 2 - (currentAngle % (Math.PI * 2))) % (Math.PI * 2);
-        const currentSeg = Math.floor(currentRaw / angleStep) % SEGMENTS.length;
-
-        let delta = (targetIndex - currentSeg + SEGMENTS.length) % SEGMENTS.length;
-        let finalAngle = currentAngle + (spins * 2 * Math.PI) + (delta * angleStep);
-
-        const duration = 2500;
-        const startTime = performance.now();
-        const startAngle = currentAngle;
-
-        function animate(now) {
-            const t = Math.min(1, (now - startTime) / duration);
-            const ease = 1 - Math.pow(1-t, 3);
-            currentAngle = startAngle + (finalAngle - startAngle) * ease;
-            drawWheel();
-
-            if (t < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                currentAngle = finalAngle % (Math.PI * 2);
+        
+        function startSpin() {
+            if(spinning || !canSpinNow || targetSegmentIndex === -1) return;
+            
+            spinning = true;
+            spinBtn.disabled = true;
+            
+            const spins = 8 + Math.floor(Math.random() * 6);
+            const angleStep = (Math.PI * 2) / SEGMENTS.length;
+            
+            let currentRawAngle = (Math.PI * 2 - (currentAngle % (Math.PI * 2))) % (Math.PI * 2);
+            let currentSeg = Math.floor(currentRawAngle / angleStep) % SEGMENTS.length;
+            
+            let delta = (targetSegmentIndex - currentSeg + SEGMENTS.length) % SEGMENTS.length;
+            let targetAngleRad = delta * angleStep;
+            let finalAngle = currentAngle + (spins * 2 * Math.PI) + targetAngleRad;
+            
+            const duration = 3200;
+            const startTime = performance.now();
+            const startAngleAnim = currentAngle;
+            
+            function animate(now) {
+                const elapsed = now - startTime;
+                let t = Math.min(1, elapsed / duration);
+                const easeOut = 1 - Math.pow(1 - t, 3.5);
+                currentAngle = startAngleAnim + (finalAngle - startAngleAnim) * easeOut;
                 drawWheel();
-
-                const prizeSegment = SEGMENTS[targetIndex];
-                const prizeAmount = prizeSegment.value;
-                let msg = `🎁 ربحت: ${prizeSegment.id} `;
-                if (prizeAmount > 0) msg += `= ${prizeAmount} ل.س`;
-                resultMsg.innerText = msg;
-
-                // ✅ إرسال النتيجة إلى البوت فوراً
-                sendResultToBot(prizeSegment, prizeAmount, userData);
-
-                spinning = false;
-                spinBtn.disabled = false;
+                
+                if(t < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    currentAngle = finalAngle % (Math.PI * 2);
+                    drawWheel();
+                    
+                    const finalRawAngle = (Math.PI * 2 - (currentAngle % (Math.PI * 2))) % (Math.PI * 2);
+                    const landedSeg = Math.floor(finalRawAngle / angleStep) % SEGMENTS.length;
+                    const prize = SEGMENTS[landedSeg];
+                    
+                    applyPrize(prize, userData);
+                    spinning = false;
+                    spinBtn.disabled = false;
+                    
+                    canSpinNow = checkCanSpin(userData);
+                    if (!canSpinNow) {
+                        spinBtn.disabled = true;
+                        spinBtn.style.opacity = "0.5";
+                    }
+                    
+                    // إغلاق الويب آب بعد 3 ثواني
+                    setTimeout(() => {
+                        if (window.Telegram && window.Telegram.WebApp) {
+                            window.Telegram.WebApp.close();
+                        }
+                    }, 3000);
+                }
             }
+            
+            requestAnimationFrame(animate);
         }
-
-        requestAnimationFrame(animate);
-    }
-
-    // تهيئة العجلة
-    function init() {
-        const urlData = getDataFromURL();
-        if (!urlData) {
-            resultMsg.innerText = "❌ خطأ في البيانات";
-            return;
+        
+        async function init() {
+            const urlData = getDataFromURL();
+            if (!urlData) {
+                loadingScreen.style.display = "none";
+                wheelContainer.style.opacity = "1";
+                spinBtn.style.display = "none";
+                resultMsg.textContent = "❌ خطأ في تحميل البيانات";
+                return;
+            }
+            
+            userData = {
+                user_id: urlData.user_id,
+                total_charge: urlData.total_charge || 0,
+                total_withdraw: urlData.total_withdraw || 0,
+                spins_count: urlData.spins_count || 0,
+                last_spin: urlData.last_spin || 0,
+                first_spin_used: urlData.first_spin_used || 0,
+                charge_last_10d: urlData.charge_last_10d || 0,
+                withdraw_last_10d: urlData.withdraw_last_10d || 0,
+                charge_count: urlData.charge_count || 0,
+                withdraw_count: urlData.withdraw_count || 0
+            };
+            
+            // تحديد الجائزة
+            const prizeResult = determinePrizeByData(userData);
+            targetSegmentIndex = prizeResult.index;
+            
+            console.log(`🎯 الجائزة المحددة: ${prizeResult.prize.name}`);
+            
+            canSpinNow = checkCanSpin(userData);
+            
+            loadImages(() => {
+                loadingScreen.style.display = "none";
+                wheelContainer.style.opacity = "1";
+                spinBtn.style.display = "block";
+                drawWheel();
+                
+                if (!canSpinNow) {
+                    spinBtn.disabled = true;
+                    spinBtn.style.opacity = "0.5";
+                    const nextSpinTime = new Date((userData.last_spin + 48 * 3600) * 1000);
+                    resultMsg.textContent = `⏳ ينتظر 48 ساعة - متاح بعد: ${nextSpinTime.toLocaleString()}`;
+                } else {
+                    spinBtn.disabled = false;
+                    spinBtn.style.opacity = "1";
+                    resultMsg.textContent = `🎯 الجائزة المحددة: ${prizeResult.prize.name} - اضغط للتدوير ✨`;
+                }
+            });
+            
+            spinBtn.addEventListener("click", startSpin);
         }
-
-        userData = urlData;
-        targetIndex = determinePrize(userData);
-
-        resultMsg.innerText = `🎯 الجائزة المحددة: ${SEGMENTS[targetIndex].id}`;
-
-        loadImages(() => {
-            drawWheel();
-            spinBtn.onclick = startSpin;
-        });
-
-        // تكبير الحجم
-        const resize = () => {
-            const size = document.querySelector('.wheel-wrapper').clientWidth;
+        
+        function resizeCanvas() {
+            const wrapper = document.querySelector('.wheel-wrapper');
+            const size = wrapper.clientWidth;
             canvas.width = size;
             canvas.height = size;
-            drawWheel();
-        };
-        window.addEventListener('resize', resize);
-        setTimeout(resize, 100);
-
-        if (window.Telegram?.WebApp) {
+            if (segmentImages.some(img => img !== null)) {
+                drawWheel();
+            }
+        }
+        
+        window.addEventListener('resize', () => setTimeout(resizeCanvas, 100));
+        setTimeout(resizeCanvas, 100);
+        
+        if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand();
         }
-    }
-
-    init();
+        
+        init();
+    })();
 </script>
 </body>
 </html>
