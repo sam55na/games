@@ -17,10 +17,39 @@
             height: 100vh;
             overflow: hidden;
             background: linear-gradient(135deg, #0f0c1f 0%, #1a1a2e 50%, #0f0c1f 100%);
-            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
         }
 
-        /* الحاوية الرئيسية - ملء الشاشة */
+        /* شاشة التحميل */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,215,0,0.3);
+            border-top-color: #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .wheel-container {
             position: relative;
             width: 100%;
@@ -32,9 +61,10 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
 
-        /* طبقة شفافة فوق الخلفية لتحسين الرؤية */
         .wheel-container::before {
             content: '';
             position: absolute;
@@ -46,7 +76,6 @@
             backdrop-filter: blur(3px);
         }
 
-        /* محتوى العجلة */
         .wheel-content {
             position: relative;
             z-index: 10;
@@ -59,7 +88,6 @@
             padding: 20px;
         }
 
-        /* حاوية العجلة */
         .wheel-wrapper {
             position: relative;
             width: 100%;
@@ -76,10 +104,8 @@
             height: 100% !important;
             border-radius: 50%;
             box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), 0 0 0 8px rgba(255, 215, 0, 0.6), 0 0 0 15px rgba(255, 215, 0, 0.3);
-            transition: all 0.3s ease;
         }
 
-        /* رمز ⚡ مع لمعان متحرك */
         .lightning-icon {
             position: absolute;
             top: -40px;
@@ -89,9 +115,7 @@
             z-index: 20;
             filter: drop-shadow(0 0 10px #ffd700);
             animation: glow 1.2s ease-in-out infinite;
-            cursor: pointer;
             pointer-events: none;
-            text-shadow: 0 0 8px #ffaa00, 0 0 15px #ffdd44;
         }
 
         @keyframes glow {
@@ -101,7 +125,7 @@
                 opacity: 0.8;
             }
             50% {
-                text-shadow: 0 0 20px #ffea00, 0 0 35px #ffcc00, 0 0 45px #ffaa00;
+                text-shadow: 0 0 20px #ffea00, 0 0 35px #ffcc00;
                 transform: translateX(-50%) scale(1.15);
                 opacity: 1;
             }
@@ -112,7 +136,6 @@
             }
         }
 
-        /* زر التدوير الأنيق */
         .spin-button {
             margin-top: 40px;
             background: linear-gradient(135deg, #ffd89b, #c7e9fb);
@@ -128,7 +151,6 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 5px 0 0 #b8860b;
             transition: 0.08s linear;
             text-transform: uppercase;
-            backdrop-filter: blur(5px);
         }
 
         .spin-button:active {
@@ -142,7 +164,6 @@
             cursor: not-allowed;
         }
 
-        /* رسالة النتيجة - تصميم شفاف وأنيق */
         .result-message {
             position: fixed;
             bottom: 30px;
@@ -158,27 +179,7 @@
             text-align: center;
             z-index: 100;
             border: 1px solid rgba(255, 215, 0, 0.5);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            letter-spacing: 1px;
             white-space: nowrap;
-        }
-
-        /* مؤقت أنيق */
-        .timer-badge {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 10px 20px;
-            border-radius: 40px;
-            color: #ffd700;
-            font-family: monospace;
-            font-size: 1rem;
-            font-weight: bold;
-            z-index: 100;
-            border: 1px solid rgba(255, 215, 0, 0.4);
-            letter-spacing: 1px;
         }
 
         @media (max-width: 600px) {
@@ -191,12 +192,6 @@
                 padding: 10px 20px;
                 white-space: normal;
                 width: 90%;
-                text-align: center;
-            }
-            .timer-badge {
-                font-size: 0.8rem;
-                top: 10px;
-                right: 10px;
             }
             .lightning-icon {
                 font-size: 36px;
@@ -206,163 +201,178 @@
     </style>
 </head>
 <body>
-<div class="wheel-container">
+<div class="loading-screen" id="loadingScreen">
+    <div class="spinner"></div>
+    <div>جاري تحميل البيانات...</div>
+</div>
+
+<div class="wheel-container" id="wheelContainer">
     <div class="wheel-content">
         <div class="wheel-wrapper">
             <canvas id="wheelCanvas" width="600" height="600"></canvas>
             <div class="lightning-icon">⚡</div>
         </div>
-        <button class="spin-button" id="spinBtn">🎡 دَوّر</button>
+        <button class="spin-button" id="spinBtn" style="display:none;">🎡 دَوّر</button>
     </div>
-    <div class="timer-badge" id="timerDisplay">جاهز</div>
-    <div class="result-message" id="resultMsg">✨ اضغط للتدوير ✨</div>
+    <div class="result-message" id="resultMsg">✨ جاري التحميل ✨</div>
 </div>
 
 <script>
     (function() {
-        // ==================== إعدادات العجلة ====================
+        // ==================== بيانات المستخدم من الرابط ====================
+        let userData = null;
+        let canSpinNow = false;
+        
+        // أقسام العجلة
         const SEGMENTS = [
-            { id: "50",   value: 50,   type: "coins",   icon: "💰", imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331967.png" },
-            { id: "100",  value: 100,  type: "coins",   icon: "💵", imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
-            { id: "500",  value: 500,  type: "coins",   icon: "💎", imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331976.png" },
-            { id: "1000", value: 1000, type: "coins",   icon: "👑", imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331985.png" },
-            { id: "5%",   value: 5,    type: "percent", icon: "⭐", imgUrl: "https://cdn-icons-png.flaticon.com/512/3208/3208699.png" },
-            { id: "25%",  value: 25,   type: "percent", icon: "🎯", imgUrl: "https://cdn-icons-png.flaticon.com/512/1040/1040243.png" }
+            { id: "50",   value: 50,   type: "coins",   imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331967.png" },
+            { id: "100",  value: 100,  type: "coins",   imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331970.png" },
+            { id: "500",  value: 500,  type: "coins",   imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331976.png" },
+            { id: "1000", value: 1000, type: "coins",   imgUrl: "https://cdn-icons-png.flaticon.com/512/2331/2331985.png" },
+            { id: "5%",   value: 5,    type: "percent", imgUrl: "https://cdn-icons-png.flaticon.com/512/3208/3208699.png" },
+            { id: "25%",  value: 25,   type: "percent", imgUrl: "https://cdn-icons-png.flaticon.com/512/1040/1040243.png" }
         ];
 
-        const COLORS = [
-            "#E74C3C", "#F39C12", "#2ECC71", "#3498DB", "#9B59B6", "#E67E22"
-        ];
-
-        // بيانات المستخدم
-        let userData = {
-            totalCharged: 0,
-            totalWithdrawn: 0,
-            spinsDone: 0,
-            lastSpinTimestamp: 0,
-            hasFirstSpinRewardGiven: false
-        };
-
+        const COLORS = ["#E74C3C", "#F39C12", "#2ECC71", "#3498DB", "#9B59B6", "#E67E22"];
+        
         let canvas = document.getElementById("wheelCanvas");
         let ctx = canvas.getContext("2d");
         let spinning = false;
         let currentAngle = 0;
-        let animationId = null;
-        let loadedImages = 0;
         let segmentImages = [];
-
-        // عناصر DOM
+        
         const spinBtn = document.getElementById("spinBtn");
-        const timerDisplay = document.getElementById("timerDisplay");
         const resultMsg = document.getElementById("resultMsg");
-
-        // تحميل البيانات
-        function loadData() {
-            const saved = localStorage.getItem("luxuryWheel");
-            if(saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    userData = { ...userData, ...parsed };
-                } catch(e) {}
+        const loadingScreen = document.getElementById("loadingScreen");
+        const wheelContainer = document.getElementById("wheelContainer");
+        
+        // ==================== استخراج البيانات من الرابط ====================
+        function getDataFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('data');
+            
+            if (!encodedData) {
+                resultMsg.textContent = "❌ خطأ: لا توجد بيانات";
+                return null;
+            }
+            
+            try {
+                const decodedData = atob(encodedData);
+                const data = JSON.parse(decodedData);
+                return data;
+            } catch(e) {
+                console.error("خطأ في فك التشفير:", e);
+                resultMsg.textContent = "❌ خطأ في تحميل البيانات";
+                return null;
             }
         }
-
-        function saveData() {
-            localStorage.setItem("luxuryWheel", JSON.stringify(userData));
-        }
-
-        // التحقق من إمكانية التدوير (كل 48 ساعة)
-        function canSpin() {
-            if(userData.lastSpinTimestamp === 0) return true;
-            const hoursPassed = (Date.now() - userData.lastSpinTimestamp) / (1000 * 60 * 60);
+        
+        // ==================== التحقق من إمكانية التدوير ====================
+        function checkCanSpin(userInfo) {
+            const now = Math.floor(Date.now() / 1000);
+            const lastSpin = userInfo.last_spin || 0;
+            const hoursPassed = (now - lastSpin) / 3600;
+            
+            // 48 ساعة بين كل تدوير
             return hoursPassed >= 48;
         }
-
-        // تحديث التايمر
-        function updateTimer() {
-            if(!canSpin() && userData.lastSpinTimestamp !== 0) {
-                const nextTime = userData.lastSpinTimestamp + (48 * 60 * 60 * 1000);
-                const diff = nextTime - Date.now();
-                if(diff > 0) {
-                    const hours = Math.floor(diff / (1000*60*60));
-                    const minutes = Math.floor((diff % (3600000)) / 60000);
-                    const secs = Math.floor((diff % 60000) / 1000);
-                    timerDisplay.textContent = `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
-                    return;
-                }
-            }
-            timerDisplay.textContent = "✓ جاهز";
-        }
-
-        setInterval(updateTimer, 1000);
-
-        // منطق تحديد الجائزة حسب الشروط
-        function getTargetSegmentIndex() {
+        
+        // ==================== تحديد الجائزة حسب الشروط ====================
+        function determinePrize(userInfo) {
             // أول استخدام -> 25%
-            if(userData.spinsDone === 0 && !userData.hasFirstSpinRewardGiven) {
+            if (userInfo.spins_count === 0 && userInfo.first_spin_used === 0) {
                 return SEGMENTS.findIndex(s => s.id === "25%");
             }
+            
             // ثاني تدوير بعد شحن -> 50
-            if(userData.spinsDone === 1 && userData.totalCharged > 0) {
+            if (userInfo.spins_count === 1 && userInfo.total_charge > 0) {
                 return SEGMENTS.findIndex(s => s.id === "50");
             }
+            
             // ثالث تدوير -> 5%
-            if(userData.spinsDone === 2) {
+            if (userInfo.spins_count === 2) {
                 return SEGMENTS.findIndex(s => s.id === "5%");
             }
-            // شرط 100
-            if(userData.totalCharged > 250000) {
+            
+            // شرط 100: إجمالي الشحن > 250,000
+            if (userInfo.total_charge > 250000) {
                 return SEGMENTS.findIndex(s => s.id === "100");
             }
-            // شرط 500
-            if(userData.totalCharged > 700000 && userData.totalWithdrawn <= 200000) {
+            
+            // شرط 500: شحن > 700,000 وسحب <= 200,000
+            if (userInfo.total_charge > 700000 && userInfo.total_withdraw <= 200000) {
                 return SEGMENTS.findIndex(s => s.id === "500");
             }
-            // شرط 1000
-            if(userData.totalCharged > 1800000 && userData.totalWithdrawn <= 400000) {
+            
+            // شرط 1000: شحن > 1,800,000 وسحب <= 400,000
+            if (userInfo.total_charge > 1800000 && userInfo.total_withdraw <= 400000) {
                 return SEGMENTS.findIndex(s => s.id === "1000");
             }
-            // default -> 5%
+            
+            // افتراضياً -> 5%
             return SEGMENTS.findIndex(s => s.id === "5%");
         }
-
-        // تطبيق الجائزة
-        function applyPrize(segment) {
+        
+        // ==================== تطبيق الجائزة وإرسال البيانات للبوت ====================
+        function applyPrize(segment, userInfo) {
             let message = "";
+            let prizeApplied = false;
             
-            if(segment.id === "25%") {
+            if (segment.id === "25%") {
                 message = "🎉 25% رصيد إضافي على أول شحن! 🎉";
-                userData.hasFirstSpinRewardGiven = true;
+                userInfo.first_spin_used = 1;
+                prizeApplied = true;
             }
-            else if(segment.id === "50") {
+            else if (segment.id === "50") {
                 message = "🎁 ربحت 5,000 ل.س تضاف إلى حسابك! 🎁";
+                prizeApplied = true;
             }
-            else if(segment.id === "5%") {
+            else if (segment.id === "5%") {
                 message = "✨ 5% إضافية على عملية الشحن التالية ✨";
+                prizeApplied = true;
             }
-            else if(segment.id === "100") {
+            else if (segment.id === "100") {
                 message = "🏆 ربحت 10,000 ل.س هدية! 🏆";
+                prizeApplied = true;
             }
-            else if(segment.id === "500") {
+            else if (segment.id === "500") {
                 message = "💎 ربحت 50,000 ل.س في حسابك! 💎";
+                prizeApplied = true;
             }
-            else if(segment.id === "1000") {
+            else if (segment.id === "1000") {
                 message = "👑 فوز كبير! 100,000 ل.س مضافة 👑";
+                prizeApplied = true;
             }
             
             resultMsg.textContent = message;
+            
+            if (prizeApplied) {
+                // تحديث بيانات المستخدم
+                userInfo.spins_count += 1;
+                userInfo.last_spin = Math.floor(Date.now() / 1000);
+                
+                // إرسال البيانات إلى البوت عبر Telegram WebApp
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.sendData(JSON.stringify({
+                        user_id: userInfo.user_id,
+                        new_spin_time: userInfo.last_spin,
+                        new_spins_count: userInfo.spins_count,
+                        first_spin_used: userInfo.first_spin_used
+                    }));
+                }
+                
+                // حفظ البيانات محلياً
+                localStorage.setItem("userWheelData", JSON.stringify(userInfo));
+            }
+            
             setTimeout(() => {
-                if(resultMsg.textContent === message) {
+                if (resultMsg.textContent === message) {
                     resultMsg.textContent = "✨ استعد للدوران التالي ✨";
                 }
             }, 4000);
-            
-            userData.spinsDone += 1;
-            userData.lastSpinTimestamp = Date.now();
-            saveData();
         }
-
-        // رسم العجلة بدون أي نصوص (صور فقط)
+        
+        // ==================== رسم العجلة ====================
         function drawWheel() {
             const size = canvas.width;
             const centerX = size/2, centerY = size/2;
@@ -371,7 +381,6 @@
             
             ctx.clearRect(0, 0, size, size);
             
-            // رسم الأقسام
             for(let i = 0; i < SEGMENTS.length; i++) {
                 const startAngle = currentAngle + i * angleStep;
                 const endAngle = startAngle + angleStep;
@@ -386,7 +395,7 @@
                 ctx.stroke();
             }
             
-            // رسم الصور في منتصف كل قطعة
+            // رسم الصور
             for(let i = 0; i < SEGMENTS.length; i++) {
                 const midAngle = currentAngle + (i + 0.5) * angleStep;
                 const imgRadius = radius * 0.65;
@@ -394,18 +403,14 @@
                 const y = centerY + Math.sin(midAngle) * imgRadius;
                 
                 if(segmentImages[i] && segmentImages[i].complete) {
-                    ctx.save();
-                    ctx.shadowBlur = 0;
                     ctx.drawImage(segmentImages[i], x - 30, y - 30, 60, 60);
-                    ctx.restore();
                 }
             }
             
-            // رسم دائرة صغيرة في المنتصف
+            // دائرة المنتصف
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.12, 0, Math.PI * 2);
             ctx.fillStyle = "#FFD700";
-            ctx.shadowBlur = 0;
             ctx.fill();
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.08, 0, Math.PI * 2);
@@ -413,8 +418,8 @@
             ctx.fill();
         }
         
-        // تحميل جميع الصور
-        function loadAllImages() {
+        // تحميل الصور
+        function loadImages(callback) {
             let loaded = 0;
             SEGMENTS.forEach((seg, idx) => {
                 const img = new Image();
@@ -423,33 +428,21 @@
                 img.onload = () => {
                     segmentImages[idx] = img;
                     loaded++;
-                    if(loaded === SEGMENTS.length) {
-                        drawWheel();
-                    }
+                    if(loaded === SEGMENTS.length) callback();
                 };
                 img.onerror = () => {
-                    // في حال فشل التحميل نستخدم أيقونة نصية كبديل
                     segmentImages[idx] = null;
                     loaded++;
-                    if(loaded === SEGMENTS.length) drawWheel();
+                    if(loaded === SEGMENTS.length) callback();
                 };
             });
         }
         
         // دوران العجلة
         function startSpin() {
-            if(spinning) return;
-            if(!canSpin()) {
-                resultMsg.textContent = "⏳ يرجى الانتظار 48 ساعة بين كل تدوير ⏳";
-                setTimeout(() => {
-                    if(resultMsg.textContent.includes("48 ساعة")) {
-                        resultMsg.textContent = "✨ اضغط للتدوير ✨";
-                    }
-                }, 3000);
-                return;
-            }
+            if(spinning || !canSpinNow) return;
             
-            const targetIndex = getTargetSegmentIndex();
+            const targetIndex = determinePrize(userData);
             if(targetIndex === -1) return;
             
             spinning = true;
@@ -458,7 +451,6 @@
             const spins = 10 + Math.floor(Math.random() * 8);
             const angleStep = (Math.PI * 2) / SEGMENTS.length;
             
-            // حساب الزاوية الحالية للقطعة
             let currentRawAngle = (Math.PI * 2 - (currentAngle % (Math.PI * 2))) % (Math.PI * 2);
             let currentSeg = Math.floor(currentRawAngle / angleStep) % SEGMENTS.length;
             
@@ -487,50 +479,91 @@
                     const landedSeg = Math.floor(finalRawAngle / angleStep) % SEGMENTS.length;
                     const prize = SEGMENTS[landedSeg];
                     
-                    applyPrize(prize);
+                    applyPrize(prize, userData);
                     spinning = false;
                     spinBtn.disabled = false;
-                    updateTimer();
-                    saveData();
+                    
+                    // بعد التدوير، نتحقق إذا كان يمكن التدوير مجدداً
+                    canSpinNow = checkCanSpin(userData);
+                    if (!canSpinNow) {
+                        spinBtn.style.opacity = "0.5";
+                    }
                 }
             }
             
             requestAnimationFrame(animate);
         }
         
-        // إضافة بيانات الشحن من الخارج
-        window.updateUserFinancials = function(chargedAmount, withdrawnAmount = 0) {
-            userData.totalCharged += chargedAmount;
-            userData.totalWithdrawn += withdrawnAmount;
-            saveData();
-            resultMsg.textContent = "✓ تم تحديث بياناتك بنجاح";
-            setTimeout(() => {
-                if(resultMsg.textContent.includes("تم تحديث")) {
+        // ==================== تهيئة الصفحة ====================
+        async function init() {
+            // استخراج البيانات من الرابط
+            const urlData = getDataFromURL();
+            if (!urlData) {
+                loadingScreen.style.display = "none";
+                wheelContainer.style.opacity = "1";
+                spinBtn.style.display = "none";
+                return;
+            }
+            
+            userData = {
+                user_id: urlData.user_id,
+                total_charge: urlData.total_charge || 0,
+                total_withdraw: urlData.total_withdraw || 0,
+                spins_count: urlData.spins_count || 0,
+                last_spin: urlData.last_spin || 0,
+                first_spin_used: urlData.first_spin_used || 0,
+                charge_last_10d: urlData.charge_last_10d || 0,
+                withdraw_last_10d: urlData.withdraw_last_10d || 0,
+                charge_count: urlData.charge_count || 0,
+                withdraw_count: urlData.withdraw_count || 0
+            };
+            
+            // التحقق من إمكانية التدوير
+            canSpinNow = checkCanSpin(userData);
+            
+            // تحميل الصور وإظهار العجلة
+            loadImages(() => {
+                loadingScreen.style.display = "none";
+                wheelContainer.style.opacity = "1";
+                spinBtn.style.display = "block";
+                drawWheel();
+                
+                if (!canSpinNow) {
+                    spinBtn.disabled = true;
+                    spinBtn.style.opacity = "0.5";
+                    const nextSpinTime = new Date((userData.last_spin + 48 * 3600) * 1000);
+                    resultMsg.textContent = `⏳ ينتظر 48 ساعة - متاح بعد: ${nextSpinTime.toLocaleTimeString()}`;
+                } else {
+                    spinBtn.disabled = false;
+                    spinBtn.style.opacity = "1";
                     resultMsg.textContent = "✨ اضغط للتدوير ✨";
                 }
-            }, 2000);
-        };
+            });
+            
+            spinBtn.addEventListener("click", startSpin);
+        }
         
-        // تهيئة
-        loadData();
-        loadAllImages();
-        spinBtn.addEventListener("click", startSpin);
-        updateTimer();
-        
-        // تحسين الرسم عند تغيير الحجم
+        // تغيير حجم canvas
         function resizeCanvas() {
             const wrapper = document.querySelector('.wheel-wrapper');
             const size = wrapper.clientWidth;
             canvas.width = size;
             canvas.height = size;
-            drawWheel();
+            if (segmentImages.some(img => img !== null)) {
+                drawWheel();
+            }
         }
         
-        window.addEventListener('resize', () => {
-            setTimeout(resizeCanvas, 100);
-        });
-        
+        window.addEventListener('resize', () => setTimeout(resizeCanvas, 100));
         setTimeout(resizeCanvas, 100);
+        
+        // دمج مع Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        }
+        
+        init();
     })();
 </script>
 </body>
