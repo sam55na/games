@@ -2,125 +2,276 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عجلة الحظ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>عجلة الحظ - DR.DOOM</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', 'Tahoma', 'Cairo', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
+            background: linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 50%, #0a0a2a 100%);
+            position: relative;
+            overflow-x: hidden;
         }
+
+        /* خلفية متحركة */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://www.transparenttextures.com/containers/75/75b5c3c7-7b1b-4c3e-8e3c-7b5c3e8e3c7e.png') repeat;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .container {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 400px;
+            position: relative;
+            z-index: 1;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 20px 20px 30px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+            max-width: 450px;
             width: 100%;
+            border: 1px solid rgba(255,255,255,0.2);
         }
-        .wheel-container {
+
+        /* عنوان DR.DOOM المميز */
+        .title {
+            text-align: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .title h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00d4ff, #0066cc, #00d4ff, #0099ff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 30px rgba(0,180,255,0.5);
+            letter-spacing: 2px;
+            animation: gradientShift 3s ease infinite, textGlow 2s ease-in-out infinite alternate;
+            position: relative;
+            display: inline-block;
+            padding: 0 20px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes textGlow {
+            0% { text-shadow: 0 0 10px rgba(0,180,255,0.3); }
+            100% { text-shadow: 0 0 30px rgba(0,180,255,0.8), 0 0 10px rgba(0,100,255,0.5); }
+        }
+
+        .title::before,
+        .title::after {
+            content: '⚡';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            opacity: 0.7;
+            animation: iconPulse 1.5s ease infinite;
+        }
+
+        .title::before {
+            left: 10px;
+        }
+
+        .title::after {
+            right: 10px;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { opacity: 0.4; transform: translateY(-50%) scale(1); }
+            50% { opacity: 1; transform: translateY(-50%) scale(1.2); }
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: -5px;
+            letter-spacing: 1px;
+        }
+
+        .wheel-wrapper {
             position: relative;
             width: 280px;
             height: 280px;
-            margin: 20px auto;
+            margin: 15px auto;
         }
+
         @media (min-width: 400px) {
-            .wheel-container {
-                width: 300px;
-                height: 300px;
+            .wheel-wrapper {
+                width: 320px;
+                height: 320px;
             }
         }
+
         #wheel {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 5px solid #fff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            transition: transform 4s cubic-bezier(0.2, 0.9, 0.1, 1.05);
+            box-shadow: 0 0 0 8px rgba(255,255,255,0.2), 0 0 0 12px rgba(0,0,0,0.2), 0 20px 40px rgba(0,0,0,0.4);
         }
+
+        /* المؤشر بتصميم ⚡ مع لمعان */
         .pointer {
             position: absolute;
-            top: -20px;
+            top: -30px;
             left: 50%;
             transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 35px solid #ff4444;
-            z-index: 10;
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+            width: 50px;
+            height: 50px;
+            z-index: 20;
+            filter: drop-shadow(0 0 10px #00ccff);
+            animation: pointerGlow 1s ease-in-out infinite alternate;
         }
-        @media (min-width: 400px) {
-            .pointer {
-                border-left: 20px solid transparent;
-                border-right: 20px solid transparent;
-                border-top: 40px solid #ff4444;
-            }
+
+        .pointer svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
+
+        @keyframes pointerGlow {
+            0% { filter: drop-shadow(0 0 5px #00ccff); }
+            100% { filter: drop-shadow(0 0 20px #00ccff) drop-shadow(0 0 5px #ffffff); }
+        }
+
+        /* مركز العجلة - شعار دائري */
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #fff 0%, #ddd 100%);
+            border-radius: 50%;
+            z-index: 15;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 4px rgba(0,0,0,0.2), 0 0 0 8px rgba(255,255,255,0.3);
+            overflow: hidden;
+        }
+
+        .wheel-center img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
         button {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-top: 25px;
+            padding: 14px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #0066cc);
             color: white;
             border: none;
-            border-radius: 50px;
+            border-radius: 60px;
             cursor: pointer;
-            font-weight: bold;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
             width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 5px 20px rgba(0,100,200,0.4);
+            position: relative;
+            overflow: hidden;
         }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
         button:hover:not(:disabled) {
             transform: scale(1.02);
+            box-shadow: 0 8px 30px rgba(0,150,255,0.6);
         }
+
         button:disabled {
-            background: #ccc;
+            background: linear-gradient(135deg, #555, #333);
+            box-shadow: none;
             transform: none;
             cursor: not-allowed;
+            opacity: 0.6;
         }
-        .info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            font-size: 13px;
-            line-height: 1.6;
-        }
+
         .timer {
-            background: #fff3cd;
-            color: #856404;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            color: #ffaa44;
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 50px;
             margin-top: 15px;
             text-align: center;
             font-weight: bold;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255,170,68,0.3);
         }
+
         .timer.ready {
-            background: #d4edda;
-            color: #155724;
+            background: rgba(0,100,0,0.6);
+            color: #88ff88;
+            border-color: #88ff88;
         }
+
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #666;
+            padding: 60px 20px;
+            color: #fff;
         }
+
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top: 3px solid #00d4ff;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin: 0 auto 20px;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -131,18 +282,30 @@
     <div class="container" id="mainContainer">
         <div class="loading" id="loadingDiv">
             <div class="spinner"></div>
-            جاري تحميل بياناتك...
+            <div style="font-size: 1rem; letter-spacing: 2px;">جاري تحميل بياناتك...</div>
         </div>
         
         <div id="wheelContent" style="display: none;">
-            <div class="wheel-container">
-                <div class="pointer"></div>
-                <canvas id="wheel" width="300" height="300"></canvas>
+            <div class="title">
+                <h1>DR.DOOM</h1>
+                <div class="subtitle">⚡ SPIN & WIN ⚡</div>
             </div>
             
-            <button id="spinBtn" style="display: none;">🔄 أدر العجلة!</button>
+            <div class="wheel-wrapper">
+                <div class="pointer" id="pointer">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50 0 L58 35 L50 30 L42 35 Z" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
+                        <path d="M50 0 L55 40 L50 35 L45 40 Z" fill="#FFF" opacity="0.6"/>
+                        <circle cx="50" cy="50" r="8" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
+                    </svg>
+                </div>
+                <canvas id="wheel" width="320" height="320"></canvas>
+                <div class="wheel-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1040/1040246.png" alt="logo" id="centerLogo">
+                </div>
+            </div>
             
-            <div class="info" id="info"></div>
+            <button id="spinBtn" style="display: none;">⚡ أدر العجلة ⚡</button>
             <div class="timer" id="timer"></div>
         </div>
     </div>
@@ -151,6 +314,26 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.MainButton.hide();
+
+        // روابط الصور - يمكنك تغييرها
+        const BACKGROUND_IMAGE_URL = "https://www.transparenttextures.com/containers/75/75b5c3c7-7b1b-4c3e-8e3c-7b5c3e8e3c7e.png";
+        const CENTER_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
+
+        // تعيين خلفية الجسم
+        document.body.style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}'), linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 50%, #0a0a2a 100%)`;
+        document.body.style.backgroundBlendMode = "overlay";
+        document.body.style.backgroundSize = "cover, auto";
+        document.body.style.backgroundRepeat = "repeat, no-repeat";
+        document.body.style.backgroundPosition = "center";
+
+        // تعيين الشعار في المنتصف
+        const centerLogo = document.getElementById('centerLogo');
+        if (centerLogo) {
+            centerLogo.src = CENTER_LOGO_URL;
+            centerLogo.onerror = () => {
+                centerLogo.src = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
+            };
+        }
 
         // الحصول على البيانات من URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -163,9 +346,13 @@
         const loadingDiv = document.getElementById('loadingDiv');
         const wheelContent = document.getElementById('wheelContent');
         
-        // تعريف الجوائز
+        // تعريف الجوائز (بدون نصوص على العجلة)
         const segments = ["50 ل.س", "100 ل.س", "500 ل.س", "1000 ل.س", "5%", "25%"];
-        const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"];
+        
+        // ألوان أزرق وأبيض بالتناوب مع تأثير تصدع
+        const baseColors = ["#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff"];
+        // تأثير التصدع - إضافة تدرجات داخلية
+        const crackColors = ["#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8"];
         
         let currentRotation = 0;
         let isSpinning = false;
@@ -181,38 +368,117 @@
                 
                 // رسم العجلة
                 drawWheel();
-                displayUserInfo();
                 checkAndShowSpinButton();
                 
             } catch(e) {
                 console.error('Error decoding data:', e);
-                loadingDiv.innerHTML = '<div style="color: red;">❌ خطأ في تحميل البيانات</div>';
+                loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ خطأ في تحميل البيانات</div>';
             }
         } else {
-            loadingDiv.innerHTML = '<div style="color: red;">❌ لا توجد بيانات متاحة</div>';
+            loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا توجد بيانات متاحة</div>';
+        }
+
+        // دالة رسم العجلة مع تأثير التصدع والتدرجات
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2;
+            const sliceAngle = (2 * Math.PI) / segments.length;
+            
+            for (let i = 0; i < segments.length; i++) {
+                const startAngle = i * sliceAngle;
+                const endAngle = (i + 1) * sliceAngle;
+                
+                // رسم القطاع الرئيسي
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                
+                // تدرج لوني للقطاع
+                const gradient = ctx.createLinearGradient(
+                    centerX + Math.cos(startAngle) * radius * 0.3,
+                    centerY + Math.sin(startAngle) * radius * 0.3,
+                    centerX + Math.cos(endAngle) * radius * 0.7,
+                    centerY + Math.sin(endAngle) * radius * 0.7
+                );
+                gradient.addColorStop(0, baseColors[i]);
+                gradient.addColorStop(0.7, crackColors[i]);
+                gradient.addColorStop(1, baseColors[i]);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                // رسم حدود القطاع
+                ctx.strokeStyle = "rgba(0,0,0,0.15)";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                
+                // تأثير التصدع - خطوط عشوائية داخل كل قطاع
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.clip();
+                
+                // رسم خطوط تشبه التصدع
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.15})`;
+                ctx.lineWidth = 1;
+                
+                for (let c = 0; c < 4; c++) {
+                    const angle = startAngle + Math.random() * sliceAngle;
+                    const dist1 = radius * (0.2 + Math.random() * 0.3);
+                    const dist2 = radius * (0.5 + Math.random() * 0.4);
+                    const x1 = centerX + Math.cos(angle) * dist1;
+                    const y1 = centerY + Math.sin(angle) * dist1;
+                    const x2 = centerX + Math.cos(angle + (Math.random() - 0.5) * 0.3) * dist2;
+                    const y2 = centerY + Math.sin(angle + (Math.random() - 0.5) * 0.3) * dist2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            }
+            
+            // رسم حلقة داخلية دائرية (زخرفة)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.15, 0, 2 * Math.PI);
+            ctx.fillStyle = "#FFD700";
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // رسم حدود دائرية خارجية
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
+            ctx.strokeStyle = "rgba(255,215,0,0.5)";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 8, 0, 2 * Math.PI);
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
         }
 
         // دالة التحقق من إمكانية التدوير (48 ساعة)
         function canSpin() {
             if (!userData) return false;
-            
-            // المستخدم الجديد يمكنه التدوير فوراً
             if (userData.first_use === 1) {
                 console.log('First time user - can spin');
                 return true;
             }
             
             const lastSpin = userData.last_spin;
-            if (!lastSpin) {
-                console.log('No last spin record - can spin');
-                return true;
-            }
+            if (!lastSpin) return true;
             
             const lastSpinDate = new Date(lastSpin);
             const now = new Date();
             const hoursDiff = (now - lastSpinDate) / (1000 * 60 * 60);
-            
-            console.log(`Hours since last spin: ${hoursDiff}`);
             
             return hoursDiff >= 48;
         }
@@ -239,55 +505,35 @@
             return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
         }
         
-        // دالة عرض وإخفاء زر التدوير
+        // دالة عرض وإخفاء زر التدوير (لا يظهر إلا بعد التحقق)
         function checkAndShowSpinButton() {
             const timerDiv = document.getElementById('timer');
             
+            // التأكد من وجود userData أولاً
+            if (!userData) {
+                spinBtn.style.display = 'none';
+                timerDiv.className = 'timer';
+                timerDiv.innerHTML = '⏳ جاري التحقق من بياناتك...';
+                return;
+            }
+            
             if (canSpin()) {
-                // إظهار زر التدوير
                 spinBtn.style.display = 'block';
                 timerDiv.className = 'timer ready';
-                timerDiv.innerHTML = '✅ يمكنك التدوير الآن! اضغط على الزر أعلاه.';
+                timerDiv.innerHTML = '⚡✅ يمكنك التدوير الآن! اضغط على الزر أعلاه ✅⚡';
                 console.log('Spin button shown - user can spin');
             } else {
-                // إخفاء زر التدوير
                 spinBtn.style.display = 'none';
                 const remaining = getRemainingTime();
                 if (remaining) {
                     timerDiv.className = 'timer';
-                    timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>الوقت المتبقي: ${remaining.hours} ساعة و ${remaining.minutes} دقيقة و ${remaining.seconds} ثانية`;
+                    timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي: ${remaining.hours} ساعة و ${remaining.minutes} دقيقة و ${remaining.seconds} ثانية ⚡`;
                     
-                    // تحديث العد التنازلي كل ثانية
                     setTimeout(() => {
                         checkAndShowSpinButton();
                     }, 1000);
                 }
-                console.log('Spin button hidden - waiting period');
             }
-        }
-
-        function drawWheel(highlightSegment = null) {
-            const sliceAngle = (2 * Math.PI) / segments.length;
-            segments.forEach((text, i) => {
-                ctx.beginPath();
-                if (highlightSegment === i && userData && userData.first_use === 1) {
-                    ctx.fillStyle = "#FFD700";
-                } else {
-                    ctx.fillStyle = colors[i];
-                }
-                ctx.moveTo(150, 150);
-                ctx.arc(150, 150, 150, i * sliceAngle, (i + 1) * sliceAngle);
-                ctx.fill();
-                
-                ctx.save();
-                ctx.translate(150, 150);
-                ctx.rotate(i * sliceAngle + sliceAngle / 2);
-                ctx.fillStyle = "white";
-                ctx.font = "bold 13px 'Segoe UI', Arial";
-                ctx.shadowBlur = 0;
-                ctx.fillText(text, 70, 10);
-                ctx.restore();
-            });
         }
 
         // دالة تحديد النتيجة حسب الشروط
@@ -299,70 +545,19 @@
             const totalWithdraw = userData.total_withdraw || 0;
             const firstUse = userData.first_use || 1;
             
-            console.log(`Determining result - SpinCount: ${spinCount}, TotalRecharge: ${totalRecharge}, TotalWithdraw: ${totalWithdraw}, FirstUse: ${firstUse}`);
+            if (firstUse === 1) return "25%";
+            if (spinCount === 1) return "50 ل.س";
+            if (spinCount === 2) return "5%";
+            if (totalRecharge > 250000) return "100 ل.س";
+            if (totalRecharge > 700000 && totalWithdraw <= 200000) return "500 ل.س";
+            if (totalRecharge > 1800000 && totalWithdraw <= 400000) return "1000 ل.س";
             
-            // شرط المستخدم الجديد
-            if (firstUse === 1) {
-                console.log('Result: 25% (new user)');
-                return "25%";
-            }
-            
-            // المرة الثانية (بعد شحن ناجح)
-            if (spinCount === 1) {
-                console.log('Result: 50 ل.س (second spin)');
-                return "50 ل.س";
-            }
-            
-            // المرة الثالثة
-            if (spinCount === 2) {
-                console.log('Result: 5% (third spin)');
-                return "5%";
-            }
-            
-            // شرط 100
-            if (totalRecharge > 250000) {
-                console.log('Result: 100 ل.س (recharge > 250k)');
-                return "100 ل.س";
-            }
-            
-            // شرط 500
-            if (totalRecharge > 700000 && totalWithdraw <= 200000) {
-                console.log('Result: 500 ل.س (recharge > 700k && withdraw <= 200k)');
-                return "500 ل.س";
-            }
-            
-            // شرط 1000
-            if (totalRecharge > 1800000 && totalWithdraw <= 400000) {
-                console.log('Result: 1000 ل.س (recharge > 1.8M && withdraw <= 400k)');
-                return "1000 ل.س";
-            }
-            
-            console.log('Result: 5% (default)');
             return "5%";
         }
 
-        function displayUserInfo() {
-            if (userData) {
-                const infoDiv = document.getElementById('info');
-                infoDiv.innerHTML = `
-                    📊 <strong>معلومات حسابك</strong><br>
-                    ─────────────────<br>
-                    🎯 عدد التدويرات السابقة: ${userData.spin_count || 0}<br>
-                    💰 مجموع الشحنات: ${(userData.total_recharge || 0).toLocaleString()} ل.س<br>
-                    💸 مجموع السحوبات: ${(userData.total_withdraw || 0).toLocaleString()} ل.س<br>
-                    📦 شحن آخر 10 أيام: ${(userData.recent_recharge || 0).toLocaleString()} ل.س<br>
-                    🚀 سحب آخر 10 أيام: ${(userData.recent_withdraw || 0).toLocaleString()} ل.س<br>
-                    ─────────────────<br>
-                    🎁 <strong>الجائزة المتوقعة حسب شروطك</strong><br>
-                    🏆 ${determineResult()}
-                `;
-            }
-        }
-
+        // زر التدوير
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
-            
-            // التحقق مرة أخرى قبل التدوير
             if (!canSpin()) {
                 checkAndShowSpinButton();
                 return;
@@ -371,18 +566,13 @@
             isSpinning = true;
             spinBtn.disabled = true;
             
-            // تحديد النتيجة حسب الشروط
             const result = determineResult();
             console.log('Spinning for result:', result);
             
-            // العثور على فهرس النتيجة في العجلة
             const resultIndex = segments.findIndex(seg => seg === result);
-            
-            // حساب الدوران للوصول إلى النتيجة المطلوبة
             const sliceAngle = 360 / segments.length;
-            const targetAngle = 270; // موضع المؤشر
+            const targetAngle = 270;
             const currentAngle = currentRotation % 360;
-            
             const resultCenterAngle = (resultIndex * sliceAngle + sliceAngle / 2);
             let neededRotation = (targetAngle - resultCenterAngle + 360) % 360;
             const fullRotations = 5 * 360;
@@ -392,7 +582,6 @@
             canvas.style.transform = `rotate(${currentRotation}deg)`;
 
             setTimeout(() => {
-                // إرسال النتيجة للبوت
                 let resultType = "";
                 let resultValue = "";
                 
@@ -411,13 +600,9 @@
                     result_value: resultValue
                 }));
                 
-                // تحديث العرض
-                const infoDiv = document.getElementById('info');
-                infoDiv.innerHTML = `🎉🎉 <strong>النتيجة: ${result}!</strong> 🎉🎉<br><br>${infoDiv.innerHTML}`;
-                
                 setTimeout(() => {
                     tg.close();
-                }, 2000);
+                }, 1500);
                 
                 isSpinning = false;
             }, 4000);
