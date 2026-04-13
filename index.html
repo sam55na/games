@@ -3,15 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عجلة الحظ المتقدمة</title>
+    <title>عجلة الحظ</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
@@ -19,475 +13,415 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            margin: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
         }
-
         .container {
             background: white;
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 400px;
             width: 100%;
         }
-
-        .info-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-right: 4px solid #667eea;
-        }
-
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 14px;
-        }
-
-        .info-item:last-child {
-            border-bottom: none;
-        }
-
-        .info-label {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .info-value {
-            color: #667eea;
-            font-weight: bold;
-        }
-
-        .wheel-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 30px 0;
-        }
-
         .wheel-container {
             position: relative;
             width: 280px;
             height: 280px;
-            margin-bottom: 20px;
+            margin: 20px auto;
         }
-
+        @media (min-width: 400px) {
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+        }
         #wheel {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 5px solid #333;
-            transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            border: 5px solid #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
         }
-
         .pointer {
             position: absolute;
-            top: -25px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 35px solid #ff6b6b;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 35px solid #ff4444;
             z-index: 10;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
         }
-
-        .result-section {
-            background: #e8f5e9;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            display: none;
-            border: 2px solid #4caf50;
-        }
-
-        .result-section.show {
-            display: block;
-            animation: slideIn 0.5s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        @media (min-width: 400px) {
+            .pointer {
+                border-left: 20px solid transparent;
+                border-right: 20px solid transparent;
+                border-top: 40px solid #ff4444;
             }
         }
-
-        .result-title {
-            color: #2e7d32;
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .result-value {
-            color: #1b5e20;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .result-description {
-            color: #388e3c;
-            font-size: 13px;
-            margin-top: 8px;
-            line-height: 1.5;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
         button {
+            margin-top: 20px;
             padding: 12px 30px;
-            font-size: 16px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 50px;
             cursor: pointer;
             font-weight: bold;
-            transition: all 0.3s ease;
+            transition: transform 0.2s;
+            width: 100%;
         }
-
-        #spinBtn {
-            background-color: #667eea;
-            color: white;
-            flex: 1;
-            max-width: 250px;
+        button:hover:not(:disabled) {
+            transform: scale(1.02);
         }
-
-        #spinBtn:hover:not(:disabled) {
-            background-color: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        #spinBtn:disabled {
-            background-color: #ccc;
+        button:disabled {
+            background: #ccc;
+            transform: none;
             cursor: not-allowed;
-            opacity: 0.6;
         }
-
-        .spin-timer {
-            text-align: center;
-            color: #ff6b6b;
-            font-weight: bold;
-            margin-top: 10px;
-            display: none;
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.6;
         }
-
-        .spin-timer.show {
-            display: block;
-        }
-
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
+        .timer {
+            background: #fff3cd;
+            color: #856404;
             padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: none;
-            border-left: 4px solid #c62828;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
         }
-
-        .error-message.show {
-            display: block;
+        .timer.ready {
+            background: #d4edda;
+            color: #155724;
         }
-
         .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .spinner {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #667eea;
             border-radius: 50%;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            margin-right: 10px;
-            vertical-align: middle;
+            margin: 0 auto 15px;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        .status-available {
-            background: #c8e6c9;
-            color: #2e7d32;
-        }
-
-        .status-locked {
-            background: #ffccbc;
-            color: #d84315;
-        }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <h1 style="text-align: center; color: #333; margin-bottom: 20px;">🎡 عجلة الحظ</h1>
-
-        <div class="error-message" id="errorMessage"></div>
-
-        <div class="info-section">
-            <div class="info-item">
-                <span class="info-label">معرّف تلجرام:</span>
-                <span class="info-value" id="userId">-</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">إجمالي الشحن (10 أيام):</span>
-                <span class="info-value" id="totalDeposits">-</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">إجمالي السحب (10 أيام):</span>
-                <span class="info-value" id="totalWithdrawals">-</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">عدد التدويرات:</span>
-                <span class="info-value" id="spinCount">-</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">آخر تدوير:</span>
-                <span class="info-value" id="lastSpinTime">-</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">الحالة:</span>
-                <span class="info-value" id="spinStatus">-</span>
-            </div>
+    <div class="container" id="mainContainer">
+        <div class="loading" id="loadingDiv">
+            <div class="spinner"></div>
+            جاري تحميل بياناتك...
         </div>
-
-        <div class="wheel-section">
+        
+        <div id="wheelContent" style="display: none;">
             <div class="wheel-container">
                 <div class="pointer"></div>
-                <canvas id="wheel" width="280" height="280"></canvas>
+                <canvas id="wheel" width="300" height="300"></canvas>
             </div>
-
-            <div class="result-section" id="resultSection">
-                <div class="result-title">🎉 تهانينا!</div>
-                <div class="result-value" id="resultValue"></div>
-                <div class="result-description" id="resultDescription"></div>
-            </div>
-
-            <div class="button-group">
-                <button id="spinBtn">أدر العجلة!</button>
-            </div>
-
-            <div class="spin-timer" id="spinTimer"></div>
+            
+            <button id="spinBtn" style="display: none;">🔄 أدر العجلة!</button>
+            
+            <div class="info" id="info"></div>
+            <div class="timer" id="timer"></div>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.MainButton.hide();
 
+        // الحصول على البيانات من URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const encodedData = urlParams.get('data');
+        let userData = null;
+        
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
-        const errorMessage = document.getElementById('errorMessage');
-        const resultSection = document.getElementById('resultSection');
-        const spinTimer = document.getElementById('spinTimer');
-
-        // البيانات المرسلة من البوت
-        let wheelData = {
-            userId: null,
-            totalDeposits: 0,
-            totalWithdrawals: 0,
-            spinCount: 0,
-            lastSpinTime: null,
-            predefinedResult: null,
-            canSpin: false,
-            spinMessage: '',
-            resultDescription: ''
-        };
-
-        // الخيارات والألوان
-        const segments = ["25%", "50", "5%", "100", "500", "1000"];
-        const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8", "#F7DC6F"];
-        const descriptions = {
-            "25%": "25% رصيد إضافي على أول عملية شحن",
-            "50": "5,000 ل.س هدية",
-            "5%": "5% إضافية لعملية الشحن",
-            "100": "10,000 ل.س هدية",
-            "500": "50,000 ل.س هدية",
-            "1000": "100,000 ل.س هدية"
-        };
-
+        const loadingDiv = document.getElementById('loadingDiv');
+        const wheelContent = document.getElementById('wheelContent');
+        
+        // تعريف الجوائز
+        const segments = ["50 ل.س", "100 ل.س", "500 ل.س", "1000 ل.س", "5%", "25%"];
+        const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"];
+        
         let currentRotation = 0;
+        let isSpinning = false;
 
-        // استقبال البيانات من البوت عبر initData
-        function parseWebAppData() {
+        // فك تشفير البيانات
+        if (encodedData) {
             try {
-                const initData = tg.initData;
-                if (!initData) {
-                    showError("لم يتم تلقي بيانات من البوت");
-                    return false;
-                }
-
-                // محاولة الحصول على البيانات من query parameters
-                const params = new URLSearchParams(window.location.search);
+                const decodedData = atob(encodedData.replace(/-/g, '+').replace(/_/g, '/'));
+                userData = JSON.parse(decodedData);
+                console.log('User Data loaded:', userData);
+                loadingDiv.style.display = 'none';
+                wheelContent.style.display = 'block';
                 
-                wheelData.userId = params.get('user_id') || tg.initDataUnsafe?.user?.id || 'unknown';
-                wheelData.totalDeposits = parseInt(params.get('total_deposits')) || 0;
-                wheelData.totalWithdrawals = parseInt(params.get('total_withdrawals')) || 0;
-                wheelData.spinCount = parseInt(params.get('spin_count')) || 0;
-                wheelData.lastSpinTime = params.get('last_spin_time') || 'لم يتم التدوير بعد';
-                wheelData.predefinedResult = params.get('result') || null;
-                wheelData.canSpin = params.get('can_spin') === 'true';
-                wheelData.spinMessage = params.get('message') || '';
-                wheelData.resultDescription = params.get('result_description') || '';
+                // رسم العجلة
+                drawWheel();
+                displayUserInfo();
+                checkAndShowSpinButton();
+                
+            } catch(e) {
+                console.error('Error decoding data:', e);
+                loadingDiv.innerHTML = '<div style="color: red;">❌ خطأ في تحميل البيانات</div>';
+            }
+        } else {
+            loadingDiv.innerHTML = '<div style="color: red;">❌ لا توجد بيانات متاحة</div>';
+        }
 
-                // تحديث واجهة المستخدم
-                updateUI();
+        // دالة التحقق من إمكانية التدوير (48 ساعة)
+        function canSpin() {
+            if (!userData) return false;
+            
+            // المستخدم الجديد يمكنه التدوير فوراً
+            if (userData.first_use === 1) {
+                console.log('First time user - can spin');
                 return true;
-            } catch (e) {
-                console.error("خطأ في معالجة البيانات:", e);
-                showError("حدث خطأ في معالجة البيانات: " + e.message);
-                return false;
             }
+            
+            const lastSpin = userData.last_spin;
+            if (!lastSpin) {
+                console.log('No last spin record - can spin');
+                return true;
+            }
+            
+            const lastSpinDate = new Date(lastSpin);
+            const now = new Date();
+            const hoursDiff = (now - lastSpinDate) / (1000 * 60 * 60);
+            
+            console.log(`Hours since last spin: ${hoursDiff}`);
+            
+            return hoursDiff >= 48;
         }
-
-        function updateUI() {
-            document.getElementById('userId').textContent = wheelData.userId;
-            document.getElementById('totalDeposits').textContent = wheelData.totalDeposits.toLocaleString() + ' ل.س';
-            document.getElementById('totalWithdrawals').textContent = wheelData.totalWithdrawals.toLocaleString() + ' ل.س';
-            document.getElementById('spinCount').textContent = wheelData.spinCount;
-            document.getElementById('lastSpinTime').textContent = wheelData.lastSpinTime;
-
-            if (wheelData.canSpin) {
-                document.getElementById('spinStatus').innerHTML = '<span class="status-badge status-available">متاح الآن</span>';
-                spinBtn.disabled = false;
+        
+        // دالة الحصول على الوقت المتبقي
+        function getRemainingTime() {
+            if (!userData) return null;
+            if (userData.first_use === 1) return null;
+            
+            const lastSpin = userData.last_spin;
+            if (!lastSpin) return null;
+            
+            const lastSpinDate = new Date(lastSpin);
+            const now = new Date();
+            const hoursPassed = (now - lastSpinDate) / (1000 * 60 * 60);
+            
+            if (hoursPassed >= 48) return null;
+            
+            const remainingMs = (48 * 60 * 60 * 1000) - (now - lastSpinDate);
+            const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+            const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+            const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+            
+            return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
+        }
+        
+        // دالة عرض وإخفاء زر التدوير
+        function checkAndShowSpinButton() {
+            const timerDiv = document.getElementById('timer');
+            
+            if (canSpin()) {
+                // إظهار زر التدوير
+                spinBtn.style.display = 'block';
+                timerDiv.className = 'timer ready';
+                timerDiv.innerHTML = '✅ يمكنك التدوير الآن! اضغط على الزر أعلاه.';
+                console.log('Spin button shown - user can spin');
             } else {
-                document.getElementById('spinStatus').innerHTML = '<span class="status-badge status-locked">مغلق - ' + wheelData.spinMessage + '</span>';
-                spinBtn.disabled = true;
-                if (wheelData.spinMessage.includes('ساعة')) {
-                    spinTimer.classList.add('show');
-                    spinTimer.textContent = wheelData.spinMessage;
+                // إخفاء زر التدوير
+                spinBtn.style.display = 'none';
+                const remaining = getRemainingTime();
+                if (remaining) {
+                    timerDiv.className = 'timer';
+                    timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>الوقت المتبقي: ${remaining.hours} ساعة و ${remaining.minutes} دقيقة و ${remaining.seconds} ثانية`;
+                    
+                    // تحديث العد التنازلي كل ثانية
+                    setTimeout(() => {
+                        checkAndShowSpinButton();
+                    }, 1000);
                 }
+                console.log('Spin button hidden - waiting period');
             }
         }
 
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.classList.add('show');
-        }
-
-        function drawWheel() {
+        function drawWheel(highlightSegment = null) {
             const sliceAngle = (2 * Math.PI) / segments.length;
             segments.forEach((text, i) => {
                 ctx.beginPath();
-                ctx.fillStyle = colors[i];
-                ctx.moveTo(140, 140);
-                ctx.arc(140, 140, 140, i * sliceAngle, (i + 1) * sliceAngle);
+                if (highlightSegment === i && userData && userData.first_use === 1) {
+                    ctx.fillStyle = "#FFD700";
+                } else {
+                    ctx.fillStyle = colors[i];
+                }
+                ctx.moveTo(150, 150);
+                ctx.arc(150, 150, 150, i * sliceAngle, (i + 1) * sliceAngle);
                 ctx.fill();
-
-                // رسم الحدود
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // رسم النص
+                
                 ctx.save();
-                ctx.translate(140, 140);
+                ctx.translate(150, 150);
                 ctx.rotate(i * sliceAngle + sliceAngle / 2);
                 ctx.fillStyle = "white";
-                ctx.font = "bold 18px Arial";
-                ctx.textAlign = "right";
-                ctx.fillText(text, 110, 5);
+                ctx.font = "bold 13px 'Segoe UI', Arial";
+                ctx.shadowBlur = 0;
+                ctx.fillText(text, 70, 10);
                 ctx.restore();
             });
         }
 
-        function getSegmentIndex(result) {
-            return segments.indexOf(result);
+        // دالة تحديد النتيجة حسب الشروط
+        function determineResult() {
+            if (!userData) return "5%";
+            
+            const spinCount = userData.spin_count || 0;
+            const totalRecharge = userData.total_recharge || 0;
+            const totalWithdraw = userData.total_withdraw || 0;
+            const firstUse = userData.first_use || 1;
+            
+            console.log(`Determining result - SpinCount: ${spinCount}, TotalRecharge: ${totalRecharge}, TotalWithdraw: ${totalWithdraw}, FirstUse: ${firstUse}`);
+            
+            // شرط المستخدم الجديد
+            if (firstUse === 1) {
+                console.log('Result: 25% (new user)');
+                return "25%";
+            }
+            
+            // المرة الثانية (بعد شحن ناجح)
+            if (spinCount === 1) {
+                console.log('Result: 50 ل.س (second spin)');
+                return "50 ل.س";
+            }
+            
+            // المرة الثالثة
+            if (spinCount === 2) {
+                console.log('Result: 5% (third spin)');
+                return "5%";
+            }
+            
+            // شرط 100
+            if (totalRecharge > 250000) {
+                console.log('Result: 100 ل.س (recharge > 250k)');
+                return "100 ل.س";
+            }
+            
+            // شرط 500
+            if (totalRecharge > 700000 && totalWithdraw <= 200000) {
+                console.log('Result: 500 ل.س (recharge > 700k && withdraw <= 200k)');
+                return "500 ل.س";
+            }
+            
+            // شرط 1000
+            if (totalRecharge > 1800000 && totalWithdraw <= 400000) {
+                console.log('Result: 1000 ل.س (recharge > 1.8M && withdraw <= 400k)');
+                return "1000 ل.س";
+            }
+            
+            console.log('Result: 5% (default)');
+            return "5%";
         }
 
-        function spinWheel() {
-            if (!wheelData.canSpin) {
-                showError("لا يمكنك التدوير الآن. " + wheelData.spinMessage);
-                return;
+        function displayUserInfo() {
+            if (userData) {
+                const infoDiv = document.getElementById('info');
+                infoDiv.innerHTML = `
+                    📊 <strong>معلومات حسابك</strong><br>
+                    ─────────────────<br>
+                    🎯 عدد التدويرات السابقة: ${userData.spin_count || 0}<br>
+                    💰 مجموع الشحنات: ${(userData.total_recharge || 0).toLocaleString()} ل.س<br>
+                    💸 مجموع السحوبات: ${(userData.total_withdraw || 0).toLocaleString()} ل.س<br>
+                    📦 شحن آخر 10 أيام: ${(userData.recent_recharge || 0).toLocaleString()} ل.س<br>
+                    🚀 سحب آخر 10 أيام: ${(userData.recent_withdraw || 0).toLocaleString()} ل.س<br>
+                    ─────────────────<br>
+                    🎁 <strong>الجائزة المتوقعة حسب شروطك</strong><br>
+                    🏆 ${determineResult()}
+                `;
             }
+        }
 
-            if (!wheelData.predefinedResult) {
-                showError("لم يتم تحديد نتيجة صحيحة من البوت");
-                return;
-            }
-
-            spinBtn.disabled = true;
-            resultSection.classList.remove('show');
-
-            const targetIndex = getSegmentIndex(wheelData.predefinedResult);
-            if (targetIndex === -1) {
-                showError("نتيجة غير صحيحة: " + wheelData.predefinedResult);
-                spinBtn.disabled = false;
-                return;
-            }
-
-            const sliceAngle = 360 / segments.length;
-            const targetDegree = targetIndex * sliceAngle;
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
             
-            // إضافة 4 دورات كاملة + الدرجة المستهدفة
-            const extraDegree = Math.floor(Math.random() * 360) + 1440 + (360 - targetDegree);
+            // التحقق مرة أخرى قبل التدوير
+            if (!canSpin()) {
+                checkAndShowSpinButton();
+                return;
+            }
+            
+            isSpinning = true;
+            spinBtn.disabled = true;
+            
+            // تحديد النتيجة حسب الشروط
+            const result = determineResult();
+            console.log('Spinning for result:', result);
+            
+            // العثور على فهرس النتيجة في العجلة
+            const resultIndex = segments.findIndex(seg => seg === result);
+            
+            // حساب الدوران للوصول إلى النتيجة المطلوبة
+            const sliceAngle = 360 / segments.length;
+            const targetAngle = 270; // موضع المؤشر
+            const currentAngle = currentRotation % 360;
+            
+            const resultCenterAngle = (resultIndex * sliceAngle + sliceAngle / 2);
+            let neededRotation = (targetAngle - resultCenterAngle + 360) % 360;
+            const fullRotations = 5 * 360;
+            const extraDegree = neededRotation + fullRotations;
+            
             currentRotation += extraDegree;
-
             canvas.style.transform = `rotate(${currentRotation}deg)`;
 
             setTimeout(() => {
-                showResult(wheelData.predefinedResult);
-                spinBtn.disabled = false;
-
                 // إرسال النتيجة للبوت
+                let resultType = "";
+                let resultValue = "";
+                
+                if (result.includes("%")) {
+                    resultType = "bonus_percent";
+                    resultValue = parseInt(result);
+                } else if (result.includes("ل.س")) {
+                    resultType = "direct_bonus";
+                    resultValue = parseInt(result);
+                }
+                
                 tg.sendData(JSON.stringify({
                     action: "spin_result",
-                    result: wheelData.predefinedResult,
-                    user_id: wheelData.userId
+                    result: result,
+                    result_type: resultType,
+                    result_value: resultValue
                 }));
-            }, 5000);
-        }
-
-        function showResult(result) {
-            document.getElementById('resultValue').textContent = result;
-            document.getElementById('resultDescription').textContent = descriptions[result] || wheelData.resultDescription;
-            resultSection.classList.add('show');
-        }
-
-        spinBtn.addEventListener('click', spinWheel);
-
-        // تهيئة الصفحة
-        window.addEventListener('load', () => {
-            drawWheel();
-            if (!parseWebAppData()) {
-                spinBtn.disabled = true;
-            }
+                
+                // تحديث العرض
+                const infoDiv = document.getElementById('info');
+                infoDiv.innerHTML = `🎉🎉 <strong>النتيجة: ${result}!</strong> 🎉🎉<br><br>${infoDiv.innerHTML}`;
+                
+                setTimeout(() => {
+                    tg.close();
+                }, 2000);
+                
+                isSpinning = false;
+            }, 4000);
         });
-
-        // تحديث المؤقت كل ثانية إذا كان هناك رسالة وقت
-        setInterval(() => {
-            if (spinTimer.classList.contains('show') && !wheelData.canSpin) {
-                // يمكن إضافة منطق تحديث المؤقت هنا
-            }
-        }, 1000);
     </script>
 </body>
 </html>
-
