@@ -10,7 +10,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
         }
 
         body {
@@ -27,6 +26,7 @@
             overflow-x: hidden;
         }
 
+        /* خلفية متحركة */
         body::before {
             content: '';
             position: fixed;
@@ -53,6 +53,7 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
 
+        /* عنوان DR.DOOM المميز */
         .title {
             text-align: center;
             margin-bottom: 15px;
@@ -70,6 +71,7 @@
             text-shadow: 0 0 30px rgba(0,180,255,0.5);
             letter-spacing: 2px;
             animation: gradientShift 3s ease infinite, textGlow 2s ease-in-out infinite alternate;
+            position: relative;
             display: inline-block;
             padding: 0 20px;
         }
@@ -96,8 +98,13 @@
             animation: iconPulse 1.5s ease infinite;
         }
 
-        .title::before { left: 10px; }
-        .title::after { right: 10px; }
+        .title::before {
+            left: 10px;
+        }
+
+        .title::after {
+            right: 10px;
+        }
 
         @keyframes iconPulse {
             0%, 100% { opacity: 0.4; transform: translateY(-50%) scale(1); }
@@ -120,7 +127,10 @@
         }
 
         @media (min-width: 400px) {
-            .wheel-wrapper { width: 320px; height: 320px; }
+            .wheel-wrapper {
+                width: 320px;
+                height: 320px;
+            }
         }
 
         #wheel {
@@ -131,6 +141,7 @@
             box-shadow: 0 0 0 8px rgba(255,255,255,0.2), 0 0 0 12px rgba(0,0,0,0.2), 0 20px 40px rgba(0,0,0,0.4);
         }
 
+        /* المؤشر بتصميم ⚡ مع لمعان */
         .pointer {
             position: absolute;
             top: -30px;
@@ -143,11 +154,18 @@
             animation: pointerGlow 1s ease-in-out infinite alternate;
         }
 
+        .pointer svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
         @keyframes pointerGlow {
             0% { filter: drop-shadow(0 0 5px #00ccff); }
             100% { filter: drop-shadow(0 0 20px #00ccff) drop-shadow(0 0 5px #ffffff); }
         }
 
+        /* مركز العجلة - شعار دائري */
         .wheel-center {
             position: absolute;
             top: 50%;
@@ -164,7 +182,13 @@
             box-shadow: 0 0 0 4px rgba(0,0,0,0.2), 0 0 0 8px rgba(255,255,255,0.3);
             overflow: hidden;
         }
-        .wheel-center img { width: 80%; height: 80%; object-fit: contain; }
+
+        .wheel-center img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
 
         button {
             margin-top: 25px;
@@ -181,14 +205,38 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             box-shadow: 0 5px 20px rgba(0,100,200,0.4);
+            position: relative;
+            overflow: hidden;
         }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 8px 30px rgba(0,150,255,0.6);
+        }
+
         button:disabled {
             background: linear-gradient(135deg, #555, #333);
+            box-shadow: none;
+            transform: none;
             cursor: not-allowed;
             opacity: 0.6;
-            transform: none;
-            box-shadow: none;
         }
+
         .timer {
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
@@ -201,21 +249,19 @@
             font-size: 0.85rem;
             border: 1px solid rgba(255,170,68,0.3);
         }
+
         .timer.ready {
             background: rgba(0,100,0,0.6);
             color: #88ff88;
             border-color: #88ff88;
         }
-        .timer.cooldown {
-            background: rgba(100,50,0,0.7);
-            color: #ffaa66;
-            border-color: #ffaa66;
-        }
+
         .loading {
             text-align: center;
             padding: 60px 20px;
             color: #fff;
         }
+
         .spinner {
             border: 3px solid rgba(255,255,255,0.2);
             border-top: 3px solid #00d4ff;
@@ -225,6 +271,7 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -235,22 +282,29 @@
     <div class="container" id="mainContainer">
         <div class="loading" id="loadingDiv">
             <div class="spinner"></div>
-            <div>جاري تحميل بياناتك...</div>
+            <div style="font-size: 1rem; letter-spacing: 2px;">جاري تحميل بياناتك...</div>
         </div>
         
         <div id="wheelContent" style="display: none;">
-            <div class="title"><h1>DR.DOOM</h1><div class="subtitle">⚡ SPIN & WIN ⚡</div></div>
+            <div class="title">
+                <h1>DR.DOOM</h1>
+                <div class="subtitle">⚡ SPIN & WIN ⚡</div>
+            </div>
+            
             <div class="wheel-wrapper">
-                <div class="pointer">
-                    <svg viewBox="0 0 100 100" fill="none">
+                <div class="pointer" id="pointer">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M50 0 L58 35 L50 30 L42 35 Z" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
                         <path d="M50 0 L55 40 L50 35 L45 40 Z" fill="#FFF" opacity="0.6"/>
                         <circle cx="50" cy="50" r="8" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
                     </svg>
                 </div>
                 <canvas id="wheel" width="320" height="320"></canvas>
-                <div class="wheel-center"><img src="https://cdn-icons-png.flaticon.com/512/1040/1040246.png" alt="logo"></div>
+                <div class="wheel-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1040/1040246.png" alt="logo" id="centerLogo">
+                </div>
             </div>
+            
             <button id="spinBtn" style="display: none;">⚡ أدر العجلة ⚡</button>
             <div class="timer" id="timer"></div>
         </div>
@@ -261,315 +315,70 @@
         tg.expand();
         tg.MainButton.hide();
 
+        // روابط الصور - يمكنك تغييرها
+        const BACKGROUND_IMAGE_URL = "https://www.transparenttextures.com/containers/75/75b5c3c7-7b1b-4c3e-8e3c-7b5c3e8e3c7e.png";
+        const CENTER_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
+
+        // تعيين خلفية الجسم
+        document.body.style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}'), linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 50%, #0a0a2a 100%)`;
+        document.body.style.backgroundBlendMode = "overlay";
+        document.body.style.backgroundSize = "cover, auto";
+        document.body.style.backgroundRepeat = "repeat, no-repeat";
+        document.body.style.backgroundPosition = "center";
+
+        // تعيين الشعار في المنتصف
+        const centerLogo = document.getElementById('centerLogo');
+        if (centerLogo) {
+            centerLogo.src = CENTER_LOGO_URL;
+            centerLogo.onerror = () => {
+                centerLogo.src = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
+            };
+        }
+
+        // الحصول على البيانات من URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const encodedData = urlParams.get('data');
+        let userData = null;
+        
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
         const loadingDiv = document.getElementById('loadingDiv');
         const wheelContent = document.getElementById('wheelContent');
-        const timerDiv = document.getElementById('timer');
-
-        // تعريف الجوائز (العرض فقط)
+        
+        // تعريف الجوائز (بدون نصوص على العجلة)
         const segments = ["50 ل.س", "100 ل.س", "500 ل.س", "1000 ل.س", "5%", "25%"];
+        
+        // ألوان أزرق وأبيض بالتناوب مع تأثير تصدع
         const baseColors = ["#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff"];
+        // تأثير التصدع - إضافة تدرجات داخلية
         const crackColors = ["#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8"];
         
         let currentRotation = 0;
         let isSpinning = false;
-        let userData = null;
-        let timerInterval = null;
-        
-        // ========== نظام التخزين المركزي في GitHub ==========
-        class RepoStorage {
-            constructor() {
-                // تحديد المستودع تلقائياً من الرابط
-                const path = window.location.pathname;
-                const parts = path.split('/').filter(p => p);
-                // GitHub Pages: /username/repo/ أو /repo/
-                if (parts.length >= 1) {
-                    this.repoName = parts[0];
-                    this.owner = parts[0]; // في GitHub Pages، username = repo name أحياناً
-                } else {
-                    this.repoName = 'your-repo-name';
-                    this.owner = 'your-username';
-                }
-                
-                // محاولة استخراج من hostname إذا كان custom domain
-                const hostParts = window.location.hostname.split('.');
-                if (hostParts[0] !== 'localhost' && hostParts[0] !== '127.0.0.1') {
-                    // قد يكون username.github.io
-                    if (hostParts[0] !== 'github' && !hostParts[0].includes('pages')) {
-                        this.owner = hostParts[0];
-                    }
-                }
-                
-                console.log(`📁 Repo: ${this.owner}/${this.repoName}`);
-                
-                // رابط ملف البيانات
-                this.dataUrl = `https://raw.githubusercontent.com/${this.owner}/${this.repoName}/main/data.json`;
-                this.apiUrl = `https://api.github.com/repos/${this.owner}/${this.repoName}/contents/data.json`;
-            }
-            
-            // قراءة البيانات من GitHub
-            async readData() {
-                try {
-                    const response = await fetch(this.dataUrl + '?t=' + Date.now());
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('📖 Data read from GitHub:', Object.keys(data.users || {}).length, 'users');
-                        return data;
-                    }
-                    return { users: {} };
-                } catch(e) {
-                    console.warn('⚠️ Could not read from GitHub:', e);
-                    return { users: {} };
-                }
-            }
-            
-            // كتابة البيانات إلى GitHub (يتطلب Personal Access Token)
-            async writeData(data, token) {
-                if (!token) {
-                    console.warn('⚠️ No token provided, saving to localStorage only');
-                    this.saveToLocalStorage(data);
-                    return false;
-                }
-                
-                try {
-                    // أولاً: الحصول على SHA الحالي للملف
-                    const response = await fetch(this.apiUrl, {
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    });
-                    
-                    let sha = null;
-                    if (response.ok) {
-                        const fileInfo = await response.json();
-                        sha = fileInfo.sha;
-                    }
-                    
-                    // تحويل البيانات إلى Base64
-                    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-                    
-                    // تحديث الملف
-                    const updateResponse = await fetch(this.apiUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: 'Update spin data',
-                            content: content,
-                            sha: sha
-                        })
-                    });
-                    
-                    if (updateResponse.ok) {
-                        console.log('✅ Data written to GitHub successfully');
-                        return true;
-                    } else {
-                        console.error('❌ Failed to write to GitHub:', await updateResponse.text());
-                        this.saveToLocalStorage(data);
-                        return false;
-                    }
-                } catch(e) {
-                    console.error('❌ Error writing to GitHub:', e);
-                    this.saveToLocalStorage(data);
-                    return false;
-                }
-            }
-            
-            // حفظ نسخة احتياطية في localStorage
-            saveToLocalStorage(data) {
-                localStorage.setItem('repo_storage_backup', JSON.stringify(data));
-                console.log('💾 Backup saved to localStorage');
-            }
-            
-            // استعادة من localStorage
-            getFromLocalStorage() {
-                const backup = localStorage.getItem('repo_storage_backup');
-                if (backup) {
-                    try {
-                        return JSON.parse(backup);
-                    } catch(e) {
-                        return null;
-                    }
-                }
-                return null;
-            }
-        }
-        
-        // ========== مدير التدوير المركزي ==========
-        class SpinManager {
-            constructor(repoStorage, githubToken = null) {
-                this.storage = repoStorage;
-                this.token = githubToken;
-                this.cache = null;
-            }
-            
-            // الحصول على معرف المستخدم
-            getUserId() {
-                if (userData && userData.user_id) return String(userData.user_id);
-                if (userData && userData.id) return String(userData.id);
-                if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
-                    return String(tg.initDataUnsafe.user.id);
-                }
-                if (!window._tempSessionId) {
-                    window._tempSessionId = 'session_' + Date.now() + '_' + Math.random();
-                }
-                return window._tempSessionId;
-            }
-            
-            // تحميل جميع البيانات
-            async loadData() {
-                this.cache = await this.storage.readData();
-                if ((!this.cache.users || Object.keys(this.cache.users).length === 0) && this.storage.getFromLocalStorage()) {
-                    this.cache = this.storage.getFromLocalStorage();
-                }
-                if (!this.cache.users) this.cache.users = {};
-                return this.cache;
-            }
-            
-            // التحقق من إمكانية التدوير (48 ساعة)
-            async canSpin() {
-                const userId = this.getUserId();
-                await this.loadData();
-                
-                const userRecord = this.cache.users[userId];
-                if (!userRecord) {
-                    console.log('✅ New user - can spin');
-                    return true;
-                }
-                
-                const lastSpin = userRecord.last_spin;
-                if (!lastSpin) return true;
-                
-                const lastSpinDate = new Date(lastSpin);
-                const now = new Date();
-                const diffHours = (now - lastSpinDate) / (1000 * 60 * 60);
-                
-                console.log(`🕐 Last spin: ${lastSpinDate}, Now: ${now}, Diff: ${diffHours.toFixed(2)} hours`);
-                
-                return diffHours >= 48;
-            }
-            
-            // الحصول على الوقت المتبقي
-            async getRemainingTime() {
-                const userId = this.getUserId();
-                await this.loadData();
-                
-                const userRecord = this.cache.users[userId];
-                if (!userRecord || !userRecord.last_spin) return null;
-                
-                const lastSpinDate = new Date(userRecord.last_spin);
-                const now = new Date();
-                const remainingMs = (48 * 60 * 60 * 1000) - (now - lastSpinDate);
-                
-                if (remainingMs <= 0) return null;
-                
-                const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
-                const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-                const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-                
-                return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
-            }
-            
-            // تسجيل تدوير جديد
-            async recordSpin(result) {
-                const userId = this.getUserId();
-                await this.loadData();
-                
-                const now = new Date().toISOString();
-                const existing = this.cache.users[userId] || {};
-                
-                this.cache.users[userId] = {
-                    user_id: userId,
-                    last_spin: now,
-                    spin_count: (existing.spin_count || 0) + 1,
-                    total_recharge: userData?.total_recharge || existing.total_recharge || 0,
-                    total_withdraw: userData?.total_withdraw || existing.total_withdraw || 0,
-                    last_result: result,
-                    first_use: existing.first_use || 0
-                };
-                
-                // محاولة حفظ في GitHub (إذا كان هناك توكن)
-                const saved = await this.storage.writeData(this.cache, this.token);
-                
-                if (!saved) {
-                    console.log('⚠️ Data saved locally only (no token or GitHub error)');
-                }
-                
-                return this.cache.users[userId];
-            }
-            
-            // الحصول على بيانات المستخدم للتخزين المحلي
-            getUserRecord() {
-                const userId = this.getUserId();
-                if (this.cache && this.cache.users[userId]) {
-                    return this.cache.users[userId];
-                }
-                return null;
-            }
-        }
-        
-        // ========== تهيئة النظام ==========
-        // ⚠️ هام: ضع توكن GitHub الشخصي هنا (يتم تخزينه محلياً فقط)
-        // يمكنك الحصول على توكن من: Settings -> Developer settings -> Personal access tokens
-        // الصلاحيات المطلوبة: repo (الكتابة على المستودع)
-        const GITHUB_TOKEN = null; // ضع التوكن هنا إذا أردت الحفظ على GitHub
-        
-        const repoStorage = new RepoStorage();
-        const spinManager = new SpinManager(repoStorage, GITHUB_TOKEN);
-        
-        // ========== باقي دوال العجلة ==========
-        
-        // فك تشفير Base64 URL-safe
-        function base64UrlDecode(str) {
+
+        // فك تشفير البيانات
+        if (encodedData) {
             try {
-                let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-                while (base64.length % 4) {
-                    base64 += '=';
-                }
-                return atob(base64);
+                const decodedData = atob(encodedData.replace(/-/g, '+').replace(/_/g, '/'));
+                userData = JSON.parse(decodedData);
+                console.log('User Data loaded:', userData);
+                loadingDiv.style.display = 'none';
+                wheelContent.style.display = 'block';
+                
+                // رسم العجلة
+                drawWheel();
+                checkAndShowSpinButton();
+                
             } catch(e) {
-                console.error("Base64 Decode Error:", e);
-                return null;
+                console.error('Error decoding data:', e);
+                loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ خطأ في تحميل البيانات</div>';
             }
+        } else {
+            loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا توجد بيانات متاحة</div>';
         }
-        
-        // الحصول على البيانات من الرابط
-        const urlParams = new URLSearchParams(window.location.search);
-        const encodedData = urlParams.get('data');
-        
-        async function init() {
-            if (encodedData) {
-                try {
-                    const jsonString = base64UrlDecode(encodedData);
-                    if (jsonString) {
-                        userData = JSON.parse(jsonString);
-                        console.log("✅ Data received:", userData);
-                        
-                        // تحميل البيانات المركزية
-                        await spinManager.loadData();
-                        
-                        loadingDiv.style.display = 'none';
-                        wheelContent.style.display = 'block';
-                        drawWheel();
-                        checkAndShowSpinButton();
-                    } else {
-                        throw new Error("Failed to decode data");
-                    }
-                } catch(e) {
-                    console.error('❌ Error processing data:', e);
-                    loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ خطأ في تحميل البيانات</div>';
-                }
-            } else {
-                loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا توجد بيانات متاحة</div>';
-            }
-        }
-        
-        // رسم العجلة
+
+        // دالة رسم العجلة مع تأثير التصدع والتدرجات
         function drawWheel() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -580,48 +389,161 @@
                 const startAngle = i * sliceAngle;
                 const endAngle = (i + 1) * sliceAngle;
                 
+                // رسم القطاع الرئيسي
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.closePath();
                 
-                const gradient = ctx.createLinearGradient(centerX - radius/2, centerY - radius/2, centerX + radius/2, centerY + radius/2);
+                // تدرج لوني للقطاع
+                const gradient = ctx.createLinearGradient(
+                    centerX + Math.cos(startAngle) * radius * 0.3,
+                    centerY + Math.sin(startAngle) * radius * 0.3,
+                    centerX + Math.cos(endAngle) * radius * 0.7,
+                    centerY + Math.sin(endAngle) * radius * 0.7
+                );
                 gradient.addColorStop(0, baseColors[i]);
-                gradient.addColorStop(1, crackColors[i]);
+                gradient.addColorStop(0.7, crackColors[i]);
+                gradient.addColorStop(1, baseColors[i]);
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-                ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                // رسم حدود القطاع
+                ctx.strokeStyle = "rgba(0,0,0,0.15)";
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
+                
+                // تأثير التصدع - خطوط عشوائية داخل كل قطاع
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.clip();
+                
+                // رسم خطوط تشبه التصدع
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.15})`;
+                ctx.lineWidth = 1;
+                
+                for (let c = 0; c < 4; c++) {
+                    const angle = startAngle + Math.random() * sliceAngle;
+                    const dist1 = radius * (0.2 + Math.random() * 0.3);
+                    const dist2 = radius * (0.5 + Math.random() * 0.4);
+                    const x1 = centerX + Math.cos(angle) * dist1;
+                    const y1 = centerY + Math.sin(angle) * dist1;
+                    const x2 = centerX + Math.cos(angle + (Math.random() - 0.5) * 0.3) * dist2;
+                    const y2 = centerY + Math.sin(angle + (Math.random() - 0.5) * 0.3) * dist2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
             }
             
+            // رسم حلقة داخلية دائرية (زخرفة)
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.15, 0, 2 * Math.PI);
             ctx.fillStyle = "#FFD700";
             ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // رسم حدود دائرية خارجية
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
+            ctx.strokeStyle = "rgba(255,215,0,0.5)";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 8, 0, 2 * Math.PI);
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // دالة التحقق من إمكانية التدوير (48 ساعة)
+        function canSpin() {
+            if (!userData) return false;
+            if (userData.first_use === 1) {
+                console.log('First time user - can spin');
+                return true;
+            }
+            
+            const lastSpin = userData.last_spin;
+            if (!lastSpin) return true;
+            
+            const lastSpinDate = new Date(lastSpin);
+            const now = new Date();
+            const hoursDiff = (now - lastSpinDate) / (1000 * 60 * 60);
+            
+            return hoursDiff >= 48;
         }
         
-        function getMultipliedValue(resultText) {
-            if (resultText.includes("%")) {
-                return parseInt(resultText);
-            } else if (resultText.includes("ل.س")) {
-                const numberMatch = resultText.match(/\d+/);
-                if (numberMatch) {
-                    const value = parseInt(numberMatch[0]);
-                    return value * 100;
+        // دالة الحصول على الوقت المتبقي
+        function getRemainingTime() {
+            if (!userData) return null;
+            if (userData.first_use === 1) return null;
+            
+            const lastSpin = userData.last_spin;
+            if (!lastSpin) return null;
+            
+            const lastSpinDate = new Date(lastSpin);
+            const now = new Date();
+            const hoursPassed = (now - lastSpinDate) / (1000 * 60 * 60);
+            
+            if (hoursPassed >= 48) return null;
+            
+            const remainingMs = (48 * 60 * 60 * 1000) - (now - lastSpinDate);
+            const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+            const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+            const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+            
+            return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
+        }
+        
+        // دالة عرض وإخفاء زر التدوير (لا يظهر إلا بعد التحقق)
+        function checkAndShowSpinButton() {
+            const timerDiv = document.getElementById('timer');
+            
+            // التأكد من وجود userData أولاً
+            if (!userData) {
+                spinBtn.style.display = 'none';
+                timerDiv.className = 'timer';
+                timerDiv.innerHTML = '⏳ جاري التحقق من بياناتك...';
+                return;
+            }
+            
+            if (canSpin()) {
+                spinBtn.style.display = 'block';
+                timerDiv.className = 'timer ready';
+                timerDiv.innerHTML = '⚡✅ يمكنك التدوير الآن! اضغط على الزر أعلاه ✅⚡';
+                console.log('Spin button shown - user can spin');
+            } else {
+                spinBtn.style.display = 'none';
+                const remaining = getRemainingTime();
+                if (remaining) {
+                    timerDiv.className = 'timer';
+                    timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي: ${remaining.hours} ساعة و ${remaining.minutes} دقيقة و ${remaining.seconds} ثانية ⚡`;
+                    
+                    setTimeout(() => {
+                        checkAndShowSpinButton();
+                    }, 1000);
                 }
             }
-            return 0;
         }
-        
+
+        // دالة تحديد النتيجة حسب الشروط
         function determineResult() {
             if (!userData) return "5%";
             
             const spinCount = userData.spin_count || 0;
             const totalRecharge = userData.total_recharge || 0;
             const totalWithdraw = userData.total_withdraw || 0;
-            const firstUse = userData.first_use || 0;
+            const firstUse = userData.first_use || 1;
             
             if (firstUse === 1) return "25%";
             if (spinCount === 1) return "50 ل.س";
@@ -632,47 +554,11 @@
             
             return "5%";
         }
-        
-        async function checkAndShowSpinButton() {
-            if (!userData) return;
-            
-            const can = await spinManager.canSpin();
-            
-            if (can) {
-                spinBtn.style.display = 'block';
-                spinBtn.disabled = false;
-                timerDiv.className = 'timer ready';
-                timerDiv.innerHTML = '⚡✅ يمكنك التدوير الآن! اضغط على الزر أعلاه ✅⚡';
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                }
-            } else {
-                spinBtn.style.display = 'none';
-                const remaining = await spinManager.getRemainingTime();
-                if (remaining) {
-                    timerDiv.className = 'timer';
-                    timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي: ${remaining.hours} ساعة و ${remaining.minutes} دقيقة و ${remaining.seconds} ثانية ⚡`;
-                    
-                    if (timerInterval) clearInterval(timerInterval);
-                    timerInterval = setInterval(async () => {
-                        const newRemaining = await spinManager.getRemainingTime();
-                        if (!newRemaining) {
-                            if (timerInterval) clearInterval(timerInterval);
-                            checkAndShowSpinButton();
-                        } else {
-                            timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي: ${newRemaining.hours} ساعة و ${newRemaining.minutes} دقيقة و ${newRemaining.seconds} ثانية ⚡`;
-                        }
-                    }, 1000);
-                }
-            }
-        }
-        
-        // حدث الضغط على زر التدوير
-        spinBtn.addEventListener('click', async () => {
+
+        // زر التدوير
+        spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
-            
-            if (!(await spinManager.canSpin())) {
+            if (!canSpin()) {
                 checkAndShowSpinButton();
                 return;
             }
@@ -680,14 +566,13 @@
             isSpinning = true;
             spinBtn.disabled = true;
             
-            const resultText = determineResult();
-            console.log('🎡 Spinning for result:', resultText);
+            const result = determineResult();
+            console.log('Spinning for result:', result);
             
-            const multipliedValue = getMultipliedValue(resultText);
-            
-            const resultIndex = segments.findIndex(seg => seg === resultText);
+            const resultIndex = segments.findIndex(seg => seg === result);
             const sliceAngle = 360 / segments.length;
             const targetAngle = 270;
+            const currentAngle = currentRotation % 360;
             const resultCenterAngle = (resultIndex * sliceAngle + sliceAngle / 2);
             let neededRotation = (targetAngle - resultCenterAngle + 360) % 360;
             const fullRotations = 5 * 360;
@@ -695,27 +580,22 @@
             
             currentRotation += extraDegree;
             canvas.style.transform = `rotate(${currentRotation}deg)`;
-            
-            setTimeout(async () => {
-                // تسجيل التدوير في التخزين المركزي
-                await spinManager.recordSpin(resultText);
-                
+
+            setTimeout(() => {
                 let resultType = "";
-                let resultValue = 0;
+                let resultValue = "";
                 
-                if (resultText.includes("%")) {
+                if (result.includes("%")) {
                     resultType = "bonus_percent";
-                    resultValue = multipliedValue;
-                } else if (resultText.includes("ل.س")) {
+                    resultValue = parseInt(result);
+                } else if (result.includes("ل.س")) {
                     resultType = "direct_bonus";
-                    resultValue = multipliedValue;
+                    resultValue = parseInt(result);
                 }
-                
-                console.log(`📤 Sending to bot: type=${resultType}, value=${resultValue} (original: ${resultText})`);
                 
                 tg.sendData(JSON.stringify({
                     action: "spin_result",
-                    result: resultText,
+                    result: result,
                     result_type: resultType,
                     result_value: resultValue
                 }));
@@ -727,9 +607,6 @@
                 isSpinning = false;
             }, 4000);
         });
-        
-        // بدء التطبيق
-        init();
     </script>
 </body>
 </html>
