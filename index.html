@@ -26,6 +26,7 @@
             overflow-x: hidden;
         }
 
+        /* خلفية متحركة */
         body::before {
             content: '';
             position: fixed;
@@ -52,6 +53,7 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
 
+        /* عنوان DR.DOOM المميز */
         .title {
             text-align: center;
             margin-bottom: 15px;
@@ -139,6 +141,7 @@
             box-shadow: 0 0 0 8px rgba(255,255,255,0.2), 0 0 0 12px rgba(0,0,0,0.2), 0 20px 40px rgba(0,0,0,0.4);
         }
 
+        /* المؤشر بتصميم ⚡ مع لمعان */
         .pointer {
             position: absolute;
             top: -30px;
@@ -162,6 +165,7 @@
             100% { filter: drop-shadow(0 0 20px #00ccff) drop-shadow(0 0 5px #ffffff); }
         }
 
+        /* مركز العجلة - شعار دائري */
         .wheel-center {
             position: absolute;
             top: 50%;
@@ -311,23 +315,27 @@
         tg.expand();
         tg.MainButton.hide();
 
-        const BACKGROUND_IMAGE_URL = "https://i.postimg.cc/dVz426qN/IMG-20260413-205747-321.jpg";
-        const CENTER_LOGO_URL = "https://i.postimg.cc/dVz426qN/IMG-20260413-205747-321.jpg";
+        // روابط الصور - يمكنك تغييرها
+        const BACKGROUND_IMAGE_URL = "https://www.transparenttextures.com/containers/75/75b5c3c7-7b1b-4c3e-8e3c-7b5c3e8e3c7e.png";
+        const CENTER_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
 
+        // تعيين خلفية الجسم
         document.body.style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}'), linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 50%, #0a0a2a 100%)`;
         document.body.style.backgroundBlendMode = "overlay";
         document.body.style.backgroundSize = "cover, auto";
         document.body.style.backgroundRepeat = "repeat, no-repeat";
         document.body.style.backgroundPosition = "center";
 
+        // تعيين الشعار في المنتصف
         const centerLogo = document.getElementById('centerLogo');
         if (centerLogo) {
             centerLogo.src = CENTER_LOGO_URL;
             centerLogo.onerror = () => {
-                centerLogo.src = "https://i.postimg.cc/dVz426qN/IMG-20260413-205747-321.jpg";
+                centerLogo.src = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
             };
         }
 
+        // الحصول على البيانات من URL
         const urlParams = new URLSearchParams(window.location.search);
         const encodedData = urlParams.get('data');
         let userData = null;
@@ -338,9 +346,12 @@
         const loadingDiv = document.getElementById('loadingDiv');
         const wheelContent = document.getElementById('wheelContent');
         
+        // تعريف الجوائز (بدون نصوص على العجلة)
         const segments = ["50 ل.س", "100 ل.س", "500 ل.س", "1000 ل.س", "5%", "25%"];
         
+        // ألوان أزرق وأبيض بالتناوب مع تأثير تصدع
         const baseColors = ["#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff"];
+        // تأثير التصدع - إضافة تدرجات داخلية
         const crackColors = ["#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8"];
         
         let currentRotation = 0;
@@ -355,6 +366,7 @@
                 loadingDiv.style.display = 'none';
                 wheelContent.style.display = 'block';
                 
+                // رسم العجلة
                 drawWheel();
                 checkAndShowSpinButton();
                 
@@ -366,6 +378,7 @@
             loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا توجد بيانات متاحة</div>';
         }
 
+        // دالة رسم العجلة مع تأثير التصدع والتدرجات
         function drawWheel() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -376,11 +389,13 @@
                 const startAngle = i * sliceAngle;
                 const endAngle = (i + 1) * sliceAngle;
                 
+                // رسم القطاع الرئيسي
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.closePath();
                 
+                // تدرج لوني للقطاع
                 const gradient = ctx.createLinearGradient(
                     centerX + Math.cos(startAngle) * radius * 0.3,
                     centerY + Math.sin(startAngle) * radius * 0.3,
@@ -393,10 +408,12 @@
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
+                // رسم حدود القطاع
                 ctx.strokeStyle = "rgba(0,0,0,0.15)";
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
                 
+                // تأثير التصدع - خطوط عشوائية داخل كل قطاع
                 ctx.save();
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
@@ -404,6 +421,7 @@
                 ctx.closePath();
                 ctx.clip();
                 
+                // رسم خطوط تشبه التصدع
                 ctx.beginPath();
                 ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.15})`;
                 ctx.lineWidth = 1;
@@ -426,12 +444,14 @@
                 ctx.restore();
             }
             
+            // رسم حلقة داخلية دائرية (زخرفة)
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.15, 0, 2 * Math.PI);
             ctx.fillStyle = "#FFD700";
             ctx.fill();
             ctx.shadowBlur = 0;
             
+            // رسم حدود دائرية خارجية
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
             ctx.strokeStyle = "rgba(255,215,0,0.5)";
@@ -445,7 +465,7 @@
             ctx.stroke();
         }
 
-        // ✅ التحقق من إمكانية التدوير (48 ساعة)
+        // دالة التحقق من إمكانية التدوير (48 ساعة)
         function canSpin() {
             if (!userData) return false;
             if (userData.first_use === 1) {
@@ -460,11 +480,10 @@
             const now = new Date();
             const hoursDiff = (now - lastSpinDate) / (1000 * 60 * 60);
             
-            console.log(`Hours since last spin: ${hoursDiff}`);
             return hoursDiff >= 48;
         }
         
-        // ✅ الحصول على الوقت المتبقي
+        // دالة الحصول على الوقت المتبقي
         function getRemainingTime() {
             if (!userData) return null;
             if (userData.first_use === 1) return null;
@@ -486,10 +505,11 @@
             return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
         }
         
-        // ✅ عرض الزر والتحقق
+        // دالة عرض وإخفاء زر التدوير (لا يظهر إلا بعد التحقق)
         function checkAndShowSpinButton() {
             const timerDiv = document.getElementById('timer');
             
+            // التأكد من وجود userData أولاً
             if (!userData) {
                 spinBtn.style.display = 'none';
                 timerDiv.className = 'timer';
@@ -509,7 +529,6 @@
                     timerDiv.className = 'timer';
                     timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي: ${remaining.hours} ساعة و ${remaining.minutes} دقيقة و ${remaining.seconds} ثانية ⚡`;
                     
-                    // تحديث العد التنازلي كل ثانية
                     setTimeout(() => {
                         checkAndShowSpinButton();
                     }, 1000);
@@ -517,6 +536,7 @@
             }
         }
 
+        // دالة تحديد النتيجة حسب الشروط
         function determineResult() {
             if (!userData) return "5%";
             
@@ -535,18 +555,10 @@
             return "5%";
         }
 
-        // ✅ زر التدوير مع التحقق
+        // زر التدوير
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
-            
-            // التحقق مرة أخرى قبل التدوير
             if (!canSpin()) {
-                const remaining = getRemainingTime();
-                if (remaining) {
-                    alert(`⚠️ يجب الانتظار ${remaining.hours} ساعة و ${remaining.minutes} دقيقة قبل التدوير مرة أخرى!`);
-                } else {
-                    alert('⚠️ لا يمكنك التدوير الآن!');
-                }
                 checkAndShowSpinButton();
                 return;
             }
@@ -581,23 +593,14 @@
                     resultValue = parseInt(result);
                 }
                 
-                // ✅ إرسال النتيجة + طلب تحديث الزر فوراً
                 tg.sendData(JSON.stringify({
                     action: "spin_result",
                     result: result,
                     result_type: resultType,
-                    result_value: resultValue,
-                    user_id: tg.initDataUnsafe.user.id,
-                    last_spin: new Date().toISOString()  // وقت آخر تدوير
+                    result_value: resultValue
                 }));
                 
-                // ✅ إرسال أمر تحديث الزر بعد الإغلاق
                 setTimeout(() => {
-                    tg.sendData(JSON.stringify({
-                        action: "close_wheel",
-                        user_id: tg.initDataUnsafe.user.id,
-                        last_spin: new Date().toISOString()
-                    }));
                     tg.close();
                 }, 1500);
                 
