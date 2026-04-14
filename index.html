@@ -10,7 +10,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
         }
 
         body {
@@ -70,6 +69,7 @@
             text-shadow: 0 0 30px rgba(0,180,255,0.5);
             letter-spacing: 2px;
             animation: gradientShift 3s ease infinite, textGlow 2s ease-in-out infinite alternate;
+            position: relative;
             display: inline-block;
             padding: 0 20px;
         }
@@ -96,8 +96,13 @@
             animation: iconPulse 1.5s ease infinite;
         }
 
-        .title::before { left: 10px; }
-        .title::after { right: 10px; }
+        .title::before {
+            left: 10px;
+        }
+
+        .title::after {
+            right: 10px;
+        }
 
         @keyframes iconPulse {
             0%, 100% { opacity: 0.4; transform: translateY(-50%) scale(1); }
@@ -120,7 +125,10 @@
         }
 
         @media (min-width: 400px) {
-            .wheel-wrapper { width: 320px; height: 320px; }
+            .wheel-wrapper {
+                width: 320px;
+                height: 320px;
+            }
         }
 
         #wheel {
@@ -141,6 +149,12 @@
             z-index: 20;
             filter: drop-shadow(0 0 10px #00ccff);
             animation: pointerGlow 1s ease-in-out infinite alternate;
+        }
+
+        .pointer svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
 
         @keyframes pointerGlow {
@@ -164,7 +178,13 @@
             box-shadow: 0 0 0 4px rgba(0,0,0,0.2), 0 0 0 8px rgba(255,255,255,0.3);
             overflow: hidden;
         }
-        .wheel-center img { width: 80%; height: 80%; object-fit: contain; }
+
+        .wheel-center img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
 
         button {
             margin-top: 25px;
@@ -181,14 +201,38 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             box-shadow: 0 5px 20px rgba(0,100,200,0.4);
+            position: relative;
+            overflow: hidden;
         }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 8px 30px rgba(0,150,255,0.6);
+        }
+
         button:disabled {
             background: linear-gradient(135deg, #555, #333);
+            box-shadow: none;
+            transform: none;
             cursor: not-allowed;
             opacity: 0.6;
-            transform: none;
-            box-shadow: none;
         }
+
         .timer {
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
@@ -201,21 +245,19 @@
             font-size: 0.85rem;
             border: 1px solid rgba(255,170,68,0.3);
         }
+
         .timer.ready {
             background: rgba(0,100,0,0.6);
             color: #88ff88;
             border-color: #88ff88;
         }
-        .timer.warning {
-            background: rgba(100,0,0,0.6);
-            color: #ff8888;
-            border-color: #ff8888;
-        }
+
         .loading {
             text-align: center;
             padding: 60px 20px;
             color: #fff;
         }
+
         .spinner {
             border: 3px solid rgba(255,255,255,0.2);
             border-top: 3px solid #00d4ff;
@@ -225,29 +267,10 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-        .token-input {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 10px;
-            background: rgba(0,0,0,0.5);
-            display: none;
-        }
-        .token-input input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: none;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        .token-input button {
-            margin-top: 5px;
-            padding: 8px;
-            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -255,28 +278,31 @@
     <div class="container" id="mainContainer">
         <div class="loading" id="loadingDiv">
             <div class="spinner"></div>
-            <div>جاري تحميل بياناتك...</div>
+            <div style="font-size: 1rem; letter-spacing: 2px;">جاري تحميل بياناتك...</div>
         </div>
         
         <div id="wheelContent" style="display: none;">
-            <div class="title"><h1>DR.DOOM</h1><div class="subtitle">⚡ SPIN & WIN ⚡</div></div>
+            <div class="title">
+                <h1>DR.DOOM</h1>
+                <div class="subtitle">⚡ SPIN & WIN ⚡</div>
+            </div>
+            
             <div class="wheel-wrapper">
-                <div class="pointer">
-                    <svg viewBox="0 0 100 100" fill="none">
+                <div class="pointer" id="pointer">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M50 0 L58 35 L50 30 L42 35 Z" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
                         <path d="M50 0 L55 40 L50 35 L45 40 Z" fill="#FFF" opacity="0.6"/>
                         <circle cx="50" cy="50" r="8" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
                     </svg>
                 </div>
                 <canvas id="wheel" width="320" height="320"></canvas>
-                <div class="wheel-center"><img src="https://cdn-icons-png.flaticon.com/512/1040/1040246.png" alt="logo"></div>
+                <div class="wheel-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1040/1040246.png" alt="logo" id="centerLogo">
+                </div>
             </div>
+            
             <button id="spinBtn" style="display: none;">⚡ أدر العجلة ⚡</button>
             <div class="timer" id="timer"></div>
-            <div class="token-input" id="tokenInput">
-                <input type="password" id="githubToken" placeholder="أدخل GitHub Token للتحديث">
-                <button id="saveTokenBtn">💾 حفظ التوكن</button>
-            </div>
         </div>
     </div>
 
@@ -285,199 +311,198 @@
         tg.expand();
         tg.MainButton.hide();
 
+        const BACKGROUND_IMAGE_URL = "https://www.transparenttextures.com/containers/75/75b5c3c7-7b1b-4c3e-8e3c-7b5c3e8e3c7e.png";
+        const CENTER_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
+
+        document.body.style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}'), linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 50%, #0a0a2a 100%)`;
+        document.body.style.backgroundBlendMode = "overlay";
+        document.body.style.backgroundSize = "cover, auto";
+        document.body.style.backgroundRepeat = "repeat, no-repeat";
+        document.body.style.backgroundPosition = "center";
+
+        const centerLogo = document.getElementById('centerLogo');
+        if (centerLogo) {
+            centerLogo.src = CENTER_LOGO_URL;
+            centerLogo.onerror = () => {
+                centerLogo.src = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
+            };
+        }
+
+        // ========== التخزين المحلي الاحتياطي ==========
+        const STORAGE_KEY = 'DRDOOM_SPIN_DATA';
+        
+        function getUserId() {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+                return `tg_${tg.initDataUnsafe.user.id}`;
+            }
+            let deviceId = localStorage.getItem('DRDOOM_DEVICE_ID');
+            if (!deviceId) {
+                deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('DRDOOM_DEVICE_ID', deviceId);
+            }
+            return deviceId;
+        }
+        
+        function saveSpinDataLocally(userId, spinTime, spinCount) {
+            const allData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            allData[userId] = {
+                lastSpin: spinTime,
+                spinCount: spinCount
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+        }
+        
+        function getLocalSpinData(userId) {
+            const allData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            return allData[userId] || null;
+        }
+        
+        const userId = getUserId();
+        
+        // ========== نهاية التخزين المحلي ==========
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const encodedData = urlParams.get('data');
+        let userData = null;
+        
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
         const loadingDiv = document.getElementById('loadingDiv');
         const wheelContent = document.getElementById('wheelContent');
-        const timerDiv = document.getElementById('timer');
-
-        // تعريف الجوائز (للشاشة فقط)
+        
         const segments = ["50 ل.س", "100 ل.س", "500 ل.س", "1000 ل.س", "5%", "25%"];
         const baseColors = ["#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff"];
         const crackColors = ["#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8"];
         
         let currentRotation = 0;
         let isSpinning = false;
-        let userData = null;
-        let timerInterval = null;
-        let repoData = null;
-        let userId = null;
 
-        // ========== نظام التخزين في GitHub ==========
-        class RepoStorage {
-            constructor() {
-                const path = window.location.pathname;
-                const parts = path.split('/').filter(p => p.length > 0);
-                
-                if (parts.length >= 2) {
-                    this.owner = parts[0];
-                    this.repoName = parts[1];
-                } else {
-                    this.owner = "YOUR_GITHUB_USERNAME";
-                    this.repoName = "YOUR_REPO_NAME";
-                }
-                
-                this.dataUrl = `https://raw.githubusercontent.com/${this.owner}/${this.repoName}/main/wheel_data.json`;
-                this.apiUrl = `https://api.github.com/repos/${this.owner}/${this.repoName}/contents/wheel_data.json`;
-                
-                console.log(`📁 Repository: ${this.owner}/${this.repoName}`);
-            }
-            
-            async readData() {
-                try {
-                    const response = await fetch(this.dataUrl + '?t=' + Date.now());
-                    if (response.ok) {
-                        return await response.json();
-                    }
-                    return { users: {} };
-                } catch(e) {
-                    console.error("❌ Error reading from GitHub:", e);
-                    return { users: {} };
-                }
-            }
-            
-            async writeData(data, token) {
-                try {
-                    const response = await fetch(this.apiUrl, {
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    });
-                    
-                    if (!response.ok) return false;
-                    
-                    const fileInfo = await response.json();
-                    
-                    const updateResponse = await fetch(this.apiUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: `Update user data - ${new Date().toISOString()}`,
-                            content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
-                            sha: fileInfo.sha
-                        })
-                    });
-                    
-                    return updateResponse.ok;
-                } catch(e) {
-                    console.error("❌ Error writing to GitHub:", e);
-                    return false;
-                }
-            }
-            
-            saveToken(token) { localStorage.setItem('github_token', token); }
-            getToken() { return localStorage.getItem('github_token'); }
-        }
-
-        const storage = new RepoStorage();
-
-        // ========== دوال التحقق من المستخدم ==========
+        // ========== شروط الجوائز حسب المطلوب ==========
+        // لا يوجد تدويرات سابقة -> بونص 25%
+        // يوجد تدويرة سابقة وعملية شحن واحدة -> 50 ل.س
+        // تدويرة ثانية ولا يوجد عملية شحن -> 5%
+        // باقي الشروط كما هي
         
-        function base64UrlDecode(str) {
-            try {
-                let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-                while (base64.length % 4) base64 += '=';
-                return atob(base64);
-            } catch(e) {
-                return null;
-            }
-        }
-
-        // تحويل قيمة الجائزة (50 → 5000, 5% → 5)
-        function getMultipliedValue(resultText) {
-            if (resultText.includes("%")) {
-                return parseInt(resultText);
-            } else if (resultText.includes("ل.س")) {
-                const numberMatch = resultText.match(/\d+/);
-                if (numberMatch) {
-                    const value = parseInt(numberMatch[0]);
-                    return value * 100;
-                }
-            }
-            return 0;
-        }
-
-        // تحديد النتيجة حسب الشروط المطلوبة
         function determineResult() {
             if (!userData) return "5%";
             
             const spinCount = userData.spin_count || 0;
             const totalRecharge = userData.total_recharge || 0;
             const totalWithdraw = userData.total_withdraw || 0;
-            const firstUse = userData.first_use || 0;
+            const firstUse = userData.first_use || 1;
             
-            console.log(`🔍 التدوير رقم: ${spinCount + 1}, إجمالي الشحن: ${totalRecharge}, إجمالي السحب: ${totalWithdraw}`);
-            
-            // 👈 المستخدمين الجدد (اول استخدام) → 25%
+            // الشرط الأول: لا يوجد تدويرات سابقة -> بونص 25%
             if (firstUse === 1) return "25%";
             
-            // 👈 المرة الثانية (بعد عملية شحن ناجحة) → 50 ل.س (5000 ل.س)
-            if (spinCount === 1) return "50 ل.س";
+            // الشرط الثاني: يوجد تدويرة سابقة وعملية شحن واحدة -> 50 ل.س
+            if (spinCount === 1 && totalRecharge > 0) return "50 ل.س";
             
-            // 👈 المرة الثالثة → 5%
-            if (spinCount === 2) return "5%";
+            // الشرط الثالث: تدويرة ثانية ولا يوجد عملية شحن -> 5%
+            if (spinCount === 2 && totalRecharge === 0) return "5%";
             
-            // 👈 مجموع مبلغ الشحن > 250,000 ل.س → 100 ل.س (10000 ل.س)
+            // باقي الشروط الأصلية
             if (totalRecharge > 250000) return "100 ل.س";
-            
-            // 👈 الشحن > 700,000 والسحب ≤ 200,000 → 500 ل.س (50000 ل.س)
             if (totalRecharge > 700000 && totalWithdraw <= 200000) return "500 ل.س";
-            
-            // 👈 الشحن > 1,800,000 والسحب ≤ 400,000 → 1000 ل.س (100000 ل.س)
             if (totalRecharge > 1800000 && totalWithdraw <= 400000) return "1000 ل.س";
             
-            // 🔻 في حال عدم توفر أي شرط → 5% دوماً
             return "5%";
         }
 
-        // التحقق من إمكانية التدوير (48 ساعة)
+        // ========== التحقق من الوقت - الأولوية القصوى للرابط ==========
+        
+        // الدالة الأساسية للتحقق من إمكانية التدوير (تعتمد على الرابط أولاً)
         function canSpin() {
             if (!userData) return false;
-            if (userData.first_use === 1) return true;
             
-            const lastSpin = userData.last_spin;
-            if (!lastSpin) return true;
+            // الأولوية القصوى: البيانات القادمة من الرابط
+            if (userData.first_use === 1) {
+                console.log('First time user from link - can spin');
+                return true;
+            }
             
-            const lastSpinDate = new Date(lastSpin);
-            const now = new Date();
-            const diffHours = (now - lastSpinDate) / (1000 * 60 * 60);
+            const lastSpinFromUrl = userData.last_spin;
+            if (lastSpinFromUrl) {
+                const lastSpinDate = new Date(lastSpinFromUrl);
+                const now = new Date();
+                const hoursDiff = (now - lastSpinDate) / (1000 * 60 * 60);
+                
+                console.log('Checking URL data - hours since last spin:', hoursDiff);
+                
+                if (hoursDiff >= 48) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
             
-            return diffHours >= 48;
+            // إذا لم توجد بيانات في الرابط (حالة نادرة)، نتحقق من التخزين المحلي كنسخة احتياطية
+            const localData = getLocalSpinData(userId);
+            if (localData && localData.lastSpin) {
+                const lastSpinDate = new Date(localData.lastSpin);
+                const now = new Date();
+                const hoursDiff = (now - lastSpinDate) / (1000 * 60 * 60);
+                return hoursDiff >= 48;
+            }
+            
+            // لا يوجد أي بيانات سابقة -> يمكن التدوير
+            return true;
         }
         
+        // دالة الحصول على الوقت المتبقي (تعتمد على الرابط أولاً)
         function getRemainingTime() {
-            if (!userData || userData.first_use === 1) return null;
+            if (!userData) return null;
             
-            const lastSpin = userData.last_spin;
-            if (!lastSpin) return null;
+            // الأولوية القصوى: الوقت من الرابط
+            if (userData.first_use !== 1 && userData.last_spin) {
+                const lastSpinDate = new Date(userData.last_spin);
+                const now = new Date();
+                const hoursPassed = (now - lastSpinDate) / (1000 * 60 * 60);
+                
+                if (hoursPassed < 48) {
+                    const remainingMs = (48 * 60 * 60 * 1000) - (now - lastSpinDate);
+                    const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+                    const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+                    return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
+                }
+            }
             
-            const lastSpinDate = new Date(lastSpin);
-            const now = new Date();
-            const remainingMs = (48 * 60 * 60 * 1000) - (now - lastSpinDate);
+            // نسخة احتياطية من التخزين المحلي
+            const localData = getLocalSpinData(userId);
+            if (localData && localData.lastSpin) {
+                const lastSpinDate = new Date(localData.lastSpin);
+                const now = new Date();
+                const hoursPassed = (now - lastSpinDate) / (1000 * 60 * 60);
+                
+                if (hoursPassed < 48) {
+                    const remainingMs = (48 * 60 * 60 * 1000) - (now - lastSpinDate);
+                    const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+                    const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+                    return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
+                }
+            }
             
-            if (remainingMs <= 0) return null;
-            
-            return {
-                hours: Math.floor(remainingMs / (1000 * 60 * 60)),
-                minutes: Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60)),
-                seconds: Math.floor((remainingMs % (1000 * 60)) / 1000)
-            };
+            return null;
         }
         
+        // دالة تحديث واجهة المستخدم
         function checkAndShowSpinButton() {
-            if (!userData) return;
+            const timerDiv = document.getElementById('timer');
+            
+            if (!userData) {
+                spinBtn.style.display = 'none';
+                timerDiv.className = 'timer';
+                timerDiv.innerHTML = '⏳ جاري التحقق من بياناتك...';
+                return;
+            }
             
             if (canSpin()) {
                 spinBtn.style.display = 'block';
-                spinBtn.disabled = false;
                 timerDiv.className = 'timer ready';
                 timerDiv.innerHTML = '⚡✅ يمكنك التدوير الآن! اضغط على الزر أعلاه ✅⚡';
-                if (timerInterval) clearInterval(timerInterval);
+                console.log('Spin button shown - user can spin');
             } else {
                 spinBtn.style.display = 'none';
                 const remaining = getRemainingTime();
@@ -485,83 +510,14 @@
                     timerDiv.className = 'timer';
                     timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي: ${remaining.hours} ساعة و ${remaining.minutes} دقيقة و ${remaining.seconds} ثانية ⚡`;
                     
-                    if (timerInterval) clearInterval(timerInterval);
-                    timerInterval = setInterval(() => {
-                        const newRemaining = getRemainingTime();
-                        if (!newRemaining) {
-                            clearInterval(timerInterval);
-                            checkAndShowSpinButton();
-                        } else {
-                            timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي: ${newRemaining.hours} ساعة و ${newRemaining.minutes} دقيقة و ${newRemaining.seconds} ثانية ⚡`;
-                        }
+                    setTimeout(() => {
+                        checkAndShowSpinButton();
                     }, 1000);
                 }
             }
         }
 
-        async function updateUserDataInRepo(token) {
-            if (!repoData || !userId) return false;
-            
-            if (!repoData.users[userId]) repoData.users[userId] = {};
-            
-            repoData.users[userId] = {
-                spin_count: userData.spin_count,
-                last_spin: userData.last_spin,
-                total_recharge: userData.total_recharge,
-                total_withdraw: userData.total_withdraw,
-                first_use: userData.first_use,
-                updated_at: new Date().toISOString()
-            };
-            
-            return await storage.writeData(repoData, token);
-        }
-
-        async function loadUserDataFromGitHub(telegramUserId, telegramUserData) {
-            try {
-                repoData = await storage.readData();
-                if (!repoData.users) repoData.users = {};
-                
-                if (repoData.users[telegramUserId]) {
-                    const stored = repoData.users[telegramUserId];
-                    userData = {
-                        spin_count: stored.spin_count || 0,
-                        last_spin: stored.last_spin || null,
-                        total_recharge: stored.total_recharge || telegramUserData.total_recharge || 0,
-                        total_withdraw: stored.total_withdraw || telegramUserData.total_withdraw || 0,
-                        first_use: stored.first_use !== undefined ? stored.first_use : (telegramUserData.first_use || 1)
-                    };
-                    console.log("📦 بيانات من GitHub:", userData);
-                } else {
-                    userData = {
-                        spin_count: telegramUserData.spin_count || 0,
-                        last_spin: telegramUserData.last_spin || null,
-                        total_recharge: telegramUserData.total_recharge || 0,
-                        total_withdraw: telegramUserData.total_withdraw || 0,
-                        first_use: telegramUserData.first_use || 1
-                    };
-                    console.log("🆕 مستخدم جديد:", userData);
-                    
-                    const token = storage.getToken();
-                    if (token) {
-                        repoData.users[telegramUserId] = userData;
-                        await storage.writeData(repoData, token);
-                    }
-                }
-                return true;
-            } catch(e) {
-                console.error("❌ خطأ في التحميل من GitHub:", e);
-                userData = {
-                    spin_count: telegramUserData.spin_count || 0,
-                    last_spin: telegramUserData.last_spin || null,
-                    total_recharge: telegramUserData.total_recharge || 0,
-                    total_withdraw: telegramUserData.total_withdraw || 0,
-                    first_use: telegramUserData.first_use || 1
-                };
-                return false;
-            }
-        }
-
-        // ========== رسم العجلة ==========
+        // رسم العجلة
         function drawWheel() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -577,84 +533,102 @@
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.closePath();
                 
-                const gradient = ctx.createLinearGradient(centerX - radius/2, centerY - radius/2, centerX + radius/2, centerY + radius/2);
+                const gradient = ctx.createLinearGradient(
+                    centerX + Math.cos(startAngle) * radius * 0.3,
+                    centerY + Math.sin(startAngle) * radius * 0.3,
+                    centerX + Math.cos(endAngle) * radius * 0.7,
+                    centerY + Math.sin(endAngle) * radius * 0.7
+                );
                 gradient.addColorStop(0, baseColors[i]);
-                gradient.addColorStop(1, crackColors[i]);
+                gradient.addColorStop(0.7, crackColors[i]);
+                gradient.addColorStop(1, baseColors[i]);
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-                ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                ctx.strokeStyle = "rgba(0,0,0,0.15)";
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.clip();
+                
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.15})`;
+                ctx.lineWidth = 1;
+                
+                for (let c = 0; c < 4; c++) {
+                    const angle = startAngle + Math.random() * sliceAngle;
+                    const dist1 = radius * (0.2 + Math.random() * 0.3);
+                    const dist2 = radius * (0.5 + Math.random() * 0.4);
+                    const x1 = centerX + Math.cos(angle) * dist1;
+                    const y1 = centerY + Math.sin(angle) * dist1;
+                    const x2 = centerX + Math.cos(angle + (Math.random() - 0.5) * 0.3) * dist2;
+                    const y2 = centerY + Math.sin(angle + (Math.random() - 0.5) * 0.3) * dist2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
             }
             
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.15, 0, 2 * Math.PI);
             ctx.fillStyle = "#FFD700";
             ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
+            ctx.strokeStyle = "rgba(255,215,0,0.5)";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 8, 0, 2 * Math.PI);
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
         }
 
-        // ========== معالجة البيانات من البوت ==========
-        const urlParams = new URLSearchParams(window.location.search);
-        const encodedData = urlParams.get('data');
-        
-        async function init() {
-            if (!encodedData) {
-                loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا توجد بيانات متاحة</div>';
-                return;
-            }
-            
+        // فك تشفير البيانات من الرابط
+        if (encodedData) {
             try {
-                const jsonString = base64UrlDecode(encodedData);
-                if (!jsonString) throw new Error("Failed to decode");
+                const decodedData = atob(encodedData.replace(/-/g, '+').replace(/_/g, '/'));
+                const urlUserData = JSON.parse(decodedData);
+                console.log('URL User Data loaded:', urlUserData);
                 
-                const telegramData = JSON.parse(jsonString);
-                console.log("✅ بيانات التليجرام:", telegramData);
+                // دمج البيانات: نعطي الأولوية للرابط، ولكن نحتفظ بعدد التدويرات المحلي كاحتياطي
+                userData = { ...urlUserData };
                 
-                userId = telegramData.user_id || tg.initDataUnsafe?.user?.id;
-                
-                if (!userId) {
-                    loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا يمكن تحديد هوية المستخدم</div>';
-                    return;
+                // التحقق من التخزين المحلي لعدد التدويرات (احتياطي فقط)
+                const localData = getLocalSpinData(userId);
+                if (localData && localData.spinCount > (userData.spin_count || 0)) {
+                    userData.spin_count = localData.spinCount;
                 }
-                
-                await loadUserDataFromGitHub(userId, telegramData);
                 
                 loadingDiv.style.display = 'none';
                 wheelContent.style.display = 'block';
+                
                 drawWheel();
                 checkAndShowSpinButton();
                 
-                const token = storage.getToken();
-                if (!token) {
-                    const tokenDiv = document.getElementById('tokenInput');
-                    tokenDiv.style.display = 'block';
-                    
-                    document.getElementById('saveTokenBtn').onclick = () => {
-                        const newToken = document.getElementById('githubToken').value.trim();
-                        if (newToken) {
-                            storage.saveToken(newToken);
-                            tokenDiv.style.display = 'none';
-                            timerDiv.innerHTML = '✅ تم حفظ التوكن! سيتم حفظ البيانات في GitHub';
-                            setTimeout(() => {
-                                if (timerDiv.className !== 'timer ready') {
-                                    timerDiv.innerHTML = '';
-                                }
-                            }, 3000);
-                        }
-                    };
-                }
-                
             } catch(e) {
-                console.error('❌ خطأ:', e);
+                console.error('Error decoding data:', e);
                 loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ خطأ في تحميل البيانات</div>';
             }
+        } else {
+            loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا توجد بيانات متاحة</div>';
         }
 
-        init();
-
-        // ========== حدث الضغط على زر التدوير ==========
-        spinBtn.addEventListener('click', async () => {
+        // حدث الضغط على زر التدوير
+        spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
             if (!canSpin()) {
                 checkAndShowSpinButton();
@@ -664,32 +638,13 @@
             isSpinning = true;
             spinBtn.disabled = true;
             
-            const resultText = determineResult();
-            console.log('🎡 النتيجة:', resultText);
+            const result = determineResult();
+            console.log('Spinning for result:', result);
             
-            const multipliedValue = getMultipliedValue(resultText);
-            
-            // تحديث بيانات المستخدم
-            const now = new Date().toISOString();
-            userData.spin_count = (userData.spin_count || 0) + 1;
-            userData.last_spin = now;
-            userData.first_use = 0;
-            
-            // إذا كانت الجائزة نقدية، نضيفها إلى إجمالي الشحن
-            if (resultText.includes("ل.س")) {
-                userData.total_recharge = (userData.total_recharge || 0) + multipliedValue;
-                console.log(`💰 إضافة ${multipliedValue} إلى الرصيد، الإجمالي الآن: ${userData.total_recharge}`);
-            }
-            
-            // حفظ في GitHub إذا كان هناك توكن
-            const token = storage.getToken();
-            if (token) {
-                await updateUserDataInRepo(token);
-            }
-            
-            const resultIndex = segments.findIndex(seg => seg === resultText);
+            const resultIndex = segments.findIndex(seg => seg === result);
             const sliceAngle = 360 / segments.length;
             const targetAngle = 270;
+            const currentAngle = currentRotation % 360;
             const resultCenterAngle = (resultIndex * sliceAngle + sliceAngle / 2);
             let neededRotation = (targetAngle - resultCenterAngle + 360) % 360;
             const fullRotations = 5 * 360;
@@ -697,24 +652,35 @@
             
             currentRotation += extraDegree;
             canvas.style.transform = `rotate(${currentRotation}deg)`;
-            
+
             setTimeout(() => {
-                let resultType = resultText.includes("%") ? "bonus_percent" : "direct_bonus";
-                let resultValue = multipliedValue;
+                // حفظ وقت التدوير في التخزين المحلي (نسخة احتياطية فقط)
+                const nowTime = new Date().toISOString();
+                const newSpinCount = (userData.spin_count || 0) + 1;
+                saveSpinDataLocally(userId, nowTime, newSpinCount);
                 
-                console.log(`📤 إرسال للبوت: النوع=${resultType}, القيمة=${resultValue}`);
+                let resultType = "";
+                let resultValue = "";
+                
+                if (result.includes("%")) {
+                    resultType = "bonus_percent";
+                    resultValue = parseInt(result);
+                } else if (result.includes("ل.س")) {
+                    resultType = "direct_bonus";
+                    resultValue = parseInt(result);
+                }
                 
                 tg.sendData(JSON.stringify({
                     action: "spin_result",
-                    result: resultText,
+                    result: result,
                     result_type: resultType,
-                    result_value: resultValue,
-                    user_id: userId,
-                    spin_count: userData.spin_count,
-                    last_spin: userData.last_spin
+                    result_value: resultValue
                 }));
                 
-                setTimeout(() => tg.close(), 1500);
+                setTimeout(() => {
+                    tg.close();
+                }, 1500);
+                
                 isSpinning = false;
             }, 4000);
         });
