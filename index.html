@@ -206,6 +206,11 @@
             color: #88ff88;
             border-color: #88ff88;
         }
+        .timer.cooldown {
+            background: rgba(100,50,0,0.7);
+            color: #ffaa66;
+            border-color: #ffaa66;
+        }
         .loading {
             text-align: center;
             padding: 60px 20px;
@@ -272,6 +277,84 @@
         let isSpinning = false;
         let userData = null;
         let timerInterval = null;
+        let tempTimerInterval = null;
+
+        // ========== نظام التخزين المؤقت (5 دقائق) ==========
+        const TEMP_COOLDOWN_MS = 5 * 60 * 1000; // 5 دقائق
+        
+        // الحصول على معرف المستخدم الفريد
+        function getUserId() {
+            if (userData && userData.user_id) return String(userData.user_id);
+            if (userData && userData.id) return String(userData.id);
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+                return String(tg.initDataUnsafe.user.id);
+            }
+            if (!window._tempSessionId) {
+                window._tempSessionId = 'session_' + Date.now() + '_' + Math.random();
+            }
+            return window._tempSessionId;
+        }
+        
+        // التحقق من وجود تبريد مؤقت نشط
+        function isTempCooldownActive() {
+            const userId = getUserId();
+            if (!userId) return false;
+            const key = 'doom_spin_cooldown_' + userId;
+            const lastSpin = localStorage.getItem(key);
+            if (!lastSpin) return false;
+            const lastTime = parseInt(lastSpin, 10);
+            if (isNaN(lastTime)) return false;
+            return (Date.now() - lastTime) < TEMP_COOLDOWN_MS;
+        }
+        
+        // تسجيل وقت التدوير (تبريد فوري)
+        function setTempCooldown() {
+            const userId = getUserId();
+            if (!userId) return;
+            const key = 'doom_spin_cooldown_' + userId;
+            localStorage.setItem(key, Date.now().toString());
+            console.log('✅ Temp cooldown set for user:', userId);
+        }
+        
+        // الحصول على الوقت المتبقي من التبريد المؤقت (بالثواني)
+        function getTempRemainingSeconds() {
+            const userId = getUserId();
+            if (!userId) return 0;
+            const key = 'doom_spin_cooldown_' + userId;
+            const lastSpin = localStorage.getItem(key);
+            if (!lastSpin) return 0;
+            const lastTime = parseInt(lastSpin, 10);
+            if (isNaN(lastTime)) return 0;
+            const elapsed = Date.now() - lastTime;
+            if (elapsed >= TEMP_COOLDOWN_MS) return 0;
+            return Math.ceil((TEMP_COOLDOWN_MS - elapsed) / 1000);
+        }
+        
+        // دالة التحقق من إمكانية التدوير (48 ساعة + التبريد المؤقت 5 دقائق)
+        function canSpin() {
+            // أولاً: التحقق من التبريد المؤقت
+            if (isTempCooldownActive()) {
+                console.log('⏳ Temp cooldown active (5 min) - cannot spin');
+                return false;
+            }
+            
+            // ثانياً: الشروط الأصلية (48 ساعة)
+            if (!userData) return false;
+            if (userData.first_use === 1) return true;
+            
+            const lastSpin = userData.last_spin;
+            if (!lastSpin) return true;
+            
+            const lastSpinDate = new Date(lastSpin);
+            const now = new Date();
+            const diffMs = now - lastSpinDate;
+            const diffHours = diffMs / (1000 * 60 * 60);
+            
+            console.log(`Last spin: ${lastSpinDate}, Now: ${now}, Diff hours: ${diffHours}`);
+            
+            return diffHours >= 48;
+        }
+        // ========== نهاية نظام التخزين المؤقت ==========
 
         // فك تشفير Base64 URL-safe
         function base64UrlDecode(str) {
@@ -348,14 +431,12 @@
         // دالة تحويل قيمة الجائزة إلى الرقم المضروب في 100
         function getMultipliedValue(resultText) {
             if (resultText.includes("%")) {
-                // النسب المئوية تبقى كما هي (5% أو 25%)
                 return parseInt(resultText);
             } else if (resultText.includes("ل.س")) {
-                // الجوائز النقدية: استخراج الرقم وضربه في 100
                 const numberMatch = resultText.match(/\d+/);
                 if (numberMatch) {
                     const value = parseInt(numberMatch[0]);
-                    return value * 100;  // 50 -> 5000, 100 -> 10000, 500 -> 50000, 1000 -> 100000
+                    return value * 100;
                 }
             }
             return 0;
@@ -381,27 +462,8 @@
             
             return "5%";
         }
-
-        // التحقق من إمكانية التدوير (48 ساعة بالضبط)
-        function canSpin() {
-            if (!userData) return false;
-            
-            if (userData.first_use === 1) return true;
-            
-            const lastSpin = userData.last_spin;
-            if (!lastSpin) return true;
-            
-            const lastSpinDate = new Date(lastSpin);
-            const now = new Date();
-            const diffMs = now - lastSpinDate;
-            const diffHours = diffMs / (1000 * 60 * 60);
-            
-            console.log(`Last spin: ${lastSpinDate}, Now: ${now}, Diff hours: ${diffHours}`);
-            
-            return diffHours >= 48;
-        }
         
-        // حساب الوقت المتبقي
+        // حساب الوقت المتبقي للشرط الأصلي (48 ساعة)
         function getRemainingTime() {
             if (!userData || userData.first_use === 1) return null;
             
@@ -421,37 +483,56 @@
             return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
         }
         
-        // تحديث واجهة الزر والمؤقت
-        function checkAndShowSpinButton() {
-            if (!userData) return;
+        // تحديث واجهة الزر والمؤقت (مع مراعاة التبريد المؤقت)
+        function updateUIForCooldown() {
+            // أولوية قصوى للتبريد المؤقت (5 دقائق)
+            if (isTempCooldownActive()) {
+                const remainingSec = getTempRemainingSeconds();
+                const minutesLeft = Math.floor(remainingSec / 60);
+                const secondsLeft = remainingSec % 60;
+                spinBtn.style.display = 'none';
+                timerDiv.className = 'timer cooldown';
+                timerDiv.innerHTML = `⏳ تبريد مؤقت: لا يمكنك التدوير الآن!<br>⚡ انتظر ${minutesLeft} دقيقة و ${secondsLeft} ثانية حتى المحاولة التالية ⚡`;
+                return true;
+            }
+            
+            // إذا لم يكن هناك تبريد مؤقت، نتحقق من الشروط الأصلية
+            if (!userData) return false;
             
             if (canSpin()) {
                 spinBtn.style.display = 'block';
                 spinBtn.disabled = false;
                 timerDiv.className = 'timer ready';
                 timerDiv.innerHTML = '⚡✅ يمكنك التدوير الآن! اضغط على الزر أعلاه ✅⚡';
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
+                if (tempTimerInterval) {
+                    clearInterval(tempTimerInterval);
+                    tempTimerInterval = null;
                 }
+                return false;
             } else {
                 spinBtn.style.display = 'none';
                 const remaining = getRemainingTime();
                 if (remaining) {
                     timerDiv.className = 'timer';
-                    timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي: ${remaining.hours} ساعة و ${remaining.minutes} دقيقة و ${remaining.seconds} ثانية ⚡`;
-                    
-                    if (timerInterval) clearInterval(timerInterval);
-                    timerInterval = setInterval(() => {
-                        const newRemaining = getRemainingTime();
-                        if (!newRemaining) {
-                            if (timerInterval) clearInterval(timerInterval);
-                            checkAndShowSpinButton();
-                        } else {
-                            timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي: ${newRemaining.hours} ساعة و ${newRemaining.minutes} دقيقة و ${newRemaining.seconds} ثانية ⚡`;
-                        }
-                    }, 1000);
+                    timerDiv.innerHTML = `⏰ لا يمكنك التدوير الآن!<br>⚡ الوقت المتبقي (الشرط الأساسي): ${remaining.hours} ساعة و ${remaining.minutes} دقيقة و ${remaining.seconds} ثانية ⚡`;
                 }
+                return false;
+            }
+        }
+        
+        // تشغيل التحديث الدوري للتبريد المؤقت
+        function startTempCooldownUpdater() {
+            if (tempTimerInterval) clearInterval(tempTimerInterval);
+            tempTimerInterval = setInterval(() => {
+                updateUIForCooldown();
+            }, 1000);
+        }
+        
+        // دالة التحقق الأساسية
+        function checkAndShowSpinButton() {
+            updateUIForCooldown();
+            if (!tempTimerInterval) {
+                startTempCooldownUpdater();
             }
         }
 
@@ -470,7 +551,7 @@
             const resultText = determineResult();
             console.log('🎡 Spinning for result:', resultText);
             
-            // حساب القيمة المضروبة في 100 (للجوائز النقدية فقط)
+            // حساب القيمة المضروبة في 100
             const multipliedValue = getMultipliedValue(resultText);
             
             const resultIndex = segments.findIndex(seg => seg === resultText);
@@ -485,15 +566,21 @@
             canvas.style.transform = `rotate(${currentRotation}deg)`;
             
             setTimeout(() => {
+                // ===== تحديث فوري: تسجيل التبريد المؤقت =====
+                setTempCooldown();
+                // تحديث الواجهة فوراً
+                updateUIForCooldown();
+                // ==========================================
+                
                 let resultType = "";
                 let resultValue = 0;
                 
                 if (resultText.includes("%")) {
                     resultType = "bonus_percent";
-                    resultValue = multipliedValue;  // 5 أو 25
+                    resultValue = multipliedValue;
                 } else if (resultText.includes("ل.س")) {
                     resultType = "direct_bonus";
-                    resultValue = multipliedValue;  // 5000, 10000, 50000, 100000
+                    resultValue = multipliedValue;
                 } else {
                     resultType = "direct_bonus";
                     resultValue = 0;
