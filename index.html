@@ -536,7 +536,7 @@
             }
         }
 
-        // دالة تحديد النتيجة حسب الشروط
+        // دالة تحديد النتيجة حسب الشروط المعدلة
         function determineResult() {
             if (!userData) return "5%";
             
@@ -545,13 +545,29 @@
             const totalWithdraw = userData.total_withdraw || 0;
             const firstUse = userData.first_use || 1;
             
+            // التدويرة الأولى: 25% بونص على أول عملية شحن
             if (firstUse === 1) return "25%";
-            if (spinCount === 1) return "50 ل.س";
+            
+            // التدويرة الثانية: 
+            // - اذا كان المستخدم ليس لديه اي عملية شحن -> 5%
+            // - اذا كان لديه عملية شحن واحدة على الأقل -> 50 ل.س
+            if (spinCount === 1) {
+                if (totalRecharge > 0) {
+                    return "50 ل.س";
+                } else {
+                    return "5%";
+                }
+            }
+            
+            // التدويرة الثالثة: 5% دائما
             if (spinCount === 2) return "5%";
+            
+            // بعدها تبقى الشروط كما هي
             if (totalRecharge > 250000) return "100 ل.س";
             if (totalRecharge > 700000 && totalWithdraw <= 200000) return "500 ل.س";
             if (totalRecharge > 1800000 && totalWithdraw <= 400000) return "1000 ل.س";
             
+            // اذا لا يوجد اي شرط كامل: 5%
             return "5%";
         }
 
