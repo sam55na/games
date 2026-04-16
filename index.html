@@ -26,6 +26,7 @@
             overflow-x: hidden;
         }
 
+        /* خلفية متحركة */
         body::before {
             content: '';
             position: fixed;
@@ -52,6 +53,7 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
 
+        /* عنوان DR.DOOM المميز */
         .title {
             text-align: center;
             margin-bottom: 15px;
@@ -139,6 +141,7 @@
             box-shadow: 0 0 0 8px rgba(255,255,255,0.2), 0 0 0 12px rgba(0,0,0,0.2), 0 20px 40px rgba(0,0,0,0.4);
         }
 
+        /* المؤشر بتصميم ⚡ مع لمعان */
         .pointer {
             position: absolute;
             top: -30px;
@@ -162,6 +165,7 @@
             100% { filter: drop-shadow(0 0 20px #00ccff) drop-shadow(0 0 5px #ffffff); }
         }
 
+        /* مركز العجلة - شعار دائري */
         .wheel-center {
             position: absolute;
             top: 50%;
@@ -311,15 +315,18 @@
         tg.expand();
         tg.MainButton.hide();
 
+        // روابط الصور - يمكنك تغييرها
         const BACKGROUND_IMAGE_URL = "https://www.transparenttextures.com/containers/75/75b5c3c7-7b1b-4c3e-8e3c-7b5c3e8e3c7e.png";
         const CENTER_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
 
+        // تعيين خلفية الجسم
         document.body.style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}'), linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 50%, #0a0a2a 100%)`;
         document.body.style.backgroundBlendMode = "overlay";
         document.body.style.backgroundSize = "cover, auto";
         document.body.style.backgroundRepeat = "repeat, no-repeat";
         document.body.style.backgroundPosition = "center";
 
+        // تعيين الشعار في المنتصف
         const centerLogo = document.getElementById('centerLogo');
         if (centerLogo) {
             centerLogo.src = CENTER_LOGO_URL;
@@ -328,39 +335,7 @@
             };
         }
 
-        // ========== التخزين المحلي الاحتياطي ==========
-        const STORAGE_KEY = 'DRDOOM_SPIN_DATA';
-        
-        function getUserId() {
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
-                return `tg_${tg.initDataUnsafe.user.id}`;
-            }
-            let deviceId = localStorage.getItem('DRDOOM_DEVICE_ID');
-            if (!deviceId) {
-                deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('DRDOOM_DEVICE_ID', deviceId);
-            }
-            return deviceId;
-        }
-        
-        function saveSpinDataLocally(userId, spinTime, spinCount) {
-            const allData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            allData[userId] = {
-                lastSpin: spinTime,
-                spinCount: spinCount
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
-        }
-        
-        function getLocalSpinData(userId) {
-            const allData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            return allData[userId] || null;
-        }
-        
-        const userId = getUserId();
-        
-        // ========== نهاية التخزين المحلي ==========
-
+        // الحصول على البيانات من URL
         const urlParams = new URLSearchParams(window.location.search);
         const encodedData = urlParams.get('data');
         let userData = null;
@@ -371,126 +346,170 @@
         const loadingDiv = document.getElementById('loadingDiv');
         const wheelContent = document.getElementById('wheelContent');
         
+        // تعريف الجوائز (بدون نصوص على العجلة)
         const segments = ["50 ل.س", "100 ل.س", "500 ل.س", "1000 ل.س", "5%", "25%"];
+        
+        // ألوان أزرق وأبيض بالتناوب مع تأثير تصدع
         const baseColors = ["#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff"];
+        // تأثير التصدع - إضافة تدرجات داخلية
         const crackColors = ["#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8"];
         
         let currentRotation = 0;
         let isSpinning = false;
 
-        // ========== شروط الجوائز حسب المطلوب ==========
-        // لا يوجد تدويرات سابقة -> بونص 25%
-        // يوجد تدويرة سابقة وعملية شحن واحدة -> 50 ل.س
-        // تدويرة ثانية ولا يوجد عملية شحن -> 5%
-        // باقي الشروط كما هي
-        
-        function determineResult() {
-            if (!userData) return "5%";
-            
-            const spinCount = userData.spin_count || 0;
-            const totalRecharge = userData.total_recharge || 0;
-            const totalWithdraw = userData.total_withdraw || 0;
-            const firstUse = userData.first_use || 1;
-            
-            // الشرط الأول: لا يوجد تدويرات سابقة -> بونص 25%
-            if (firstUse === 1) return "25%";
-            
-            // الشرط الثاني: يوجد تدويرة سابقة وعملية شحن واحدة -> 50 ل.س
-            if (spinCount === 1 && totalRecharge > 0) return "50 ل.س";
-            
-            // الشرط الثالث: تدويرة ثانية ولا يوجد عملية شحن -> 5%
-            if (spinCount === 2 && totalRecharge === 0) return "5%";
-            
-            // باقي الشروط الأصلية
-            if (totalRecharge > 250000) return "100 ل.س";
-            if (totalRecharge > 700000 && totalWithdraw <= 200000) return "500 ل.س";
-            if (totalRecharge > 1800000 && totalWithdraw <= 400000) return "1000 ل.س";
-            
-            return "5%";
+        // فك تشفير البيانات
+        if (encodedData) {
+            try {
+                const decodedData = atob(encodedData.replace(/-/g, '+').replace(/_/g, '/'));
+                userData = JSON.parse(decodedData);
+                console.log('User Data loaded:', userData);
+                loadingDiv.style.display = 'none';
+                wheelContent.style.display = 'block';
+                
+                // رسم العجلة
+                drawWheel();
+                checkAndShowSpinButton();
+                
+            } catch(e) {
+                console.error('Error decoding data:', e);
+                loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ خطأ في تحميل البيانات</div>';
+            }
+        } else {
+            loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا توجد بيانات متاحة</div>';
         }
 
-        // ========== التحقق من الوقت - الأولوية القصوى للرابط ==========
-        
-        // الدالة الأساسية للتحقق من إمكانية التدوير (تعتمد على الرابط أولاً)
+        // دالة رسم العجلة مع تأثير التصدع والتدرجات
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2;
+            const sliceAngle = (2 * Math.PI) / segments.length;
+            
+            for (let i = 0; i < segments.length; i++) {
+                const startAngle = i * sliceAngle;
+                const endAngle = (i + 1) * sliceAngle;
+                
+                // رسم القطاع الرئيسي
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                
+                // تدرج لوني للقطاع
+                const gradient = ctx.createLinearGradient(
+                    centerX + Math.cos(startAngle) * radius * 0.3,
+                    centerY + Math.sin(startAngle) * radius * 0.3,
+                    centerX + Math.cos(endAngle) * radius * 0.7,
+                    centerY + Math.sin(endAngle) * radius * 0.7
+                );
+                gradient.addColorStop(0, baseColors[i]);
+                gradient.addColorStop(0.7, crackColors[i]);
+                gradient.addColorStop(1, baseColors[i]);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                // رسم حدود القطاع
+                ctx.strokeStyle = "rgba(0,0,0,0.15)";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                
+                // تأثير التصدع - خطوط عشوائية داخل كل قطاع
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.clip();
+                
+                // رسم خطوط تشبه التصدع
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.15})`;
+                ctx.lineWidth = 1;
+                
+                for (let c = 0; c < 4; c++) {
+                    const angle = startAngle + Math.random() * sliceAngle;
+                    const dist1 = radius * (0.2 + Math.random() * 0.3);
+                    const dist2 = radius * (0.5 + Math.random() * 0.4);
+                    const x1 = centerX + Math.cos(angle) * dist1;
+                    const y1 = centerY + Math.sin(angle) * dist1;
+                    const x2 = centerX + Math.cos(angle + (Math.random() - 0.5) * 0.3) * dist2;
+                    const y2 = centerY + Math.sin(angle + (Math.random() - 0.5) * 0.3) * dist2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            }
+            
+            // رسم حلقة داخلية دائرية (زخرفة)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.15, 0, 2 * Math.PI);
+            ctx.fillStyle = "#FFD700";
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // رسم حدود دائرية خارجية
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
+            ctx.strokeStyle = "rgba(255,215,0,0.5)";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 8, 0, 2 * Math.PI);
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // دالة التحقق من إمكانية التدوير (48 ساعة)
         function canSpin() {
             if (!userData) return false;
-            
-            // الأولوية القصوى: البيانات القادمة من الرابط
             if (userData.first_use === 1) {
-                console.log('First time user from link - can spin');
+                console.log('First time user - can spin');
                 return true;
             }
             
-            const lastSpinFromUrl = userData.last_spin;
-            if (lastSpinFromUrl) {
-                const lastSpinDate = new Date(lastSpinFromUrl);
-                const now = new Date();
-                const hoursDiff = (now - lastSpinDate) / (1000 * 60 * 60);
-                
-                console.log('Checking URL data - hours since last spin:', hoursDiff);
-                
-                if (hoursDiff >= 48) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+            const lastSpin = userData.last_spin;
+            if (!lastSpin) return true;
             
-            // إذا لم توجد بيانات في الرابط (حالة نادرة)، نتحقق من التخزين المحلي كنسخة احتياطية
-            const localData = getLocalSpinData(userId);
-            if (localData && localData.lastSpin) {
-                const lastSpinDate = new Date(localData.lastSpin);
-                const now = new Date();
-                const hoursDiff = (now - lastSpinDate) / (1000 * 60 * 60);
-                return hoursDiff >= 48;
-            }
+            const lastSpinDate = new Date(lastSpin);
+            const now = new Date();
+            const hoursDiff = (now - lastSpinDate) / (1000 * 60 * 60);
             
-            // لا يوجد أي بيانات سابقة -> يمكن التدوير
-            return true;
+            return hoursDiff >= 48;
         }
         
-        // دالة الحصول على الوقت المتبقي (تعتمد على الرابط أولاً)
+        // دالة الحصول على الوقت المتبقي
         function getRemainingTime() {
             if (!userData) return null;
+            if (userData.first_use === 1) return null;
             
-            // الأولوية القصوى: الوقت من الرابط
-            if (userData.first_use !== 1 && userData.last_spin) {
-                const lastSpinDate = new Date(userData.last_spin);
-                const now = new Date();
-                const hoursPassed = (now - lastSpinDate) / (1000 * 60 * 60);
-                
-                if (hoursPassed < 48) {
-                    const remainingMs = (48 * 60 * 60 * 1000) - (now - lastSpinDate);
-                    const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
-                    const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-                    const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-                    return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
-                }
-            }
+            const lastSpin = userData.last_spin;
+            if (!lastSpin) return null;
             
-            // نسخة احتياطية من التخزين المحلي
-            const localData = getLocalSpinData(userId);
-            if (localData && localData.lastSpin) {
-                const lastSpinDate = new Date(localData.lastSpin);
-                const now = new Date();
-                const hoursPassed = (now - lastSpinDate) / (1000 * 60 * 60);
-                
-                if (hoursPassed < 48) {
-                    const remainingMs = (48 * 60 * 60 * 1000) - (now - lastSpinDate);
-                    const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
-                    const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-                    const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
-                    return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
-                }
-            }
+            const lastSpinDate = new Date(lastSpin);
+            const now = new Date();
+            const hoursPassed = (now - lastSpinDate) / (1000 * 60 * 60);
             
-            return null;
+            if (hoursPassed >= 48) return null;
+            
+            const remainingMs = (48 * 60 * 60 * 1000) - (now - lastSpinDate);
+            const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+            const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+            const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+            
+            return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
         }
         
-        // دالة تحديث واجهة المستخدم
+        // دالة عرض وإخفاء زر التدوير (لا يظهر إلا بعد التحقق)
         function checkAndShowSpinButton() {
             const timerDiv = document.getElementById('timer');
             
+            // التأكد من وجود userData أولاً
             if (!userData) {
                 spinBtn.style.display = 'none';
                 timerDiv.className = 'timer';
@@ -517,117 +536,26 @@
             }
         }
 
-        // رسم العجلة
-        function drawWheel() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = canvas.width / 2;
-            const sliceAngle = (2 * Math.PI) / segments.length;
+        // دالة تحديد النتيجة حسب الشروط
+        function determineResult() {
+            if (!userData) return "5%";
             
-            for (let i = 0; i < segments.length; i++) {
-                const startAngle = i * sliceAngle;
-                const endAngle = (i + 1) * sliceAngle;
-                
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-                ctx.closePath();
-                
-                const gradient = ctx.createLinearGradient(
-                    centerX + Math.cos(startAngle) * radius * 0.3,
-                    centerY + Math.sin(startAngle) * radius * 0.3,
-                    centerX + Math.cos(endAngle) * radius * 0.7,
-                    centerY + Math.sin(endAngle) * radius * 0.7
-                );
-                gradient.addColorStop(0, baseColors[i]);
-                gradient.addColorStop(0.7, crackColors[i]);
-                gradient.addColorStop(1, baseColors[i]);
-                ctx.fillStyle = gradient;
-                ctx.fill();
-                
-                ctx.strokeStyle = "rgba(0,0,0,0.15)";
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                
-                ctx.save();
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-                ctx.closePath();
-                ctx.clip();
-                
-                ctx.beginPath();
-                ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.15})`;
-                ctx.lineWidth = 1;
-                
-                for (let c = 0; c < 4; c++) {
-                    const angle = startAngle + Math.random() * sliceAngle;
-                    const dist1 = radius * (0.2 + Math.random() * 0.3);
-                    const dist2 = radius * (0.5 + Math.random() * 0.4);
-                    const x1 = centerX + Math.cos(angle) * dist1;
-                    const y1 = centerY + Math.sin(angle) * dist1;
-                    const x2 = centerX + Math.cos(angle + (Math.random() - 0.5) * 0.3) * dist2;
-                    const y2 = centerY + Math.sin(angle + (Math.random() - 0.5) * 0.3) * dist2;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-                }
-                
-                ctx.restore();
-            }
+            const spinCount = userData.spin_count || 0;
+            const totalRecharge = userData.total_recharge || 0;
+            const totalWithdraw = userData.total_withdraw || 0;
+            const firstUse = userData.first_use || 1;
             
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius * 0.15, 0, 2 * Math.PI);
-            ctx.fillStyle = "#FFD700";
-            ctx.fill();
-            ctx.shadowBlur = 0;
+            if (firstUse === 1) return "25%";
+            if (spinCount === 1) return "50 ل.س";
+            if (spinCount === 2) return "5%";
+            if (totalRecharge > 250000) return "100 ل.س";
+            if (totalRecharge > 700000 && totalWithdraw <= 200000) return "500 ل.س";
+            if (totalRecharge > 1800000 && totalWithdraw <= 400000) return "1000 ل.س";
             
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
-            ctx.strokeStyle = "rgba(255,215,0,0.5)";
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius - 8, 0, 2 * Math.PI);
-            ctx.strokeStyle = "rgba(255,255,255,0.3)";
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
+            return "5%";
         }
 
-        // فك تشفير البيانات من الرابط
-        if (encodedData) {
-            try {
-                const decodedData = atob(encodedData.replace(/-/g, '+').replace(/_/g, '/'));
-                const urlUserData = JSON.parse(decodedData);
-                console.log('URL User Data loaded:', urlUserData);
-                
-                // دمج البيانات: نعطي الأولوية للرابط، ولكن نحتفظ بعدد التدويرات المحلي كاحتياطي
-                userData = { ...urlUserData };
-                
-                // التحقق من التخزين المحلي لعدد التدويرات (احتياطي فقط)
-                const localData = getLocalSpinData(userId);
-                if (localData && localData.spinCount > (userData.spin_count || 0)) {
-                    userData.spin_count = localData.spinCount;
-                }
-                
-                loadingDiv.style.display = 'none';
-                wheelContent.style.display = 'block';
-                
-                drawWheel();
-                checkAndShowSpinButton();
-                
-            } catch(e) {
-                console.error('Error decoding data:', e);
-                loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ خطأ في تحميل البيانات</div>';
-            }
-        } else {
-            loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا توجد بيانات متاحة</div>';
-        }
-
-        // حدث الضغط على زر التدوير
+        // زر التدوير
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
             if (!canSpin()) {
@@ -654,11 +582,6 @@
             canvas.style.transform = `rotate(${currentRotation}deg)`;
 
             setTimeout(() => {
-                // حفظ وقت التدوير في التخزين المحلي (نسخة احتياطية فقط)
-                const nowTime = new Date().toISOString();
-                const newSpinCount = (userData.spin_count || 0) + 1;
-                saveSpinDataLocally(userId, nowTime, newSpinCount);
-                
                 let resultType = "";
                 let resultValue = "";
                 
