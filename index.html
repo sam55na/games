@@ -26,7 +26,6 @@
             overflow-x: hidden;
         }
 
-        /* خلفية متحركة */
         body::before {
             content: '';
             position: fixed;
@@ -53,7 +52,6 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* عنوان DR.DOOM المميز */
         .title {
             text-align: center;
             margin-bottom: 15px;
@@ -141,7 +139,6 @@
             box-shadow: 0 0 0 8px rgba(255,255,255,0.2), 0 0 0 12px rgba(0,0,0,0.2), 0 20px 40px rgba(0,0,0,0.4);
         }
 
-        /* المؤشر بتصميم ⚡ مع لمعان */
         .pointer {
             position: absolute;
             top: -30px;
@@ -165,7 +162,6 @@
             100% { filter: drop-shadow(0 0 20px #00ccff) drop-shadow(0 0 5px #ffffff); }
         }
 
-        /* مركز العجلة - شعار دائري */
         .wheel-center {
             position: absolute;
             top: 50%;
@@ -315,18 +311,15 @@
         tg.expand();
         tg.MainButton.hide();
 
-        // روابط الصور - يمكنك تغييرها
         const BACKGROUND_IMAGE_URL = "https://www.transparenttextures.com/containers/75/75b5c3c7-7b1b-4c3e-8e3c-7b5c3e8e3c7e.png";
         const CENTER_LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1040/1040246.png";
 
-        // تعيين خلفية الجسم
         document.body.style.backgroundImage = `url('${BACKGROUND_IMAGE_URL}'), linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 50%, #0a0a2a 100%)`;
         document.body.style.backgroundBlendMode = "overlay";
         document.body.style.backgroundSize = "cover, auto";
         document.body.style.backgroundRepeat = "repeat, no-repeat";
         document.body.style.backgroundPosition = "center";
 
-        // تعيين الشعار في المنتصف
         const centerLogo = document.getElementById('centerLogo');
         if (centerLogo) {
             centerLogo.src = CENTER_LOGO_URL;
@@ -335,7 +328,6 @@
             };
         }
 
-        // الحصول على البيانات من URL
         const urlParams = new URLSearchParams(window.location.search);
         const encodedData = urlParams.get('data');
         let userData = null;
@@ -346,18 +338,14 @@
         const loadingDiv = document.getElementById('loadingDiv');
         const wheelContent = document.getElementById('wheelContent');
         
-        // تعريف الجوائز (بدون نصوص على العجلة)
         const segments = ["50 ل.س", "100 ل.س", "500 ل.س", "1000 ل.س", "5%", "25%"];
         
-        // ألوان أزرق وأبيض بالتناوب مع تأثير تصدع
         const baseColors = ["#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff"];
-        // تأثير التصدع - إضافة تدرجات داخلية
         const crackColors = ["#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8"];
         
         let currentRotation = 0;
         let isSpinning = false;
 
-        // فك تشفير البيانات
         if (encodedData) {
             try {
                 const decodedData = atob(encodedData.replace(/-/g, '+').replace(/_/g, '/'));
@@ -366,7 +354,6 @@
                 loadingDiv.style.display = 'none';
                 wheelContent.style.display = 'block';
                 
-                // رسم العجلة
                 drawWheel();
                 checkAndShowSpinButton();
                 
@@ -378,7 +365,6 @@
             loadingDiv.innerHTML = '<div style="color: #ff6666;">❌ لا توجد بيانات متاحة</div>';
         }
 
-        // دالة رسم العجلة مع تأثير التصدع والتدرجات
         function drawWheel() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -389,13 +375,11 @@
                 const startAngle = i * sliceAngle;
                 const endAngle = (i + 1) * sliceAngle;
                 
-                // رسم القطاع الرئيسي
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.closePath();
                 
-                // تدرج لوني للقطاع
                 const gradient = ctx.createLinearGradient(
                     centerX + Math.cos(startAngle) * radius * 0.3,
                     centerY + Math.sin(startAngle) * radius * 0.3,
@@ -408,12 +392,10 @@
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-                // رسم حدود القطاع
                 ctx.strokeStyle = "rgba(0,0,0,0.15)";
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
                 
-                // تأثير التصدع - خطوط عشوائية داخل كل قطاع
                 ctx.save();
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
@@ -421,7 +403,6 @@
                 ctx.closePath();
                 ctx.clip();
                 
-                // رسم خطوط تشبه التصدع
                 ctx.beginPath();
                 ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.15})`;
                 ctx.lineWidth = 1;
@@ -444,14 +425,12 @@
                 ctx.restore();
             }
             
-            // رسم حلقة داخلية دائرية (زخرفة)
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius * 0.15, 0, 2 * Math.PI);
             ctx.fillStyle = "#FFD700";
             ctx.fill();
             ctx.shadowBlur = 0;
             
-            // رسم حدود دائرية خارجية
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
             ctx.strokeStyle = "rgba(255,215,0,0.5)";
@@ -465,7 +444,6 @@
             ctx.stroke();
         }
 
-        // دالة التحقق من إمكانية التدوير (48 ساعة)
         function canSpin() {
             if (!userData) return false;
             if (userData.first_use === 1) {
@@ -483,7 +461,6 @@
             return hoursDiff >= 48;
         }
         
-        // دالة الحصول على الوقت المتبقي
         function getRemainingTime() {
             if (!userData) return null;
             if (userData.first_use === 1) return null;
@@ -505,11 +482,9 @@
             return { hours: remainingHours, minutes: remainingMinutes, seconds: remainingSeconds };
         }
         
-        // دالة عرض وإخفاء زر التدوير (لا يظهر إلا بعد التحقق)
         function checkAndShowSpinButton() {
             const timerDiv = document.getElementById('timer');
             
-            // التأكد من وجود userData أولاً
             if (!userData) {
                 spinBtn.style.display = 'none';
                 timerDiv.className = 'timer';
@@ -536,21 +511,21 @@
             }
         }
 
-        // دالة تحديد النتيجة حسب الشروط المعدلة
+        // ========== التعديل الوحيد في الكود ==========
+        // تم تعديل دالة determineResult لتعتمد فقط على spin_count
+        // البوت يبدأ spin_count من 0 للمستخدم الجديد
+        // ============================================
         function determineResult() {
             if (!userData) return "5%";
             
             const spinCount = userData.spin_count || 0;
             const totalRecharge = userData.total_recharge || 0;
             const totalWithdraw = userData.total_withdraw || 0;
-            const firstUse = userData.first_use || 1;
             
-            // التدويرة الأولى: 25% بونص على أول عملية شحن
-            if (firstUse === 1) return "25%";
+            // التدويرة الأولى: عندما spinCount = 0
+            if (spinCount === 0) return "25%";
             
-            // التدويرة الثانية: 
-            // - اذا كان المستخدم ليس لديه اي عملية شحن -> 5%
-            // - اذا كان لديه عملية شحن واحدة على الأقل -> 50 ل.س
+            // التدويرة الثانية: عندما spinCount = 1
             if (spinCount === 1) {
                 if (totalRecharge > 0) {
                     return "50 ل.س";
@@ -559,19 +534,18 @@
                 }
             }
             
-            // التدويرة الثالثة: 5% دائما
+            // التدويرة الثالثة: عندما spinCount = 2
             if (spinCount === 2) return "5%";
             
-            // بعدها تبقى الشروط كما هي
+            // باقي الشروط كما هي
             if (totalRecharge > 250000) return "100 ل.س";
             if (totalRecharge > 700000 && totalWithdraw <= 200000) return "500 ل.س";
             if (totalRecharge > 1800000 && totalWithdraw <= 400000) return "1000 ل.س";
             
-            // اذا لا يوجد اي شرط كامل: 5%
             return "5%";
         }
+        // ========== نهاية التعديل ==========
 
-        // زر التدوير
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
             if (!canSpin()) {
