@@ -338,7 +338,8 @@
         const loadingDiv = document.getElementById('loadingDiv');
         const wheelContent = document.getElementById('wheelContent');
         
-        const segments = ["50 ل.س", "100 ل.س", "500 ل.س", "1000 ل.س", "5%", "25%"];
+        // جميع الجوائز الثابتة أضيف لها 00
+        const segments = ["5000 ل.س", "10000 ل.س", "50000 ل.س", "100000 ل.س", "5%", "25%"];
         
         const baseColors = ["#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff"];
         const crackColors = ["#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8"];
@@ -511,10 +512,6 @@
             }
         }
 
-        // ========== التعديل الوحيد في الكود ==========
-        // تم تعديل دالة determineResult لتعتمد فقط على spin_count
-        // البوت يبدأ spin_count من 0 للمستخدم الجديد
-        // ============================================
         function determineResult() {
             if (!userData) return "5%";
             
@@ -522,29 +519,24 @@
             const totalRecharge = userData.total_recharge || 0;
             const totalWithdraw = userData.total_withdraw || 0;
             
-            // التدويرة الأولى: عندما spinCount = 0
             if (spinCount === 0) return "25%";
             
-            // التدويرة الثانية: عندما spinCount = 1
             if (spinCount === 1) {
                 if (totalRecharge > 0) {
-                    return "50 ل.س";
+                    return "5000 ل.س";
                 } else {
                     return "5%";
                 }
             }
             
-            // التدويرة الثالثة: عندما spinCount = 2
             if (spinCount === 2) return "5%";
             
-            // باقي الشروط كما هي
-            if (totalRecharge > 250000) return "100 ل.س";
-            if (totalRecharge > 700000 && totalWithdraw <= 200000) return "500 ل.س";
-            if (totalRecharge > 1800000 && totalWithdraw <= 400000) return "1000 ل.س";
+            if (totalRecharge > 250000) return "10000 ل.س";
+            if (totalRecharge > 700000 && totalWithdraw <= 200000) return "50000 ل.س";
+            if (totalRecharge > 1800000 && totalWithdraw <= 400000) return "100000 ل.س";
             
             return "5%";
         }
-        // ========== نهاية التعديل ==========
 
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
