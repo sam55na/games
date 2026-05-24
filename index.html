@@ -398,6 +398,7 @@
         
         let currentRotation = 0;
         let isSpinning = false;
+        let animationFrame = null;
 
         if (encodedData) {
             try {
@@ -408,6 +409,7 @@
                 wheelContent.style.display = 'block';
                 
                 drawWheel();
+                startBlinkAnimation();
                 checkAndShowSpinButton();
                 
             } catch(e) {
@@ -456,21 +458,82 @@
                 ctx.closePath();
                 ctx.clip();
                 
-                // نصوص الجوائز
-                ctx.font = `bold ${Math.floor(radius * 0.13)}px 'Cairo', 'Segoe UI'`;
-                ctx.fillStyle = "#fff";
-                ctx.shadowColor = "rgba(0,0,0,0.6)";
-                ctx.shadowBlur = 3;
+                // ========== تحسين عرض النصوص: وميض وفي منتصف القسم ==========
                 const textAngle = startAngle + sliceAngle / 2;
                 const textRadius = radius * 0.65;
+                
                 const x = centerX + Math.cos(textAngle) * textRadius;
                 const y = centerY + Math.sin(textAngle) * textRadius;
-                ctx.translate(x, y);
-                ctx.rotate(textAngle + Math.PI/2);
-                ctx.fillText(segments[i], 0, 0);
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
                 
-                // شقوق عشوائية
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(textAngle + Math.PI / 2);
+                
+                const fontSize = Math.floor(radius * 0.12);
+                ctx.font = `bold ${fontSize}px 'Cairo', 'Segoe UI', Tahoma`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                
+                // تأثير الوميض (ظل متغير + لون متغير)
+                const blinkPhase = (Date.now() / 500) % (Math.PI * 2);
+                const blinkIntensity = 0.5 + Math.sin(blinkPhase) * 0.5;
+                
+                const r = 255;
+                const g = 215 + Math.floor(40 * blinkIntensity);
+                const b = 100 + Math.floor(155 * blinkIntensity);
+                ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                
+                ctx.shadowColor = `rgba(255, 215, 0, ${0.5 + blinkIntensity * 0.5})`;
+                ctx.shadowBlur = 8 + Math.floor(blinkIntensity * 10);
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                
+                // تقسيم النص إلى سطرين إذا كان طويلاً
+                let text = segments[i];
+                let line1 = text;
+                let line2 = "";
+                
+                if (text.length > 8) {
+                    const parts = text.split(" ");
+                    if (parts.length > 1) {
+                        line1 = parts[0];
+                        line2 = parts.slice(1).join(" ");
+                    } else if (text.includes("%")) {
+                        line1 = text.substring(0, text.indexOf("%") + 1);
+                        line2 = text.substring(text.indexOf("%") + 1);
+                    } else {
+                        const mid = Math.floor(text.length / 2);
+                        line1 = text.substring(0, mid);
+                        line2 = text.substring(mid);
+                    }
+                }
+                
+                // رسم السطر الأول
+                if (line2) {
+                    ctx.font = `bold ${fontSize - 4}px 'Cairo', 'Segoe UI', Tahoma`;
+                    ctx.fillText(line1, 0, -fontSize / 3);
+                    ctx.fillText(line2, 0, fontSize / 3);
+                } else {
+                    ctx.fillText(text, 0, 0);
+                }
+                
+                // إعادة تعيين الظل
+                ctx.shadowColor = "transparent";
+                
+                // رسم إطار حول النص لزيادة الوضوح
+                ctx.strokeStyle = "rgba(0,0,0,0.4)";
+                ctx.lineWidth = 1.5;
+                if (line2) {
+                    ctx.strokeText(line1, 0, -fontSize / 3);
+                    ctx.strokeText(line2, 0, fontSize / 3);
+                } else {
+                    ctx.strokeText(text, 0, 0);
+                }
+                
+                ctx.restore();
+                // ========== نهاية تحسين النصوص ==========
+                
+                // رسم شقوق عشوائية
                 ctx.beginPath();
                 ctx.strokeStyle = `rgba(0,0,0,0.15)`;
                 ctx.lineWidth = 1;
@@ -507,6 +570,18 @@
             ctx.strokeStyle = "rgba(255,255,255,0.3)";
             ctx.lineWidth = 1.5;
             ctx.stroke();
+        }
+
+        function startBlinkAnimation() {
+            if (animationFrame) cancelAnimationFrame(animationFrame);
+            
+            function animate() {
+                if (!isSpinning) {
+                    drawWheel();
+                }
+                animationFrame = requestAnimationFrame(animate);
+            }
+            animate();
         }
 
         function canSpin() {
