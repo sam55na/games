@@ -26,6 +26,47 @@
             overflow-x: hidden;
         }
 
+        /* ========== أجسام مضيئة خافتة في الخلفية ========== */
+        .glow-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.15) 0%, rgba(0, 100, 200, 0.05) 70%, transparent 100%);
+            filter: blur(30px);
+            animation: floatGlow 12s infinite alternate ease-in-out;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+
+        @keyframes floatGlow {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.3;
+            }
+            100% {
+                transform: translate(40px, -30px) scale(1.2);
+                opacity: 0.6;
+            }
+        }
+
+        /* كرات بألوان مختلفة وحركات متفاوتة */
+        .glow-orb:nth-child(1) { width: 280px; height: 280px; top: -80px; left: -100px; background: radial-gradient(circle, rgba(255, 100, 150, 0.12) 0%, rgba(255, 50, 100, 0.03) 100%); animation-duration: 18s; animation-delay: 0s; }
+        .glow-orb:nth-child(2) { width: 360px; height: 360px; bottom: -120px; right: -120px; background: radial-gradient(circle, rgba(0, 200, 255, 0.12) 0%, rgba(0, 100, 200, 0.02) 100%); animation-duration: 14s; animation-delay: 2s; }
+        .glow-orb:nth-child(3) { width: 220px; height: 220px; top: 40%; left: 20%; background: radial-gradient(circle, rgba(100, 200, 255, 0.1) 0%, rgba(50, 100, 200, 0.02) 100%); animation-duration: 20s; animation-delay: 1s; }
+        .glow-orb:nth-child(4) { width: 300px; height: 300px; bottom: 20%; right: 10%; background: radial-gradient(circle, rgba(210, 180, 255, 0.1) 0%, rgba(120, 80, 200, 0.02) 100%); animation-duration: 16s; animation-delay: 4s; }
+        .glow-orb:nth-child(5) { width: 180px; height: 180px; top: 65%; left: 70%; background: radial-gradient(circle, rgba(0, 255, 200, 0.08) 0%, rgba(0, 150, 100, 0.02) 100%); animation-duration: 22s; animation-delay: 0.5s; }
+        .glow-orb:nth-child(6) { width: 400px; height: 400px; top: -150px; right: -80px; background: radial-gradient(circle, rgba(255, 215, 0, 0.08) 0%, rgba(200, 150, 0, 0.01) 100%); animation-duration: 25s; animation-delay: 3s; }
+
         body::before {
             content: '';
             position: fixed;
@@ -34,14 +75,14 @@
             right: 0;
             bottom: 0;
             background: url('https://www.transparenttextures.com/containers/75/75b5c3c7-7b1b-4c3e-8e3c-7b5c3e8e3c7e.png') repeat;
-            opacity: 0.1;
+            opacity: 0.08;
             pointer-events: none;
             z-index: 0;
         }
 
         .container {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             background: rgba(255,255,255,0.08);
             backdrop-filter: blur(10px);
             border-radius: 50px;
@@ -275,6 +316,16 @@
     </style>
 </head>
 <body>
+    <!-- عناصر مضيئة خافتة بالخلفية -->
+    <div class="glow-bg">
+        <div class="glow-orb"></div>
+        <div class="glow-orb"></div>
+        <div class="glow-orb"></div>
+        <div class="glow-orb"></div>
+        <div class="glow-orb"></div>
+        <div class="glow-orb"></div>
+    </div>
+
     <div class="container" id="mainContainer">
         <div class="loading" id="loadingDiv">
             <div class="spinner"></div>
@@ -338,11 +389,12 @@
         const loadingDiv = document.getElementById('loadingDiv');
         const wheelContent = document.getElementById('wheelContent');
         
-        // جميع الجوائز (4 قطع 5000 ل.س + قطعتين 5%)
-        const segments = ["5000 ل.س", "5000 ل.س", "5000 ل.س", "5000 ل.س", "5%", "5%"];
+        // تحديث الجوائز لتتناسب مع الشروط الجديدة (للعرض فقط، النتيجة يتم حسابها منطقياً)
+        // سنعرض على العجلة الجوائز المحتملة: "15% إيداع", "5000 ل.س", "10000 ل.س", "5%"
+        const segments = ["15% إيداع", "5000 ل.س", "10000 ل.س", "5%"];
         
-        const baseColors = ["#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff", "#1a5c9e", "#ffffff"];
-        const crackColors = ["#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8", "#0d3b66", "#e8e8e8"];
+        const baseColors = ["#9b59b6", "#3498db", "#e67e22", "#2ecc71"];
+        const crackColors = ["#6c3483", "#2471a3", "#b45f06", "#1e8449"];
         
         let currentRotation = 0;
         let isSpinning = false;
@@ -387,13 +439,13 @@
                     centerX + Math.cos(endAngle) * radius * 0.7,
                     centerY + Math.sin(endAngle) * radius * 0.7
                 );
-                gradient.addColorStop(0, baseColors[i]);
-                gradient.addColorStop(0.7, crackColors[i]);
-                gradient.addColorStop(1, baseColors[i]);
+                gradient.addColorStop(0, baseColors[i % baseColors.length]);
+                gradient.addColorStop(0.7, crackColors[i % crackColors.length]);
+                gradient.addColorStop(1, baseColors[i % baseColors.length]);
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-                ctx.strokeStyle = "rgba(0,0,0,0.15)";
+                ctx.strokeStyle = "rgba(0,0,0,0.2)";
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
                 
@@ -404,11 +456,25 @@
                 ctx.closePath();
                 ctx.clip();
                 
-                ctx.beginPath();
-                ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.15})`;
-                ctx.lineWidth = 1;
+                // نصوص الجوائز
+                ctx.font = `bold ${Math.floor(radius * 0.13)}px 'Cairo', 'Segoe UI'`;
+                ctx.fillStyle = "#fff";
+                ctx.shadowColor = "rgba(0,0,0,0.6)";
+                ctx.shadowBlur = 3;
+                const textAngle = startAngle + sliceAngle / 2;
+                const textRadius = radius * 0.65;
+                const x = centerX + Math.cos(textAngle) * textRadius;
+                const y = centerY + Math.sin(textAngle) * textRadius;
+                ctx.translate(x, y);
+                ctx.rotate(textAngle + Math.PI/2);
+                ctx.fillText(segments[i], 0, 0);
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
                 
-                for (let c = 0; c < 4; c++) {
+                // شقوق عشوائية
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(0,0,0,0.15)`;
+                ctx.lineWidth = 1;
+                for (let c = 0; c < 3; c++) {
                     const angle = startAngle + Math.random() * sliceAngle;
                     const dist1 = radius * (0.2 + Math.random() * 0.3);
                     const dist2 = radius * (0.5 + Math.random() * 0.4);
@@ -416,7 +482,6 @@
                     const y1 = centerY + Math.sin(angle) * dist1;
                     const x2 = centerX + Math.cos(angle + (Math.random() - 0.5) * 0.3) * dist2;
                     const y2 = centerY + Math.sin(angle + (Math.random() - 0.5) * 0.3) * dist2;
-                    
                     ctx.beginPath();
                     ctx.moveTo(x1, y1);
                     ctx.lineTo(x2, y2);
@@ -430,11 +495,10 @@
             ctx.arc(centerX, centerY, radius * 0.15, 0, 2 * Math.PI);
             ctx.fillStyle = "#FFD700";
             ctx.fill();
-            ctx.shadowBlur = 0;
             
             ctx.beginPath();
             ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
-            ctx.strokeStyle = "rgba(255,215,0,0.5)";
+            ctx.strokeStyle = "rgba(255,215,0,0.6)";
             ctx.lineWidth = 3;
             ctx.stroke();
             
@@ -512,7 +576,7 @@
             }
         }
 
-        // دالة تحديد النتيجة المعدلة حسب طلبك
+        // دالة منطق الجوائز المُعدَّلة حسب الشروط الجديدة
         function determineResult() {
             if (!userData) return "5%";
             
@@ -520,28 +584,32 @@
             const totalRecharge = userData.total_recharge || 0;
             const totalWithdraw = userData.total_withdraw || 0;
             
-            // أول مرة يدور → 5%
-            if (spinCount === 0) return "5%";
-            
-            // المرة الثانية → حسب الشحن
-            if (spinCount === 1) {
-                if (totalRecharge > 0) {
-                    return "5000 ل.س";
-                } else {
-                    return "5%";
-                }
+            // الشرط 1: أول تدويرة (spinCount === 0) → "15% إيداع" (15% على أول عملية إيداع)
+            if (spinCount === 0) {
+                return "15% إيداع";
             }
             
-            // المرة الثالثة → 5%
-            if (spinCount === 2) return "5%";
+            // بعد التدويرة الأولى، نطبق الشروط للمرات التالية (سبن أول مرة انتهى)
+            // الشرط 2: 5000 إذا كان مجموع الشحن 150000 ولم يقم بأي عملية سحب
+            if (totalRecharge === 150000 && totalWithdraw === 0) {
+                return "5000 ل.س";
+            }
             
-            // المرات التالية → حسب قيمة الشحن والسحب (كلها تعطي 5000 ل.س)
-            if (totalRecharge > 250000) return "5000 ل.س";
-            if (totalRecharge > 700000 && totalWithdraw <= 200000) return "5000 ل.س";
-            if (totalRecharge > 1800000 && totalWithdraw <= 400000) return "5000 ل.س";
+            // الشرط 3: 10000 إذا كان مجموع الشحن 250000 ولم يقم بأي عملية سحب
+            if (totalRecharge === 250000 && totalWithdraw === 0) {
+                return "10000 ل.س";
+            }
             
-            // بشكل افتراضي → 5%
+            // الشرط 4: كل المستخدمين الآخرين (لا يستوفون الشروط أعلاه) يحصلون على 5% على أول عملية إيداع بعد التدوير
             return "5%";
+        }
+
+        // إعداد مؤشر الفوز على العجلة بناءً على النتيجة (لجعل العجلة تتوقف عند القطاع المناسب)
+        function getSegmentIndexForResult(result) {
+            if (result === "15% إيداع") return 0;
+            if (result === "5000 ل.س") return 1;
+            if (result === "10000 ل.س") return 2;
+            return 3; // 5%
         }
 
         spinBtn.addEventListener('click', () => {
@@ -557,10 +625,12 @@
             const result = determineResult();
             console.log('Spinning for result:', result);
             
-            const resultIndex = segments.findIndex(seg => seg === result);
+            const resultIndex = getSegmentIndexForResult(result);
             const sliceAngle = 360 / segments.length;
+            // الزاوية التي يشير إليها السهم الثابت = 270 درجة (أعلى)
             const targetAngle = 270;
             const currentAngle = currentRotation % 360;
+            // مركز القطاع المستهدف
             const resultCenterAngle = (resultIndex * sliceAngle + sliceAngle / 2);
             let neededRotation = (targetAngle - resultCenterAngle + 360) % 360;
             const fullRotations = 5 * 360;
@@ -568,31 +638,49 @@
             
             currentRotation += extraDegree;
             canvas.style.transform = `rotate(${currentRotation}deg)`;
-
+            
+            // بعد انتهاء الدوران
             setTimeout(() => {
                 let resultType = "";
-                let resultValue = "";
+                let resultValue = null;
+                let displayResult = result;
                 
-                if (result.includes("%")) {
-                    resultType = "bonus_percent";
-                    resultValue = parseInt(result);
-                } else if (result.includes("ل.س")) {
+                if (result === "15% إيداع") {
+                    resultType = "first_deposit_bonus";
+                    resultValue = 15; // 15%
+                } 
+                else if (result === "5000 ل.س") {
                     resultType = "direct_bonus";
-                    resultValue = parseInt(result);
+                    resultValue = 5000;
+                }
+                else if (result === "10000 ل.س") {
+                    resultType = "direct_bonus";
+                    resultValue = 10000;
+                }
+                else if (result === "5%") {
+                    resultType = "next_deposit_percent";
+                    resultValue = 5;
                 }
                 
+                // إرسال النتيجة إلى البوت
                 tg.sendData(JSON.stringify({
                     action: "spin_result",
-                    result: result,
+                    result: displayResult,
                     result_type: resultType,
-                    result_value: resultValue
+                    result_value: resultValue,
+                    // إرسال معلومات إضافية للمساعدة (يمكن للبوت استخدامها)
+                    spin_count: userData.spin_count || 0,
+                    total_recharge: userData.total_recharge || 0,
+                    total_withdraw: userData.total_withdraw || 0
                 }));
                 
+                // إغلاق الويب آب بعد ثانية ونصف
                 setTimeout(() => {
                     tg.close();
                 }, 1500);
                 
                 isSpinning = false;
+                // لا نقوم بإعادة تمكين الزر لأنه سيتم إغلاق الصفحة
             }, 4000);
         });
     </script>
